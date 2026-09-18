@@ -1,0 +1,384 @@
+/* FoFo Personal WorkStation Custom Styles */
+:root {
+  --primary: #059669;
+  --primary-hover: #047857;
+  --primary-light: #ecfdf5;
+  --bg-main: #0b0f19;
+  --bg-card: #1e293b;
+  --bg-input: #334155;
+  --border-color: #334155;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color: var(--text-main);
+  background-color: #0b0f19;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Custom Full-screen Background Layers (Properly Layered between body and content) */
+#custom-bg-layer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  display: none;
+}
+
+#custom-bg-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(11, 15, 25, 0.8);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 1;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  display: none;
+}
+
+/* Ensure all page content floats safely above the background layers */
+header, main {
+  position: relative;
+  z-index: 10;
+}
+
+/* iOS Distinct Vibrant Theme Gradients */
+body.theme-midnight {
+  background: radial-gradient(ellipse at 50% 0%, #1e293b 0%, #0f172a 50%, #070a13 100%) !important;
+  background-attachment: fixed !important;
+}
+body.theme-pacific {
+  background: radial-gradient(ellipse at 25% 0%, #1d4ed8 0%, #0f2b5c 40%, #071326 80%, #030712 100%) !important;
+  background-attachment: fixed !important;
+}
+body.theme-deep-purple {
+  background: radial-gradient(ellipse at 25% 0%, #7e22ce 0%, #3b0764 45%, #180728 80%, #05020a 100%) !important;
+  background-attachment: fixed !important;
+}
+body.theme-alpine-green {
+  background: radial-gradient(ellipse at 25% 0%, #047857 0%, #064e3b 45%, #03251c 80%, #010d0a 100%) !important;
+  background-attachment: fixed !important;
+}
+body.theme-space-gray {
+  background: radial-gradient(ellipse at 25% 0%, #52525b 0%, #27272a 45%, #141417 80%, #09090b 100%) !important;
+  background-attachment: fixed !important;
+}
+
+/* User Avatar Round Container (Prominent 52px) */
+.user-avatar-container {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 9999px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.45);
+  border: 2px solid rgba(16, 185, 129, 0.7);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.user-avatar-container:hover {
+  border-color: #34d399;
+  transform: scale(1.05);
+}
+
+.user-avatar-container:hover .avatar-hover-mask {
+  opacity: 1;
+}
+
+.avatar-hover-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.4);
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Card Styling with Enhanced Frosted Glass */
+.fofo-card {
+  background: rgba(30, 41, 59, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(51, 65, 85, 0.75);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s ease;
+}
+
+.fofo-card:hover {
+  border-color: rgba(71, 85, 105, 0.95);
+}
+
+/* GitHub Heatmap Grid */
+.heatmap-grid {
+  display: grid;
+  grid-template-rows: repeat(7, 11px);
+  grid-auto-flow: column;
+  grid-auto-columns: 11px;
+  gap: 3px;
+}
+
+.heatmap-cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  transition: transform 0.15s ease, outline 0.15s ease;
+  cursor: pointer;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.35);
+  z-index: 10;
+  outline: 1.5px solid #38bdf8;
+}
+
+.heatmap-cell.active-day {
+  outline: 2px solid #fbbf24 !important;
+}
+
+.level-0 { background-color: #1e293b; }
+.level-1 { background-color: #064e3b; }
+.level-2 { background-color: #059669; }
+.level-3 { background-color: #10b981; }
+.level-4 { background-color: #34d399; }
+
+/* Tooltip */
+#heatmap-tooltip {
+  position: fixed;
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid #475569;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #f8fafc;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  display: none;
+  white-space: nowrap;
+}
+
+/* Priority Badges */
+.badge-p0 {
+  background-color: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+.badge-p1 {
+  background-color: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.5);
+}
+.badge-p2 {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+/* Checkbox Style */
+.task-checkbox {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #64748b;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.task-checkbox:checked {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.task-checkbox:checked::after {
+  content: "✓";
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.task-completed {
+  text-decoration: line-through;
+  color: #64748b;
+}
+
+/* Floating Toast Notification */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  min-width: 280px;
+  max-width: 360px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid #10b981;
+  border-radius: 0.5rem;
+  padding: 12px 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  color: #f8fafc;
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+
+/* Reading Card Styles */
+.reading-card {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(51, 65, 85, 0.8);
+  border-radius: 0.5rem;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.reading-card:hover {
+  background: rgba(51, 65, 85, 0.9);
+  border-color: #38bdf8;
+  transform: translateY(-1px);
+}
+
+/* Bulletin Board Sticky Style */
+.bulletin-card {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-left: 3px solid #f59e0b;
+  border-radius: 0.375rem;
+  padding: 8px 10px;
+  transition: all 0.15s ease;
+}
+
+.bulletin-card:hover {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* Markdown preview typography */
+.markdown-preview {
+  line-height: 1.6;
+  color: #cbd5e1;
+}
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3 {
+  color: #f8fafc;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+.markdown-preview h1 { font-size: 1.35rem; border-bottom: 1px solid #334155; padding-bottom: 0.3rem; }
+.markdown-preview h2 { font-size: 1.15rem; }
+.markdown-preview h3 { font-size: 1.05rem; }
+.markdown-preview ul, .markdown-preview ol {
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+}
+.markdown-preview li {
+  margin-bottom: 0.25rem;
+}
+.markdown-preview code {
+  background: #334155;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  color: #38bdf8;
+}
+.markdown-preview blockquote {
+  border-left: 3px solid #10b981;
+  padding-left: 0.75rem;
+  margin: 0.5rem 0;
+  color: #94a3b8;
+}
+
+/* Canvas Confetti Layer */
+#confetti-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 99998;
+}
+
+/* Theme Swatch Circle */
+.theme-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-swatch:hover {
+  transform: scale(1.15);
+}
+
+.theme-swatch.active {
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}

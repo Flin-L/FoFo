@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoFo 个人工作台 - Personal WorkStation</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Marked.js for fast Markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="theme-midnight text-slate-100 flex flex-col min-h-screen">
+  <!-- Full-screen Custom Background & Frosted Glass Overlay -->
+  <div id="custom-bg-layer"></div>
+  <div id="custom-bg-overlay"></div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Toast Floating Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Hidden File Inputs -->
+  <input type="file" id="avatar-file-input" accept="image/*" class="hidden" />
+  <input type="file" id="bg-file-input" accept="image/*" class="hidden" />
+
+  <!-- ================= TOP STATUS BAR & POMODORO ================= -->
+  <header class="border-b border-slate-800/80 bg-slate-900/85 backdrop-blur-md sticky top-0 z-40 px-5 py-2.5">
+    <div class="max-w-[1720px] mx-auto flex items-center justify-between flex-nowrap gap-4 w-full">
+      
+      <!-- Left: User Avatar (Enlarged 52px) & App Title / Date (Larger) -->
+      <div class="flex items-center space-x-3.5 flex-shrink-0">
+        <!-- Circular User Avatar -->
+        <div class="user-avatar-container" id="btn-trigger-avatar" title="点击上传/更换个人头像">
+          <img id="user-avatar-img" class="w-full h-full object-cover hidden" alt="用户头像" />
+          <div id="default-avatar-placeholder" class="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-2xl">
+            F
+          </div>
+          <div class="avatar-hover-mask">
+            <span>换头像</span>
+          </div>
+        </div>
+
+        <!-- Larger Title & Date -->
+        <div class="flex flex-col justify-center">
+          <div class="flex items-center space-x-2">
+            <h1 class="font-black text-lg md:text-xl leading-tight text-slate-100 tracking-wide">FoFo 工作台</h1>
+            <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/60 font-semibold font-mono">v1.0.0</span>
+          </div>
+          <span class="text-xs md:text-sm text-slate-300 font-medium mt-0.5" id="header-date-sub">加载中...</span>
+        </div>
+
+        <div class="hidden 2xl:flex items-center pl-4 border-l border-slate-800 text-xs text-slate-400 space-x-2">
+          <span id="month-progress-text">月度进度: 0%</span>
+          <div class="w-20 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div id="month-progress-bar" class="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: Stacked Pomodoro + Water (Narrow width, NO horizontal squeezing) -->
+      <div class="fofo-card px-3.5 py-1.5 flex flex-col border-emerald-900/40 bg-slate-900/80 shadow-md flex-shrink-0">
+        <!-- Upper row: Pomodoro -->
+        <div class="flex items-center space-x-3">
+          <!-- Modes -->
+          <div class="flex items-center bg-slate-800/80 p-0.5 rounded text-xs space-x-0.5">
+            <button id="pomo-mode-focus" class="px-2 py-0.5 rounded font-medium bg-emerald-600 text-white transition text-xs">专注 25m</button>
+            <button id="pomo-mode-short" class="px-1.5 py-0.5 rounded text-slate-400 hover:text-white transition text-xs">短休 5m</button>
+            <button id="pomo-mode-long" class="px-1.5 py-0.5 rounded text-slate-400 hover:text-white transition text-xs">长休 15m</button>
+          </div>
+
+          <!-- Timer Display -->
+          <span id="pomo-display" class="font-mono text-xl font-black text-emerald-400 tracking-tight">25:00</span>
+          
+          <!-- Controls -->
+          <div class="flex items-center space-x-1">
+            <button id="pomo-btn-toggle" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded shadow transition active:scale-95">
+              开始
+            </button>
+            <button id="pomo-btn-reset" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs rounded transition" title="重置计时器">
+              ↺
+            </button>
+          </div>
+
+          <div class="max-w-[120px] truncate text-[11px] text-slate-400" id="pomo-task-tag" title="无绑定任务">
+            未绑定任务
+          </div>
+
+          <div class="pl-2 border-l border-slate-800 text-xs text-slate-400 flex items-center space-x-1" title="今日已完成专注番茄">
+            <span>🍅</span>
+            <span id="pomo-today-count" class="font-bold text-amber-400 font-mono">0</span>
+          </div>
+        </div>
+
+        <!-- Lower row: Daily Water Intake (Under Pomodoro) -->
+        <div class="flex items-center justify-between pt-1 mt-1 border-t border-slate-800/80 text-[11px]">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-cyan-400">🥤</span>
+            <span class="text-slate-400 font-medium">今日饮水:</span>
+            <span id="water-intake-text" class="font-bold text-cyan-300 font-mono">0ml</span>
+            <span class="text-slate-500">/ 1500ml</span>
+            <div class="w-16 bg-slate-800 rounded-full h-1.5 overflow-hidden ml-1">
+              <div id="water-progress-bar" class="bg-cyan-400 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <span id="water-percent-text" class="text-slate-400 font-mono text-[10px]">0%</span>
+          </div>
+
+          <div class="flex items-center space-x-1">
+            <button id="btn-water-150" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-cyan-900/60 hover:text-cyan-300 text-slate-300 text-[10px] transition">+150ml</button>
+            <button id="btn-water-250" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-cyan-900/60 hover:text-cyan-300 text-slate-300 text-[10px] transition">+250ml</button>
+            <button id="btn-water-350" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-cyan-900/60 hover:text-cyan-300 text-slate-300 text-[10px] transition">+350ml</button>
+            <button id="btn-water-reset" class="px-1 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-500 hover:text-slate-300 text-[10px] transition" title="重置今日饮水">↺</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Heatmap + Spacious Action Buttons (Full room, zero squeezing) -->
+      <div class="flex items-center space-x-3 flex-shrink-0">
+        <!-- Activity Heatmap Mini View -->
+        <div class="hidden lg:flex flex-col items-end">
+          <div class="flex items-center justify-between w-full text-[10px] text-slate-400 mb-0.5">
+            <span>产出热力图</span>
+            <span class="text-slate-500">近 18 周</span>
+          </div>
+          <div id="heatmap-container" class="bg-slate-900/60 p-1 rounded border border-slate-800/80"></div>
+        </div>
+
+        <!-- Global Action Buttons (Spacious Full Text) -->
+        <div class="flex items-center space-x-1.5 text-xs">
+          <button id="btn-theme-modal" class="flex items-center space-x-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md border border-slate-700 transition" title="自定义背景与主题配色">
+            <span>🎨</span>
+            <span>配色/背景</span>
+          </button>
+          <button id="btn-export-markdown" class="flex items-center space-x-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md border border-slate-700 transition" title="生成并导出本月 Markdown 完整归档">
+            <span>📦</span>
+            <span>导出月报</span>
+          </button>
+          <button id="btn-weekly-review" class="flex items-center space-x-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md border border-slate-700 transition" title="进行本周工作复盘与规划">
+            <span>📋</span>
+            <span>周复盘</span>
+          </button>
+          <button id="btn-data-modal" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-md border border-slate-700 transition" title="数据备份与设置">
+            ⚙️
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN THREE-COLUMN WORKBENCH ================= -->
+  <main class="flex-1 max-w-[1720px] w-full mx-auto p-3 md:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4">
+    
+    <!-- LEFT PANEL: Goals (Tabbed switcher) & Calendar (Col 1-3) -->
+    <aside class="lg:col-span-3 space-y-4 flex flex-col">
+      
+      <!-- 1. Main Goals (Tabbed Switcher: Monthly Goals vs Weekly Focus) -->
+      <div class="fofo-card p-3.5 flex flex-col">
+        <!-- Switcher Header Tabs -->
+        <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
+          <div class="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-xs">
+            <button id="tab-btn-weekly" class="px-2.5 py-1 rounded-md font-semibold bg-emerald-600 text-white transition flex items-center space-x-1">
+              <span>📌</span>
+              <span>本周重点</span>
+              <span class="text-[10px] opacity-80 font-mono ml-0.5" id="current-week-label">W38</span>
+            </button>
+            <button id="tab-btn-monthly" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 transition flex items-center space-x-1">
+              <span>🎯</span>
+              <span>本月目标</span>
+            </button>
+          </div>
+          <span class="text-[11px] text-emerald-400 font-semibold" id="goals-progress-badge">0% 达成</span>
+        </div>
+
+        <!-- Weekly Focus Panel View -->
+        <div id="view-weekly-goals" class="flex flex-col">
+          <div class="flex items-center space-x-1.5 mb-2.5">
+            <input type="text" id="input-weekly-goal" placeholder="添加本周攻坚任务..." class="flex-1 bg-slate-900 border border-slate-700/80 rounded-md px-2.5 py-1 text-xs focus:outline-none focus:border-emerald-500 text-slate-200" />
+            <button id="btn-add-weekly-goal" class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded-md text-xs font-semibold transition">+</button>
+          </div>
+          <div id="weekly-goals-list" class="space-y-1.5 overflow-y-auto max-h-52 pr-1 text-xs">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Monthly Goals Panel View (Initially Hidden) -->
+        <div id="view-monthly-goals" class="flex-col hidden">
+          <div class="flex items-center space-x-1.5 mb-2.5">
+            <input type="text" id="input-monthly-goal" placeholder="添加本月核心战役目标..." class="flex-1 bg-slate-900 border border-slate-700/80 rounded-md px-2.5 py-1 text-xs focus:outline-none focus:border-emerald-500 text-slate-200" />
+            <button id="btn-add-monthly-goal" class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded-md text-xs font-semibold transition">+</button>
+          </div>
+          <div id="monthly-goals-list" class="space-y-2 overflow-y-auto max-h-52 pr-1 text-xs">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Calendar & Milestones (Permanently Anchored) -->
+      <div class="fofo-card p-3.5 flex-1 flex flex-col">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-sm">🗓️</span>
+            <h2 class="font-bold text-xs text-slate-200">日程与重要节点</h2>
+          </div>
+          <button id="btn-set-milestone" class="text-xs text-amber-400 hover:text-amber-300 font-medium transition" title="为选中日期添加日程节点">
+            + 标记节点
+          </button>
+        </div>
+
+        <div id="calendar-widget-container" class="my-auto">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Selected Day Milestones Container -->
+        <div id="selected-day-milestone-box" class="mt-2.5 p-2 bg-slate-900/90 border border-slate-800 rounded-md text-xs">
+          <div class="flex items-center justify-between text-amber-400 font-semibold mb-1">
+            <span class="text-[11px] flex items-center space-x-1">
+              <span>🚩</span>
+              <span>当日日程节点 (<span id="milestone-count-text">0</span>)</span>
+            </span>
+          </div>
+          <div id="selected-day-milestones-list" class="space-y-1 max-h-24 overflow-y-auto pr-0.5">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- CENTER PANEL: Today's Core Workflow & Reading (Col 4-8) -->
+    <section class="lg:col-span-5 flex flex-col space-y-3.5">
+      
+      <!-- Date Switcher Bar -->
+      <div class="fofo-card px-4 py-2.5 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <button id="btn-prev-day" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition">‹</button>
+          <div class="flex items-center space-x-2">
+            <span id="active-day-title" class="font-bold text-sm md:text-base text-slate-100">2026-09-18 星期五</span>
+            <span id="active-day-badge" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/60">今日</span>
+          </div>
+          <button id="btn-next-day" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition">›</button>
+        </div>
+
+        <button id="btn-jump-today" class="px-2.5 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          回到今天
+        </button>
+      </div>
+
+      <!-- TODAY'S READING / REFERENCES (今日待阅) -->
+      <div class="fofo-card p-3.5 border-l-4 border-l-cyan-500">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-cyan-400 tracking-wide flex items-center space-x-1">
+              <span>📖</span>
+              <span>今日待阅 (Reading & Docs)</span>
+            </span>
+            <span id="reading-count-badge" class="px-1.5 py-0.2 rounded bg-slate-800 text-[10px] text-cyan-300 font-mono">0</span>
+          </div>
+          <button id="btn-open-add-reading" class="text-xs font-medium text-cyan-400 hover:text-cyan-300 transition flex items-center space-x-1">
+            <span>+ 新增待阅</span>
+          </button>
+        </div>
+        
+        <!-- Reading Items Cards Container -->
+        <div id="reading-items-container" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Daily Task List Container -->
+      <div class="fofo-card p-4 flex-1 flex flex-col min-h-[460px]">
+        
+        <!-- Task Header & Filter Tabs -->
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+          <div class="flex items-center space-x-2">
+            <span class="text-base">📋</span>
+            <h3 class="font-bold text-sm text-slate-100">今日工作待办清单</h3>
+            <span id="task-stat-badge" class="px-2 py-0.5 text-[11px] rounded bg-slate-800 text-slate-400">0/0</span>
+          </div>
+
+          <div class="flex items-center space-x-1 text-xs">
+            <button id="task-filter-all" class="px-2 py-0.5 rounded font-medium bg-emerald-600/30 text-emerald-400">全部</button>
+            <button id="task-filter-active" class="px-2 py-0.5 rounded text-slate-400 hover:text-slate-200">进行中</button>
+            <button id="task-filter-done" class="px-2 py-0.5 rounded text-slate-400 hover:text-slate-200">已完成</button>
+          </div>
+        </div>
+
+        <!-- Task Input Box -->
+        <div class="flex items-center space-x-2 mb-3">
+          <select id="task-priority-select" class="bg-slate-900 border border-slate-700 text-xs rounded-md px-2 py-1.5 text-slate-200 focus:outline-none">
+            <option value="P0">P0 紧急</option>
+            <option value="P1" selected>P1 重要</option>
+            <option value="P2">P2 普通</option>
+          </select>
+          <input type="text" id="task-input-text" placeholder="输入待办事项，按回车快速添加（自动按优先级排布）..." class="flex-1 bg-slate-900 border border-slate-700 rounded-md px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 transition" />
+          <button id="btn-add-task" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-xs font-semibold shadow transition">添加</button>
+        </div>
+
+        <!-- Task List Items (Sorted by P0 > P1 > P2) -->
+        <div id="daily-task-list" class="flex-1 overflow-y-auto space-y-2 pr-1">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Bottom Task Action Bar -->
+        <div class="pt-3 mt-auto border-t border-slate-800 flex items-center justify-between text-xs text-slate-500">
+          <span>排序规则：P0 紧急 &gt; P1 重要 &gt; P2 普通</span>
+          <button id="btn-clear-completed" class="hover:text-slate-300 transition">清空已完成</button>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- RIGHT PANEL: Notes & Bulletin/Memos (Col 9-12) -->
+    <aside class="lg:col-span-4 flex flex-col space-y-3.5">
+      
+      <!-- Tab Switcher -->
+      <div class="fofo-card p-1 flex items-center space-x-1">
+        <button id="tab-btn-notes" class="flex-1 py-1.5 text-xs font-semibold rounded-md bg-emerald-600 text-white transition flex items-center justify-center space-x-1.5">
+          <span>📝</span>
+          <span>工作日志与会议纪要</span>
+        </button>
+        <button id="tab-btn-scratchpad" class="flex-1 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition flex items-center justify-center space-x-1.5">
+          <span>📢</span>
+          <span>公告栏与灵感</span>
+        </button>
+      </div>
+
+      <!-- TAB CONTENT 1: Markdown Notes -->
+      <div id="tab-content-notes" class="fofo-card p-4 flex-1 flex flex-col">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs text-slate-400">当前日期专栏笔记 (Markdown)</span>
+            <span id="note-save-status" class="text-[10px] text-emerald-400">已自动保存</span>
+          </div>
+
+          <div class="flex items-center space-x-1">
+            <button id="btn-note-timestamp" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition" title="插入时间戳">
+              ⏱ 插入时间
+            </button>
+            <div class="flex items-center bg-slate-900 border border-slate-800 rounded p-0.5 text-xs">
+              <button id="btn-note-edit" class="px-2 py-0.5 rounded bg-slate-700 text-white font-medium">编辑</button>
+              <button id="btn-note-preview" class="px-2 py-0.5 rounded text-slate-400 hover:text-white">预览</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Markdown Editor -->
+        <div class="flex-1 flex flex-col">
+          <textarea id="note-editor" placeholder="在这里撰写会议纪要、工作思路、讨论结论...&#10;支持标题 #、无序列表 -、加粗 ** 等 Markdown 语法" class="w-full flex-1 bg-slate-900/90 border border-slate-700/80 rounded-lg p-3 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-mono resize-none leading-relaxed min-h-[440px]"></textarea>
+          
+          <div id="note-preview" class="hidden w-full flex-1 bg-slate-900/60 border border-slate-800 rounded-lg p-3 overflow-y-auto markdown-preview text-xs min-h-[440px]">
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB CONTENT 2: Bulletin Notice Board (Top) + Scratchpad (Bottom) -->
+      <div id="tab-content-scratchpad" class="fofo-card p-4 flex-1 flex-col space-y-4 hidden">
+        
+        <!-- Part A: 备忘公告栏 (Bulletin Board) -->
+        <div class="flex flex-col space-y-2">
+          <div class="flex items-center justify-between pb-1.5 border-b border-slate-800">
+            <div class="flex items-center space-x-1.5">
+              <span class="text-sm">📌</span>
+              <h3 class="font-bold text-xs text-amber-400">备忘公告栏 (常驻便签)</h3>
+            </div>
+            <span class="text-[10px] text-slate-500">团队原则 · 长期备忘</span>
+          </div>
+
+          <div class="flex items-center space-x-1.5">
+            <input type="text" id="input-bulletin" placeholder="添加一条公告或长期备忘..." class="flex-1 bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-amber-500" />
+            <button id="btn-add-bulletin" class="px-3 py-1 bg-amber-700 hover:bg-amber-600 text-white rounded text-xs font-semibold transition">发布</button>
+          </div>
+
+          <div id="bulletin-list" class="space-y-1.5 overflow-y-auto max-h-48 pr-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Part B: 灵感与闪念 (Scratchpad) -->
+        <div class="flex flex-col space-y-2 pt-2 border-t border-slate-800 flex-1">
+          <div class="flex items-center justify-between pb-1">
+            <div class="flex items-center space-x-1.5">
+              <span class="text-sm">💡</span>
+              <h3 class="font-bold text-xs text-slate-200">灵感备忘</h3>
+            </div>
+            <span class="text-[10px] text-slate-500">临时想法 · 一键转为待办</span>
+          </div>
+
+          <div class="flex items-center space-x-1.5">
+            <input type="text" id="scratchpad-input" placeholder="输入突发灵感或临时事项..." class="flex-1 bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-emerald-500" />
+            <button id="btn-add-scratchpad" class="px-3 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded text-xs font-semibold transition">记录</button>
+          </div>
+
+          <div id="scratchpad-list" class="space-y-1.5 overflow-y-auto max-h-52 pr-1 flex-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 0. Theme & Custom Background Settings Modal (主题与自定义背景) -->
+  <div id="modal-theme-settings" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="fofo-card max-w-md w-full p-5 bg-slate-900 border border-slate-700 shadow-2xl flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between mb-3.5 pb-2 border-b border-slate-800">
+        <h3 class="font-bold text-sm text-slate-100 flex items-center space-x-2">
+          <span>🎨</span>
+          <span>配色主题与个性化背景</span>
+        </h3>
+        <button id="modal-theme-close" class="text-slate-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <div class="space-y-4 overflow-y-auto pr-1 text-xs">
+        <!-- iOS Classic Presets -->
+        <div>
+          <label class="block text-slate-300 font-semibold mb-2">iOS 经典暗色配色方案：</label>
+          <div class="grid grid-cols-5 gap-2 text-center">
+            <button class="theme-preset-btn flex flex-col items-center space-y-1 group" data-theme="midnight">
+              <div class="theme-swatch" style="background: radial-gradient(circle, #334155, #0b0f19);"></div>
+              <span class="text-[11px] text-slate-400 group-hover:text-white">极夜黑</span>
+            </button>
+            <button class="theme-preset-btn flex flex-col items-center space-y-1 group" data-theme="pacific">
+              <div class="theme-swatch" style="background: radial-gradient(circle, #2563eb, #0f172a);"></div>
+              <span class="text-[11px] text-slate-400 group-hover:text-white">远峰蓝</span>
+            </button>
+            <button class="theme-preset-btn flex flex-col items-center space-y-1 group" data-theme="deep-purple">
+              <div class="theme-swatch" style="background: radial-gradient(circle, #9333ea, #1e1138);"></div>
+              <span class="text-[11px] text-slate-400 group-hover:text-white">暗夜紫</span>
+            </button>
+            <button class="theme-preset-btn flex flex-col items-center space-y-1 group" data-theme="alpine-green">
+              <div class="theme-swatch" style="background: radial-gradient(circle, #059669, #06261d);"></div>
+              <span class="text-[11px] text-slate-400 group-hover:text-white">松岭绿</span>
+            </button>
+            <button class="theme-preset-btn flex flex-col items-center space-y-1 group" data-theme="space-gray">
+              <div class="theme-swatch" style="background: radial-gradient(circle, #71717a, #18181b);"></div>
+              <span class="text-[11px] text-slate-400 group-hover:text-white">深空灰</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Background Image -->
+        <div class="pt-3 border-t border-slate-800 space-y-2.5">
+          <label class="block text-slate-300 font-semibold">自定义背景壁纸：</label>
+          <div class="flex items-center space-x-2">
+            <button id="btn-choose-bg-image" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 font-medium transition flex items-center space-x-1.5">
+              <span>🖼️</span>
+              <span>上传壁纸图片</span>
+            </button>
+            <button id="btn-remove-bg-image" class="px-3 py-1.5 text-slate-400 hover:text-red-400 text-xs transition hidden">
+              ✕ 清除壁纸
+            </button>
+          </div>
+
+          <!-- Background Controls (Opacity & Blur) -->
+          <div id="bg-controls-box" class="space-y-2 pt-1 hidden">
+            <div>
+              <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                <span>深色遮罩暗度 (保护文字清晰度)：</span>
+                <span id="bg-opacity-val" class="font-mono text-emerald-400">82%</span>
+              </div>
+              <input type="range" id="bg-opacity-slider" min="40" max="95" value="82" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
+            </div>
+            <div>
+              <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                <span>毛玻璃模糊度：</span>
+                <span id="bg-blur-val" class="font-mono text-emerald-400">6px</span>
+              </div>
+              <input type="range" id="bg-blur-slider" min="0" max="18" value="6" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
+            </div>
+          </div>
+        </div>
+
+        <!-- User Avatar Management -->
+        <div class="pt-3 border-t border-slate-800 space-y-2">
+          <label class="block text-slate-300 font-semibold">个人圆形头像：</label>
+          <div class="flex items-center space-x-3">
+            <button id="btn-upload-avatar-modal" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 font-medium transition flex items-center space-x-1.5">
+              <span>👤</span>
+              <span>上传新头像</span>
+            </button>
+            <button id="btn-remove-avatar" class="px-3 py-1.5 text-slate-400 hover:text-red-400 text-xs transition hidden">
+              恢复默认头像
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 1. Add Reading Item Modal (今日待阅新建弹窗) -->
+  <div id="modal-add-reading" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="fofo-card max-w-md w-full p-5 bg-slate-900 border border-slate-700 shadow-2xl flex flex-col">
+      <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+        <h3 class="font-bold text-sm text-slate-100 flex items-center space-x-1.5">
+          <span>📖</span>
+          <span>新建今日待阅事项</span>
+        </h3>
+        <button id="modal-reading-close" class="text-slate-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <div class="space-y-3.5 text-xs">
+        <!-- Type Switcher -->
+        <div>
+          <label class="block text-slate-400 mb-1.5 font-medium">选择待阅类型：</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btn-type-doc" type="button" class="py-2 px-3 rounded-lg border border-cyan-500/60 bg-cyan-950/40 text-cyan-300 font-semibold flex items-center justify-center space-x-1.5 transition">
+              <span>📄</span>
+              <span>本地文档 (md/doc/pdf)</span>
+            </button>
+            <button id="btn-type-url" type="button" class="py-2 px-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-400 hover:text-slate-200 font-semibold flex items-center justify-center space-x-1.5 transition">
+              <span>🌐</span>
+              <span>网页链接 (URL)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Document Section -->
+        <div id="reading-doc-section" class="space-y-2">
+          <label class="block text-slate-300 font-medium">文档文件路径：</label>
+          <div class="flex space-x-1.5">
+            <input type="text" id="input-reading-doc-path" placeholder="例如: F:\FoFo\README.md 或从右侧浏览" class="flex-1 bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500" />
+            <label class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded cursor-pointer transition border border-slate-700 text-center flex items-center">
+              浏览...
+              <input type="file" id="file-picker-reading" accept=".md,.doc,.docx,.pdf,.txt" class="hidden" />
+            </label>
+          </div>
+          <p class="text-[10px] text-slate-500">支持直接粘贴文件全路径，或点击浏览选择电脑上的文档。</p>
+        </div>
+
+        <!-- URL Section (Initially Hidden) -->
+        <div id="reading-url-section" class="space-y-2 hidden">
+          <label class="block text-slate-300 font-medium">网页链接地址：</label>
+          <input type="text" id="input-reading-url" placeholder="例如: https://github.com/..." class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500" />
+        </div>
+
+        <!-- Item Name -->
+        <div>
+          <label class="block text-slate-300 font-medium mb-1">待阅事项名称：</label>
+          <input type="text" id="input-reading-title" placeholder="输入卡片上展示的事项名，例如：产品PRD文档" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500" />
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end space-x-2">
+        <button id="btn-cancel-add-reading" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white transition">取消</button>
+        <button id="btn-confirm-add-reading" class="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded shadow transition">保存待阅</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Multi-Milestones Modal (日程与多事件管理弹窗) -->
+  <div id="modal-milestone-prompt" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="fofo-card max-w-sm w-full p-4 bg-slate-900 border border-slate-700 shadow-2xl flex flex-col">
+      <div class="flex items-center justify-between mb-2.5 pb-1.5 border-b border-slate-800">
+        <h4 class="font-bold text-xs text-slate-200 flex items-center space-x-1">
+          <span>🚩</span>
+          <span id="milestone-modal-date-title">管理日程事件</span>
+        </h4>
+        <button id="btn-cancel-milestone" class="text-slate-400 hover:text-white text-sm">✕</button>
+      </div>
+
+      <!-- Existing Milestones for this day -->
+      <div class="mb-3">
+        <label class="block text-[11px] text-slate-400 mb-1">当日已有日程：</label>
+        <div id="modal-milestone-list" class="space-y-1 max-h-28 overflow-y-auto pr-0.5 text-xs">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Add New Milestone Input -->
+      <div class="space-y-1.5 pt-2 border-t border-slate-800">
+        <label class="block text-[11px] text-slate-300 font-medium">添加新日程/事件：</label>
+        <input type="text" id="input-milestone-text" placeholder="例如：10:00 方案答辩、提交材料..." class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500" />
+      </div>
+
+      <div class="mt-3 flex justify-end space-x-2">
+        <button id="btn-confirm-milestone" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold rounded transition">+ 添加此事件</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Markdown Export Modal -->
+  <div id="modal-export" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="fofo-card max-w-2xl w-full p-6 bg-slate-900 border border-slate-700 shadow-2xl flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+        <div class="flex items-center space-x-2">
+          <span class="text-lg">📦</span>
+          <h3 class="font-bold text-base text-slate-100">导出月度 Markdown 归档</h3>
+        </div>
+        <button id="modal-export-close" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <div class="mb-3 flex items-center justify-between text-xs">
+        <div class="flex items-center space-x-2">
+          <span class="text-slate-400">选择目标月份：</span>
+          <input type="month" id="export-month-select" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none" />
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="btn-copy-export-md" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 transition">复制文本</button>
+          <button id="btn-save-export-file" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded transition">保存为 .md 文件</button>
+        </div>
+      </div>
+
+      <textarea id="export-preview-textarea" readonly class="w-full flex-1 bg-slate-950 border border-slate-800 rounded p-3 font-mono text-xs text-slate-300 resize-none min-h-[340px] focus:outline-none"></textarea>
+      
+      <p id="export-disk-status" class="mt-2 text-xs text-emerald-400 hidden"></p>
+    </div>
+  </div>
+
+  <!-- 4. Weekly Review Modal -->
+  <div id="modal-weekly-review" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="fofo-card max-w-xl w-full p-6 bg-slate-900 border border-slate-700 shadow-2xl flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+        <div class="flex items-center space-x-2">
+          <span class="text-lg">📋</span>
+          <h3 class="font-bold text-base text-slate-100">本周工作复盘与回顾</h3>
+        </div>
+        <button id="modal-weekly-close" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <div class="space-y-4 overflow-y-auto flex-1 text-xs pr-1">
+        <!-- Week Stats -->
+        <div class="p-3 bg-slate-800/60 rounded-lg border border-slate-700/60 flex items-center justify-around text-center">
+          <div>
+            <div class="text-lg font-bold text-emerald-400" id="weekly-stat-done-tasks">0</div>
+            <div class="text-[11px] text-slate-400">本周完成任务</div>
+          </div>
+          <div>
+            <div class="text-lg font-bold text-amber-400" id="weekly-stat-pomos">0</div>
+            <div class="text-[11px] text-slate-400">专注番茄钟</div>
+          </div>
+          <div>
+            <div class="text-lg font-bold text-cyan-400" id="weekly-stat-focus-time">0h</div>
+            <div class="text-[11px] text-slate-400">专注总时长</div>
+          </div>
+        </div>
+
+        <!-- Weekly Summary Input -->
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">本周复盘总结与反思：</label>
+          <textarea id="weekly-summary-input" placeholder="• 本周核心产出：&#10;• 遇到的卡点与改进方式：&#10;• 下周关键主线：" class="w-full bg-slate-950 border border-slate-800 rounded p-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 h-40 resize-none font-mono"></textarea>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end space-x-2">
+        <button id="btn-save-weekly-summary" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded transition">保存复盘</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Data Settings Modal -->
+  <div id="modal-data-settings" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="fofo-card max-w-md w-full p-6 bg-slate-900 border border-slate-700 shadow-2xl flex flex-col">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+        <h3 class="font-bold text-sm text-slate-100">⚙️ 数据备份与管理</h3>
+        <button id="modal-data-close" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300">
+        <p>FoFo 采用<strong>本地持久化机制</strong>，所有目标、任务、番茄钟、待阅、日志完全保存在你的电脑本地。</p>
+        
+        <div class="p-3 bg-slate-800/60 rounded border border-slate-700 space-y-2">
+          <div class="font-semibold text-slate-200">一键备份与恢复</div>
+          <div class="flex space-x-2">
+            <button id="btn-backup-json" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded font-medium transition">备份数据 (JSON)</button>
+            <label class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded font-medium text-center cursor-pointer transition">
+              导入备份
+              <input type="file" id="input-restore-json" accept=".json" class="hidden" />
+            </label>
+          </div>
+        </div>
+
+        <div class="pt-2 text-slate-500 text-[11px]">
+          后端状态：<span id="backend-status-text" class="text-slate-400">检测中...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Component Scripts -->
+  <script src="js/components/pomodoro.js"></script>
+  <script src="js/components/heatmap.js"></script>
+  <script src="js/components/calendar.js"></script>
+  <script src="js/components/export.js"></script>
+  <!-- Main Application Script -->
+  <script src="js/app.js"></script>
+</body>
+</html>

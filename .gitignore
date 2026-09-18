@@ -1,0 +1,23 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# User-specific runtime workspace data (Keep repository pure template for other users)
+data/*.json
+!data/.gitkeep
+documents/*.json
+!documents/.gitkeep
+exports/*.md
+!exports/.gitkeep
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
