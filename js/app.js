@@ -521,6 +521,7 @@
     // Active day title
     const activeTitle = document.getElementById('active-day-title');
     const activeBadge = document.getElementById('active-day-badge');
+    const holidayBadge = document.getElementById('active-day-holiday-badge');
     const isToday = state.currentDate === formatDateStr(today);
     
     if (activeTitle) activeTitle.textContent = `${state.currentDate} ${weekday}`;
@@ -529,6 +530,25 @@
       activeBadge.className = isToday 
         ? 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/60'
         : 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-800 text-slate-300 border border-slate-700';
+    }
+
+    if (holidayBadge) {
+      const holiday = window.CalendarWidget ? window.CalendarWidget.getHolidayInfo(state.currentDate) : null;
+      if (holiday && holiday.isHoliday) {
+        holidayBadge.classList.remove('hidden');
+        holidayBadge.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-950 text-rose-300 border border-rose-800/60 flex items-center space-x-1';
+        holidayBadge.innerHTML = `<span>🇨🇳</span><span>${holiday.name} · 休</span>`;
+      } else if (holiday && holiday.isWorkday) {
+        holidayBadge.classList.remove('hidden');
+        holidayBadge.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-950 text-amber-300 border border-amber-800/60 flex items-center space-x-1';
+        holidayBadge.innerHTML = `<span>💼</span><span>${holiday.name} · 班</span>`;
+      } else if (holiday && holiday.name) {
+        holidayBadge.classList.remove('hidden');
+        holidayBadge.className = 'px-2 py-0.5 text-[10px] font-semibold rounded-full bg-slate-800 text-emerald-300 border border-slate-700';
+        holidayBadge.textContent = holiday.name;
+      } else {
+        holidayBadge.classList.add('hidden');
+      }
     }
 
     const weekLabel = document.getElementById('current-week-label');
@@ -985,7 +1005,7 @@
     });
   }
 
-  // Milestones
+  // Milestones & Selected Date Details
   function renderMilestones() {
     ensureCurrentDayExists();
     const day = state.dailyData[state.currentDate];
@@ -998,14 +1018,51 @@
     if (!list) return;
     list.innerHTML = '';
 
-    if (milestones.length === 0) {
+    // Check Chinese statutory holiday or festival
+    const holiday = window.CalendarWidget ? window.CalendarWidget.getHolidayInfo(state.currentDate) : null;
+    if (holiday && (holiday.name || holiday.isHoliday || holiday.isWorkday)) {
+      const hCard = document.createElement('div');
+      if (holiday.isHoliday) {
+        hCard.className = 'mb-1.5 px-2.5 py-1.5 bg-rose-950/60 border border-rose-800/60 rounded flex items-center justify-between text-xs text-rose-300';
+        hCard.innerHTML = `
+          <div class="flex items-center space-x-1.5 font-medium truncate">
+            <span>🇨🇳</span>
+            <span>法定节假日 · <strong>${holiday.name}</strong></span>
+            ${holiday.lunarStr ? `<span class="text-[10px] text-rose-400/80 font-normal">(${holiday.lunarStr})</span>` : ''}
+          </div>
+          <span class="px-1.5 py-0.2 bg-rose-600 text-white font-bold text-[10px] rounded flex-shrink-0 shadow-xs">休假</span>
+        `;
+      } else if (holiday.isWorkday) {
+        hCard.className = 'mb-1.5 px-2.5 py-1.5 bg-amber-950/60 border border-amber-800/60 rounded flex items-center justify-between text-xs text-amber-300';
+        hCard.innerHTML = `
+          <div class="flex items-center space-x-1.5 font-medium truncate">
+            <span>💼</span>
+            <span>调休补班日 · <strong>${holiday.name}</strong></span>
+            ${holiday.lunarStr ? `<span class="text-[10px] text-amber-400/80 font-normal">(${holiday.lunarStr})</span>` : ''}
+          </div>
+          <span class="px-1.5 py-0.2 bg-amber-500 text-slate-950 font-black text-[10px] rounded flex-shrink-0">补班</span>
+        `;
+      } else if (holiday.name) {
+        hCard.className = 'mb-1.5 px-2.5 py-1 bg-slate-800/80 border border-slate-700/80 rounded flex items-center justify-between text-xs text-emerald-300';
+        hCard.innerHTML = `
+          <div class="flex items-center space-x-1.5 font-medium truncate">
+            <span>🎉</span>
+            <span>节日 · <strong>${holiday.name}</strong></span>
+            ${holiday.lunarStr ? `<span class="text-[10px] text-slate-400 font-normal">(${holiday.lunarStr})</span>` : ''}
+          </div>
+        `;
+      }
+      list.appendChild(hCard);
+    }
+
+    if (milestones.length === 0 && (!holiday || (!holiday.name && !holiday.isHoliday && !holiday.isWorkday))) {
       list.innerHTML = `<div class="text-slate-500 text-[11px]">当日无特殊节点标记</div>`;
       return;
     }
 
     milestones.forEach(m => {
       const item = document.createElement('div');
-      item.className = 'flex items-center justify-between text-slate-300 bg-slate-800/80 px-2 py-1 rounded text-[11px]';
+      item.className = 'flex items-center justify-between text-slate-300 bg-slate-800/80 px-2 py-1 rounded text-[11px] mb-1';
       item.innerHTML = `
         <span class="truncate flex-1 mr-1">🚩 ${m.text}</span>
         <button class="btn-del text-slate-500 hover:text-red-400">✕</button>

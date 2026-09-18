@@ -1,7 +1,7 @@
 # 🚀 FoFo 个人工作台 (FoFo Personal WorkStation)
 
 <p align="left">
-  <img src="https://img.shields.io/badge/version-1.0.0-emerald?style=flat-square" alt="Version 1.0.0" />
+  <img src="https://img.shields.io/badge/version-1.1.0-emerald?style=flat-square" alt="Version 1.1.0" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=flat-square" alt="Cross Platform" />
   <img src="https://img.shields.io/badge/license-MIT-purple?style=flat-square" alt="License MIT" />
   <img src="https://img.shields.io/badge/storage-100%25%20Local-success?style=flat-square" alt="100% Local" />
@@ -25,6 +25,19 @@
 > - **修订号 (Patch)**：针对已有功能的缺陷修复 (Bugfix)、性能优化或细节微调；
 > 
 > **后续每次发布新版本，必须在此区域以倒序方式（最新版本置顶）追加记录，清晰列出新版本号、发布日期及功能更新明细。**
+
+---
+
+### [v1.1.0] - 2026-09-18 (中国大陆法定节假日与农历历表支持)
+
+🌟 **核心特性升级**：
+- **中国大陆法定节假日全量收录**：精准内置 2024 ~ 2027 年国务院最新法定年节放假及调休安排（涵盖元旦、春节 8 天除夕长假、清明、五一劳动节、端午、中秋、国庆黄金周）；
+- **“休” / “班” 角标直观指示**：
+  - 法定放假日期右上角标注鲜红底白字 **`休`** 徽标；
+  - 调休补班工作日右上角标注琥珀底黑字 **`班`** 徽标；
+- **传统节日与公历纪念日标注**：日期下方常驻显示节日缩略名（如“中秋”、“国庆”、“除夕”、“元旦”、“端午”、“重阳”等），悬浮查看包含农历月日、放假性质的完整浮层提示；
+- **高精度离线农历算法**：内置中国农历查表推导算法，日常呈现农历月日（如“八月十五”、“初八”、“廿三”）；
+- **日程卡片与标题栏联动**：点击任意节假日或调休日期时，左侧日程节点栏与中央标题栏即时展示专属法定假日/补班状态横幅。
 
 ---
 
