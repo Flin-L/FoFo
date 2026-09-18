@@ -165,6 +165,9 @@
       bgBlur: 6,
       userAvatar: '',
       customBgImage: '',
+      appTitle: 'FoFo 工作台',
+      heroBannerImage: '',
+      heroBannerSlogan: '保持热爱，奔赴山海！',
       monthlyGoals: [
         { id: 'mg-1', month: monthStr, text: '完成 FoFo 工作台优化与升级', progress: 100, done: true },
         { id: 'mg-2', month: monthStr, text: '建立每日待阅与健康饮水习惯 (≥1.5L)', progress: 60, done: false },
@@ -240,8 +243,11 @@
         canvas.width = w;
         canvas.height = h;
         const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const mimeType = (file && file.type === 'image/png') ? 'image/png' : 'image/jpeg';
+        const dataUrl = canvas.toDataURL(mimeType, quality || 0.9);
         callback(dataUrl);
       };
       img.onerror = () => callback(e.target.result);
@@ -350,6 +356,48 @@
     }
   }
 
+  function applyHeroBanner() {
+    const bannerImg = document.getElementById('hero-banner-img');
+    const sloganText = document.getElementById('hero-slogan-text');
+    const modalPreviewImg = document.getElementById('modal-banner-preview-img');
+    const modalPreviewText = document.getElementById('modal-banner-preview-text');
+    const btnRemove = document.getElementById('btn-remove-banner-img');
+
+    const slogan = (state.heroBannerSlogan && state.heroBannerSlogan.trim())
+      ? state.heroBannerSlogan
+      : '保持热爱，奔赴山海！';
+    const bgUrl = state.heroBannerImage || '';
+    const bgImage = bgUrl ? `url("${bgUrl}")` : 'none';
+
+    if (sloganText) sloganText.textContent = slogan;
+    if (modalPreviewText) modalPreviewText.textContent = slogan;
+
+    if (bannerImg) {
+      bannerImg.style.backgroundImage = bgImage;
+    }
+    if (modalPreviewImg) {
+      modalPreviewImg.style.backgroundImage = bgImage;
+    }
+
+    if (btnRemove) {
+      if (state.heroBannerImage) {
+        btnRemove.classList.remove('hidden');
+      } else {
+        btnRemove.classList.add('hidden');
+      }
+    }
+  }
+
+  function applyAppTitle() {
+    const title = (state.appTitle && state.appTitle.trim()) ? state.appTitle.trim() : 'FoFo 工作台';
+    const titleEl = document.getElementById('app-title-text');
+    if (titleEl) {
+      titleEl.textContent = title;
+    }
+    // Synchronize to browser webpage title tab
+    document.title = `${title} - Personal WorkStation`;
+  }
+
   // --- Data Persistence Layer ---
   async function initData() {
     try {
@@ -393,6 +441,8 @@
     saveState(true);
     applyTheme();
     applyAvatar();
+    applyAppTitle();
+    applyHeroBanner();
     updateBackendStatus();
   }
 
@@ -1023,14 +1073,14 @@
     if (holiday && (holiday.name || holiday.isHoliday || holiday.isWorkday)) {
       const hCard = document.createElement('div');
       if (holiday.isHoliday) {
-        hCard.className = 'mb-1.5 px-2.5 py-1.5 bg-rose-950/60 border border-rose-800/60 rounded flex items-center justify-between text-xs text-rose-300';
+        hCard.className = 'mb-1.5 px-2.5 py-1.5 bg-emerald-950/60 border border-emerald-800/60 rounded flex items-center justify-between text-xs text-emerald-300';
         hCard.innerHTML = `
           <div class="flex items-center space-x-1.5 font-medium truncate">
             <span>🇨🇳</span>
             <span>法定节假日 · <strong>${holiday.name}</strong></span>
-            ${holiday.lunarStr ? `<span class="text-[10px] text-rose-400/80 font-normal">(${holiday.lunarStr})</span>` : ''}
+            ${holiday.lunarStr ? `<span class="text-[10px] text-emerald-400/80 font-normal">(${holiday.lunarStr})</span>` : ''}
           </div>
-          <span class="px-1.5 py-0.2 bg-rose-600 text-white font-bold text-[10px] rounded flex-shrink-0 shadow-xs">休假</span>
+          <span class="px-1.5 py-0.2 bg-emerald-600 text-white font-bold text-[10px] rounded flex-shrink-0 shadow-xs">休假</span>
         `;
       } else if (holiday.isWorkday) {
         hCard.className = 'mb-1.5 px-2.5 py-1.5 bg-amber-950/60 border border-amber-800/60 rounded flex items-center justify-between text-xs text-amber-300';
@@ -1062,11 +1112,41 @@
 
     milestones.forEach(m => {
       const item = document.createElement('div');
-      item.className = 'flex items-center justify-between text-slate-300 bg-slate-800/80 px-2 py-1 rounded text-[11px] mb-1';
-      item.innerHTML = `
-        <span class="truncate flex-1 mr-1">🚩 ${m.text}</span>
-        <button class="btn-del text-slate-500 hover:text-red-400">✕</button>
-      `;
+      const isVacation = m.type === 'vacation' || (m.text && (m.text.includes('休假') || m.text.includes('请假') || m.text.includes('年假')));
+      const isOvertime = m.type === 'overtime' || (m.text && m.text.includes('加班'));
+
+      if (isVacation) {
+        item.className = 'flex items-center justify-between bg-emerald-950/50 border border-emerald-800/50 text-emerald-200 px-2.5 py-1.5 rounded text-[11px] mb-1.5';
+        item.innerHTML = `
+          <div class="flex items-center space-x-1.5 truncate flex-1 mr-1">
+            <span>🌴</span>
+            <span class="font-medium">${m.text}</span>
+          </div>
+          <div class="flex items-center space-x-1.5 flex-shrink-0">
+            <span class="px-1.5 py-0.2 bg-emerald-600 text-white font-bold text-[10px] rounded shadow-xs">休假</span>
+            <button class="btn-del text-emerald-400/60 hover:text-red-400">✕</button>
+          </div>
+        `;
+      } else if (isOvertime) {
+        item.className = 'flex items-center justify-between bg-rose-950/50 border border-rose-800/50 text-rose-200 px-2.5 py-1.5 rounded text-[11px] mb-1.5';
+        item.innerHTML = `
+          <div class="flex items-center space-x-1.5 truncate flex-1 mr-1">
+            <span>💼</span>
+            <span class="font-medium">${m.text}</span>
+          </div>
+          <div class="flex items-center space-x-1.5 flex-shrink-0">
+            <span class="px-1.5 py-0.2 bg-rose-600 text-white font-bold text-[10px] rounded shadow-xs">加班</span>
+            <button class="btn-del text-rose-400/60 hover:text-red-400">✕</button>
+          </div>
+        `;
+      } else {
+        item.className = 'flex items-center justify-between text-slate-300 bg-slate-800/80 border border-slate-700/60 px-2.5 py-1 rounded text-[11px] mb-1';
+        item.innerHTML = `
+          <span class="truncate flex-1 mr-1">🚩 ${m.text}</span>
+          <button class="btn-del text-slate-500 hover:text-red-400">✕</button>
+        `;
+      }
+
       item.querySelector('.btn-del').onclick = () => {
         day.milestones = day.milestones.filter(x => x.id !== m.id);
         saveState();
@@ -1515,9 +1595,22 @@
 
       milestones.forEach(m => {
         const item = document.createElement('div');
+        const isVacation = m.type === 'vacation' || (m.text && (m.text.includes('休假') || m.text.includes('请假') || m.text.includes('年假')));
+        const isOvertime = m.type === 'overtime' || (m.text && m.text.includes('加班'));
+
+        let badgeHtml = '<span class="text-amber-400">🚩</span>';
+        if (isVacation) {
+          badgeHtml = '<span class="px-1.5 py-0.2 bg-emerald-600 text-white font-bold text-[10px] rounded">休假</span>';
+        } else if (isOvertime) {
+          badgeHtml = '<span class="px-1.5 py-0.2 bg-rose-600 text-white font-bold text-[10px] rounded">加班</span>';
+        }
+
         item.className = 'flex items-center justify-between text-slate-300 bg-slate-800/80 px-2 py-1 rounded text-xs';
         item.innerHTML = `
-          <span class="truncate flex-1 mr-1">🚩 ${m.text}</span>
+          <div class="flex items-center space-x-1.5 truncate flex-1 mr-1">
+            ${badgeHtml}
+            <span class="truncate">${m.text}</span>
+          </div>
           <button class="btn-del text-slate-500 hover:text-red-400 text-xs">✕</button>
         `;
         item.querySelector('.btn-del').onclick = () => {
@@ -1531,9 +1624,33 @@
       });
     };
 
+    // Milestone type state
+    let currentMilestoneType = 'event';
+    const milestoneTypeBtns = document.querySelectorAll('.milestone-type-btn');
+    milestoneTypeBtns.forEach(btn => {
+      btn.onclick = () => {
+        currentMilestoneType = btn.dataset.type;
+        milestoneTypeBtns.forEach(b => {
+          b.classList.remove('active', 'border-amber-500/60', 'bg-amber-950/40', 'text-amber-300', 'border-emerald-500/60', 'bg-emerald-950/40', 'text-emerald-300', 'border-rose-500/60', 'bg-rose-950/40', 'text-rose-300');
+          b.classList.add('border-slate-700', 'bg-slate-800/80', 'text-slate-400');
+        });
+        btn.classList.remove('border-slate-700', 'bg-slate-800/80', 'text-slate-400');
+        if (currentMilestoneType === 'vacation') {
+          btn.classList.add('active', 'border-emerald-500/60', 'bg-emerald-950/40', 'text-emerald-300');
+        } else if (currentMilestoneType === 'overtime') {
+          btn.classList.add('active', 'border-rose-500/60', 'bg-rose-950/40', 'text-rose-300');
+        } else {
+          btn.classList.add('active', 'border-amber-500/60', 'bg-amber-950/40', 'text-amber-300');
+        }
+      };
+    });
+
     document.getElementById('btn-set-milestone').onclick = () => {
       refreshModalMilestones();
       inputMilestone.value = '';
+      currentMilestoneType = 'event';
+      const eventBtn = document.getElementById('milestone-type-event');
+      if (eventBtn) eventBtn.click();
       modalMilestone.classList.remove('hidden');
       inputMilestone.focus();
     };
@@ -1548,15 +1665,132 @@
       ensureCurrentDayExists();
       state.dailyData[state.currentDate].milestones.push({
         id: 'm-' + Date.now(),
-        text: val
+        text: val,
+        type: currentMilestoneType
       });
       saveState();
       inputMilestone.value = '';
       refreshModalMilestones();
       renderMilestones();
       calendar.render();
-      showToast(`已标记新日程: ${val}`, 'info');
+      const typeLabel = currentMilestoneType === 'vacation' ? '休假' : (currentMilestoneType === 'overtime' ? '加班' : '日程');
+      showToast(`已添加${typeLabel}: ${val}`, 'info');
     };
+
+    // Consolidated header utility menu
+    const headerActionsBtn = document.getElementById('btn-header-actions');
+    const headerActionsMenu = document.getElementById('header-actions-menu');
+    if (headerActionsBtn && headerActionsMenu) {
+      const closeHeaderActions = () => {
+        headerActionsMenu.classList.add('hidden');
+        headerActionsBtn.setAttribute('aria-expanded', 'false');
+      };
+      headerActionsBtn.onclick = (event) => {
+        event.stopPropagation();
+        const isHidden = headerActionsMenu.classList.toggle('hidden');
+        headerActionsBtn.setAttribute('aria-expanded', String(!isHidden));
+      };
+      headerActionsMenu.querySelectorAll('button').forEach((button) => {
+        button.addEventListener('click', closeHeaderActions);
+      });
+      document.addEventListener('click', (event) => {
+        if (!headerActionsMenu.contains(event.target) && event.target !== headerActionsBtn) {
+          closeHeaderActions();
+        }
+      });
+    }
+
+    // Hero Banner Showcase & Mood Slogan Modal Binding
+    const modalBanner = document.getElementById('modal-banner-settings');
+    const heroCard = document.getElementById('hero-banner-card');
+    const inputBannerSlogan = document.getElementById('input-banner-slogan');
+    const bannerFileInput = document.getElementById('banner-file-input');
+
+    if (heroCard) {
+      heroCard.onclick = () => {
+        if (inputBannerSlogan) {
+          inputBannerSlogan.value = state.heroBannerSlogan || '保持热爱，奔赴山海！';
+        }
+        applyHeroBanner();
+        if (modalBanner) modalBanner.classList.remove('hidden');
+      };
+    }
+
+    const modalBannerClose = document.getElementById('modal-banner-close');
+    if (modalBannerClose) {
+      modalBannerClose.onclick = () => {
+        if (modalBanner) modalBanner.classList.add('hidden');
+      };
+    }
+
+    const btnUploadBannerImg = document.getElementById('btn-upload-banner-img');
+    if (btnUploadBannerImg && bannerFileInput) {
+      btnUploadBannerImg.onclick = () => {
+        bannerFileInput.click();
+      };
+    }
+
+    if (bannerFileInput) {
+      bannerFileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        compressImageFile(file, 1920, 1080, 0.92, (compressedDataUrl) => {
+          state.heroBannerImage = compressedDataUrl;
+          applyHeroBanner();
+          saveState();
+          showToast('已更新动态展板背景图！', 'theme');
+        });
+      };
+    }
+
+    const btnRemoveBannerImg = document.getElementById('btn-remove-banner-img');
+    if (btnRemoveBannerImg) {
+      btnRemoveBannerImg.onclick = () => {
+        state.heroBannerImage = '';
+        if (bannerFileInput) bannerFileInput.value = '';
+        applyHeroBanner();
+        saveState();
+        showToast('已恢复展板默认背景', 'info');
+      };
+    }
+
+    if (inputBannerSlogan) {
+      inputBannerSlogan.oninput = (e) => {
+        const previewText = document.getElementById('modal-banner-preview-text');
+        if (previewText) previewText.textContent = e.target.value || '保持热爱，奔赴山海！';
+      };
+    }
+
+    const btnSaveBanner = document.getElementById('btn-save-banner');
+    if (btnSaveBanner) {
+      btnSaveBanner.onclick = () => {
+        if (inputBannerSlogan) {
+          state.heroBannerSlogan = inputBannerSlogan.value.trim() || '保持热爱，奔赴山海！';
+        }
+        applyHeroBanner();
+        saveState();
+        if (modalBanner) modalBanner.classList.add('hidden');
+        showToast('动态心情标语与展板已更新！', 'success');
+      };
+    }
+
+    // Editable Workspace Name (Syncs with browser document title)
+    const handleEditAppTitle = () => {
+      const current = state.appTitle || 'FoFo 工作台';
+      const newTitle = prompt('请输入新的工作台名称（将同步至网页标题）：', current);
+      if (newTitle !== null) {
+        const trimmed = newTitle.trim();
+        state.appTitle = trimmed || 'FoFo 工作台';
+        applyAppTitle();
+        saveState();
+        showToast(`工作台名称已更新为: ${state.appTitle}`, 'success');
+      }
+    };
+
+    const titleEl = document.getElementById('app-title-text');
+    if (titleEl) titleEl.onclick = handleEditAppTitle;
+    const btnEditTitle = document.getElementById('btn-edit-app-title');
+    if (btnEditTitle) btnEditTitle.onclick = handleEditAppTitle;
 
     // Theme & Background Modal
     const modalTheme = document.getElementById('modal-theme-settings');

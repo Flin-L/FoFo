@@ -82,8 +82,8 @@ body.theme-space-gray {
 /* User Avatar Round Container (Prominent 52px) */
 .user-avatar-container {
   position: relative;
-  width: 52px;
-  height: 52px;
+  width: 60px;
+  height: 60px;
   border-radius: 9999px;
   overflow: hidden;
   cursor: pointer;
@@ -153,6 +153,13 @@ body.theme-space-gray {
   grid-auto-flow: column;
   grid-auto-columns: 11px;
   gap: 3px;
+}
+
+/* Keep the heatmap compact in the shortened top bar without changing its
+   hit targets or contribution data. */
+#heatmap-container {
+  transform: scale(0.90);
+  transform-origin: left center;
 }
 
 .heatmap-cell {
@@ -381,4 +388,60 @@ body.theme-space-gray {
 .theme-swatch.active {
   border-color: #38bdf8;
   box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+/* ================= Dynamic Hero Banner Showcase Board ================= */
+.hero-banner-showcase {
+  background-color: #0f172a;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.6);
+  isolation: isolate;
+}
+
+.hero-banner-bg {
+  width: 100%;
+  height: 100%;
+  /* Prioritize seeing the complete uploaded artwork. This board is decorative
+     and intentionally permits non-uniform scaling instead of cropping the
+     image with `cover`. */
+  background-size: 100% 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  isolation: isolate;
+  transition: transform 0.4s ease;
+}
+
+.hero-banner-showcase:hover .hero-banner-bg {
+  /* Keep the background plate stable while editing; no hover zoom is needed. */
+  transform: none;
+}
+
+/* Subtle readability overlay only. The board now sits under the system header,
+   so it no longer needs a left-edge fade transition. */
+.hero-banner-mask {
+  background:
+    linear-gradient(rgba(11, 15, 25, 0.28), rgba(11, 15, 25, 0.28)),
+    linear-gradient(to top, rgba(11, 15, 25, 0.64) 0%, rgba(11, 15, 25, 0.2) 48%, rgba(11, 15, 25, 0.12) 100%);
+}
+
+/* Schedule Milestone Tags: Green for Vacation, Red for Overtime */
+.milestone-tag-vacation {
+  background-color: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #34d399;
+}
+
+.milestone-tag-overtime {
+  background-color: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: #f87171;
+}
+
+.milestone-badge-vacation {
+  background-color: #059669;
+  color: #ffffff;
+}
+
+.milestone-badge-overtime {
+  background-color: #e11d48;
+  color: #ffffff;
 }

@@ -12,10 +12,6 @@
 
 ---
 
-![FoFo 个人工作台产品渲染效果图](fofo_product_showcase.jpg)
-
----
-
 ## 🏷️ 版本规范与更新日志 (Changelog)
 
 > ### 📌 版本更新规范（后续迭代规则）
@@ -25,6 +21,27 @@
 > - **修订号 (Patch)**：针对已有功能的缺陷修复 (Bugfix)、性能优化或细节微调；
 > 
 > **后续每次发布新版本，必须在此区域以倒序方式（最新版本置顶）追加记录，清晰列出新版本号、发布日期及功能更新明细。**
+
+---
+
+### [v1.2.0] - 2026-09-18
+
+#### 🌟 新增功能
+
+- **动态个性展板**：支持上传本地个性背景图片、设置动态心情文案，并在顶部栏中预览和管理；
+- **日程类型扩展**：新增普通事项、休假、加班三种日程类型，日历支持区分显示休假、加班和调休补班；
+- **工作台个性化**：支持自定义工作台名称、同步更新浏览器页面标题，并新增自定义网页图标。
+
+#### 🎨 体验优化
+
+- 优化了顶部栏整体 UI 效果；
+- 优化了动态个性展板的显示效果；
+- 优化了头像、工作台信息、日期信息和动态文案的层次关系；
+- 优化了专注区域、饮水记录和热力图的布局效果；
+- 优化了热力图尺寸、位置及标题显示效果；
+- 将顶部栏多个功能入口整合为统一的功能菜单；
+- 精简了动态个性展板设置弹窗中的提示文案；
+- 精简了项目开发文档和交接文档。
 
 ---
 
@@ -84,16 +101,11 @@
 
 ## 📚 开发者手册与交接文档索引
 
-FoFo 的全流程设计理念、数据字典与交互细节已全面归档于 **`docs/`** 目录：
+FoFo 当前仅保留一份精简的 AI 接手文档：
 
 | 文档名称 | 路径 | 内容简介 |
 | :--- | :--- | :--- |
-| **📖 AI 开发者接手全景指南** | [docs/AI_HANDOVER_AND_DEV_MANUAL.md](docs/AI_HANDOVER_AND_DEV_MANUAL.md) | **核心指南**：产品哲学、技术架构、全量数据字典、API 规范与交接手册 |
-| **🌐 AI 结对编程全记录 (HTML)** | [docs/AI_COLLABORATION_LOG.html](docs/AI_COLLABORATION_LOG.html) | **单文件独立自包含**：完整记录 17 轮人机结对对话、思考、工具调用与产品图，支持浏览器直接阅读与转 PDF |
-| **📝 AI 结对编程全记录 (Markdown)** | [docs/AI_COLLABORATION_LOG.md](docs/AI_COLLABORATION_LOG.md) | Markdown 版全流程对话纪要，包含清晰目录大纲与交互明细 |
-| **🛠️ MVP 初始实施方案** | [docs/implementation_plan_v1.0.md](docs/implementation_plan_v1.0.md) | MVP 阶段模块规划与技术选型方案 |
-| **⚡ v1.1 优化实施方案** | [docs/implementation_plan_v1.1.md](docs/implementation_plan_v1.1.md) | 基于用户首份反馈建议重构落地方案 |
-| **✅ v1.1 功能验收与总结** | [docs/walkthrough_v1.1.md](docs/walkthrough_v1.1.md) | 待阅、饮水、日程多事件与排版修复验收总结 |
+| **📖 AI 接手文档** | [docs/AI_HANDOVER_AND_DEV_MANUAL.md](docs/AI_HANDOVER_AND_DEV_MANUAL.md) | 当前版本状态、主要文件和后续协作规则 |
 
 ---
 
@@ -104,7 +116,6 @@ FoFo/
 ├── index.html            # 主工作台页面骨架 (v1.0.0)
 ├── start.bat             # Windows 一键启动脚本
 ├── server.py             # 极轻量本地服务 (提供原生文件打开与本地磁盘读写)
-├── fofo_product_showcase.jpg # 产品高清渲染展示大图
 ├── README.md             # 项目说明与版本更新日志 (Changelog)
 ├── .gitignore            # Git 忽略配置文件
 │
@@ -122,7 +133,7 @@ FoFo/
 ├── documents/            # 每日待阅文档与索引归档目录
 ├── exports/              # 生成的月度 Markdown 归档文件
 ├── user_comment/         # 用户体验反馈与建议归档
-└── docs/                 # 技术设计方案、AI 开发者手册与结对会话记录
+└── docs/                 # 精简的 AI 接手文档
 ```
 
 ---

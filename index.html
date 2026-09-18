@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FoFo 个人工作台 - Personal WorkStation</title>
+  <link rel="icon" type="image/png" href="sparkle.png">
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -41,43 +42,55 @@
   <!-- Hidden File Inputs -->
   <input type="file" id="avatar-file-input" accept="image/*" class="hidden" />
   <input type="file" id="bg-file-input" accept="image/*" class="hidden" />
+  <input type="file" id="banner-file-input" accept="image/*" class="hidden" />
 
   <!-- ================= TOP STATUS BAR & POMODORO ================= -->
   <header class="border-b border-slate-800/80 bg-slate-900/85 backdrop-blur-md sticky top-0 z-40 px-5 py-2.5">
-    <div class="max-w-[1720px] mx-auto flex items-center justify-between flex-nowrap gap-4 w-full">
+    <div class="max-w-[1720px] mx-auto relative flex items-center justify-start flex-nowrap gap-4 w-full">
       
-      <!-- Left: User Avatar (Enlarged 52px) & App Title / Date (Larger) -->
-      <div class="flex items-center space-x-3.5 flex-shrink-0">
-        <!-- Circular User Avatar -->
-        <div class="user-avatar-container" id="btn-trigger-avatar" title="点击上传/更换个人头像">
-          <img id="user-avatar-img" class="w-full h-full object-cover hidden" alt="用户头像" />
-          <div id="default-avatar-placeholder" class="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-2xl">
-            F
+      <!-- Left: Column containing (Row 1: User Avatar & App Title & Date; Row 2: Action Buttons) -->
+      <div class="relative flex flex-[0_1_620px] max-w-[620px] min-w-0 min-h-[78px]">
+        <!-- Row 1: Avatar, Title & Date -->
+        <div class="relative z-10 flex items-center space-x-3.5 px-1 py-1 -translate-y-[10px]">
+          <!-- Circular User Avatar -->
+          <div class="user-avatar-container" id="btn-trigger-avatar" title="点击上传/更换个人头像">
+            <img id="user-avatar-img" class="w-full h-full object-cover hidden" alt="用户头像" />
+            <div id="default-avatar-placeholder" class="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-black text-white text-2xl">
+              F
+            </div>
+            <div class="avatar-hover-mask">
+              <span>换头像</span>
+            </div>
           </div>
-          <div class="avatar-hover-mask">
-            <span>换头像</span>
+
+          <!-- Larger Title & Date -->
+          <div class="flex flex-col justify-center">
+            <div class="flex items-center space-x-2 group">
+              <h1 id="app-title-text" class="font-black text-xl md:text-2xl leading-tight text-slate-100 tracking-wide cursor-pointer hover:text-emerald-400 transition" title="点击修改工作台名称">FoFo 工作台</h1>
+              <button id="btn-edit-app-title" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-emerald-400 text-xs transition" title="修改工作台名称">✎</button>
+              <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/60 font-semibold font-mono">v1.1.0</span>
+            </div>
+            <span class="text-xs md:text-sm text-slate-300 font-medium mt-0.5" id="header-date-sub">加载中...</span>
           </div>
+
         </div>
 
-        <!-- Larger Title & Date -->
-        <div class="flex flex-col justify-center">
-          <div class="flex items-center space-x-2">
-            <h1 class="font-black text-lg md:text-xl leading-tight text-slate-100 tracking-wide">FoFo 工作台</h1>
-            <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/60 font-semibold font-mono">v1.1.0</span>
-          </div>
-          <span class="text-xs md:text-sm text-slate-300 font-medium mt-0.5" id="header-date-sub">加载中...</span>
-        </div>
-
-        <div class="hidden 2xl:flex items-center pl-4 border-l border-slate-800 text-xs text-slate-400 space-x-2">
-          <span id="month-progress-text">月度进度: 0%</span>
-          <div class="w-20 bg-slate-800 rounded-full h-1.5 overflow-hidden">
-            <div id="month-progress-bar" class="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+        <!-- Personal dynamic board: a background layer behind the system identity -->
+        <div id="hero-banner-card" class="hero-banner-showcase absolute left-[-23px] right-[233px] top-[-23px] bottom-[-23px] z-0 overflow-hidden rounded-lg shadow-2xl group cursor-pointer transition-all duration-300 border border-slate-800/60" title="点击更换个性背景图或编辑心情标语">
+          <div id="hero-banner-img" class="hero-banner-bg absolute inset-0"></div>
+          <div class="hero-banner-mask absolute inset-0 pointer-events-none"></div>
+          <div class="absolute left-[68px] top-[89px] z-10 flex items-center justify-start pointer-events-none">
+            <div class="flex items-center space-x-1.5 min-w-0 max-w-[320px]">
+              <span class="text-xs flex-shrink-0 filter drop-shadow">✨</span>
+              <p id="hero-slogan-text" class="text-xs font-bold text-white truncate tracking-wide drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]">保持热爱，奔赴山海！</p>
+            </div>
+            <span class="text-[10px] opacity-0 group-hover:opacity-100 text-emerald-300 font-medium transition flex-shrink-0 bg-slate-950/80 px-1.5 py-0.5 rounded drop-shadow border border-slate-700/60 mr-2">编辑</span>
           </div>
         </div>
       </div>
 
       <!-- Center: Stacked Pomodoro + Water (Narrow width, NO horizontal squeezing) -->
-      <div class="fofo-card px-3.5 py-1.5 flex flex-col border-emerald-900/40 bg-slate-900/80 shadow-md flex-shrink-0">
+      <div class="fofo-card px-3.5 py-1.5 flex flex-col border-emerald-900/40 bg-slate-900/80 shadow-md flex-shrink-0 -translate-x-[220px] scale-[1.15] origin-left">
         <!-- Upper row: Pomodoro -->
         <div class="flex items-center space-x-3">
           <!-- Modes -->
@@ -132,36 +145,40 @@
         </div>
       </div>
 
-      <!-- Right: Heatmap + Spacious Action Buttons (Full room, zero squeezing) -->
-      <div class="flex items-center space-x-3 flex-shrink-0">
-        <!-- Activity Heatmap Mini View -->
-        <div class="hidden lg:flex flex-col items-end">
-          <div class="flex items-center justify-between w-full text-[10px] text-slate-400 mb-0.5">
+      <!-- Right: Heatmap + Dynamic Banner Display Board (Edge-blurred Hero Board) -->
+      <div class="flex items-center space-x-4 flex-shrink-0 self-stretch -my-2.5 -mr-5 -translate-x-[100px]">
+        <!-- Activity Heatmap Mini View (Unchanged position, never intruded) -->
+          <div class="hidden lg:flex flex-col items-start flex-shrink-0 my-auto -translate-x-[20px] translate-y-[2px]">
+          <div class="flex items-center justify-between w-full text-[10px] text-slate-400 mb-0.5 scale-x-[0.9] origin-left">
             <span>产出热力图</span>
             <span class="text-slate-500">近 18 周</span>
           </div>
           <div id="heatmap-container" class="bg-slate-900/60 p-1 rounded border border-slate-800/80"></div>
         </div>
 
-        <!-- Global Action Buttons (Spacious Full Text) -->
-        <div class="flex items-center space-x-1.5 text-xs">
-          <button id="btn-theme-modal" class="flex items-center space-x-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md border border-slate-700 transition" title="自定义背景与主题配色">
-            <span>🎨</span>
-            <span>配色/背景</span>
+      </div>
+
+      <!-- Consolidated utility menu: bottom-aligned at the far right -->
+      <div class="relative self-end mb-0 mr-0 translate-x-[150px] flex-shrink-0">
+        <button id="btn-header-actions" type="button" class="flex items-center space-x-1 px-2.5 py-1 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 transition text-xs" title="打开工作台功能菜单" aria-expanded="false" aria-haspopup="true">
+          <span>☰</span>
+          <span>功能</span>
+          <span class="text-[9px] opacity-70">▾</span>
+        </button>
+        <div id="header-actions-menu" class="absolute right-0 top-full mt-1 hidden min-w-[150px] p-1.5 rounded-lg border border-slate-700 bg-slate-900/95 backdrop-blur-md shadow-2xl z-50">
+          <button id="btn-theme-modal" class="w-full flex items-center space-x-2 px-2.5 py-1.5 bg-transparent hover:bg-slate-800 text-slate-200 rounded transition text-xs text-left" title="自定义背景与主题配色">
+            <span>🎨</span><span>配色 / 背景</span>
           </button>
-          <button id="btn-export-markdown" class="flex items-center space-x-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md border border-slate-700 transition" title="生成并导出本月 Markdown 完整归档">
-            <span>📦</span>
-            <span>导出月报</span>
+          <button id="btn-export-markdown" class="w-full flex items-center space-x-2 px-2.5 py-1.5 bg-transparent hover:bg-slate-800 text-slate-200 rounded transition text-xs text-left" title="生成并导出本月 Markdown 完整归档">
+            <span>📦</span><span>导出月报</span>
           </button>
-          <button id="btn-weekly-review" class="flex items-center space-x-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md border border-slate-700 transition" title="进行本周工作复盘与规划">
-            <span>📋</span>
-            <span>周复盘</span>
+          <button id="btn-weekly-review" class="w-full flex items-center space-x-2 px-2.5 py-1.5 bg-transparent hover:bg-slate-800 text-slate-200 rounded transition text-xs text-left" title="进行本周工作复盘与规划">
+            <span>📋</span><span>周复盘</span>
           </button>
-          <button id="btn-data-modal" class="px-2 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-md border border-slate-700 transition" title="数据备份与设置">
-            ⚙️
+          <button id="btn-data-modal" class="w-full flex items-center space-x-2 px-2.5 py-1.5 bg-transparent hover:bg-slate-800 text-slate-200 rounded transition text-xs text-left" title="数据备份与设置">
+            <span>⚙️</span><span>数据与设置</span>
           </button>
         </div>
-
       </div>
     </div>
   </header>
@@ -592,13 +609,33 @@
       </div>
 
       <!-- Add New Milestone Input -->
-      <div class="space-y-1.5 pt-2 border-t border-slate-800">
-        <label class="block text-[11px] text-slate-300 font-medium">添加新日程/事件：</label>
-        <input type="text" id="input-milestone-text" placeholder="例如：10:00 方案答辩、提交材料..." class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500" />
+      <div class="space-y-2 pt-2 border-t border-slate-800">
+        <div>
+          <label class="block text-[11px] text-slate-300 font-medium mb-1">选择日程标签类型：</label>
+          <div class="grid grid-cols-3 gap-1.5 text-xs">
+            <button type="button" id="milestone-type-event" class="milestone-type-btn py-1 px-1.5 rounded border border-amber-500/60 bg-amber-950/40 text-amber-300 font-semibold flex items-center justify-center space-x-1 transition active" data-type="event">
+              <span>🚩</span>
+              <span>普通事项</span>
+            </button>
+            <button type="button" id="milestone-type-vacation" class="milestone-type-btn py-1 px-1.5 rounded border border-slate-700 bg-slate-800/80 text-slate-400 hover:text-emerald-300 font-medium flex items-center justify-center space-x-1 transition" data-type="vacation">
+              <span>🌴</span>
+              <span>休假 (绿)</span>
+            </button>
+            <button type="button" id="milestone-type-overtime" class="milestone-type-btn py-1 px-1.5 rounded border border-slate-700 bg-slate-800/80 text-slate-400 hover:text-rose-300 font-medium flex items-center justify-center space-x-1 transition" data-type="overtime">
+              <span>💼</span>
+              <span>加班 (红)</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] text-slate-300 font-medium mb-1">日程内容描述：</label>
+          <input type="text" id="input-milestone-text" placeholder="例如：10:00 方案答辩、全天年假、项目攻坚..." class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500" />
+        </div>
       </div>
 
       <div class="mt-3 flex justify-end space-x-2">
-        <button id="btn-confirm-milestone" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold rounded transition">+ 添加此事件</button>
+        <button id="btn-confirm-milestone" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold rounded transition">+ 添加此日程</button>
       </div>
     </div>
   </div>
@@ -697,6 +734,58 @@
         <div class="pt-2 text-slate-500 text-[11px]">
           后端状态：<span id="backend-status-text" class="text-slate-400">检测中...</span>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Dynamic Banner & Mood Slogan Modal -->
+  <div id="modal-banner-settings" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="fofo-card max-w-md w-full p-5 bg-slate-900 border border-slate-700 shadow-2xl flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <h3 class="font-bold text-sm text-slate-100 flex items-center space-x-1.5">
+          <span>🖼️</span>
+          <span>设置动态个性展板与心情标语</span>
+        </h3>
+        <button id="modal-banner-close" class="text-slate-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <!-- Live Preview inside modal -->
+      <div>
+          <label class="block text-[11px] text-slate-400 mb-1.5">展板预览效果：</label>
+        <div class="relative w-full h-[76px] rounded-lg overflow-hidden border border-slate-700 shadow-inner bg-slate-950 flex items-center justify-center">
+          <div id="modal-banner-preview-img" class="hero-banner-bg absolute inset-0"></div>
+          <div class="hero-banner-mask absolute inset-0 pointer-events-none"></div>
+          <div class="absolute inset-x-0 bottom-0 p-2 z-10 flex items-center justify-between pointer-events-none">
+            <div class="flex items-center space-x-1.5 min-w-0 max-w-[90%]">
+              <span class="text-xs">✨</span>
+              <p id="modal-banner-preview-text" class="text-xs font-semibold text-white truncate tracking-wide drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">保持热爱，奔赴山海！</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banner Image Upload -->
+      <div class="space-y-2 pt-1 border-t border-slate-800">
+        <label class="block text-[11px] text-slate-300 font-semibold">个性背景图片：</label>
+        <div class="flex items-center space-x-2">
+          <button type="button" id="btn-upload-banner-img" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 text-xs font-medium transition flex items-center space-x-1">
+            <span>📷</span>
+            <span>选择背景图</span>
+          </button>
+          <button type="button" id="btn-remove-banner-img" class="px-2.5 py-1.5 text-slate-400 hover:text-rose-400 text-xs transition hidden">
+            恢复默认背景
+          </button>
+        </div>
+      </div>
+
+      <!-- Mood Slogan Text Input -->
+      <div class="space-y-1.5 pt-2 border-t border-slate-800">
+        <label class="block text-[11px] text-slate-300 font-semibold">动态心情 / 座右铭标语：</label>
+        <input type="text" id="input-banner-slogan" placeholder="输入你的今日标语，例如：今日无 Bug，万事胜意！" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500" />
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 flex justify-end space-x-2">
+        <button id="btn-save-banner" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded shadow transition">保存设置</button>
       </div>
     </div>
   </div>

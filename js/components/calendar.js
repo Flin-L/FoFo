@@ -385,14 +385,15 @@
       header.querySelector('#cal-next').onclick = () => this.nextMonth();
       header.querySelector('#cal-today').onclick = () => this.jumpToToday();
 
-      // Legend Sub-header (休假 / 补班指示)
+      // Legend Sub-header (休假 / 加班 / 补班指示)
       const legend = document.createElement('div');
       legend.className = 'flex items-center justify-between text-[10px] text-slate-500 mb-1 px-1';
       legend.innerHTML = `
         <span>法定假日 & 农历历表</span>
         <div class="flex items-center space-x-2">
-          <span class="flex items-center space-x-0.5"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span><span class="text-rose-400">休</span></span>
-          <span class="flex items-center space-x-0.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span class="text-amber-400">班</span></span>
+          <span class="flex items-center space-x-0.5" title="法定假期与个人休假"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span class="text-emerald-400 font-medium">休假</span></span>
+          <span class="flex items-center space-x-0.5" title="加班标记"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span><span class="text-rose-400 font-medium">加班</span></span>
+          <span class="flex items-center space-x-0.5" title="调休补班"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span class="text-amber-400 font-medium">补班</span></span>
         </div>
       `;
       this.container.appendChild(legend);
@@ -444,14 +445,21 @@
         const currentDow = new Date(year, month, d).getDay();
         const isWeekend = (currentDow === 0 || currentDow === 6);
 
+        const hasVacationMilestone = milestones.some(m => m.type === 'vacation' || (m.text && (m.text.includes('休假') || m.text.includes('请假') || m.text.includes('年假'))));
+        const hasOvertimeMilestone = milestones.some(m => m.type === 'overtime' || (m.text && m.text.includes('加班')));
+
         let classes = 'relative h-10 py-0.5 px-0.5 rounded cursor-pointer transition flex flex-col items-center justify-between select-none ';
         
         if (isSelected) {
           classes += 'bg-emerald-600 text-white font-bold shadow-lg ring-2 ring-emerald-400/50 z-20 ';
         } else if (isToday) {
           classes += 'bg-slate-800/95 text-emerald-400 font-bold border border-emerald-500/60 shadow-sm ';
+        } else if (hasVacationMilestone) {
+          classes += 'bg-emerald-950/40 text-emerald-200 hover:bg-emerald-900/50 border border-emerald-600/40 ';
+        } else if (hasOvertimeMilestone) {
+          classes += 'bg-rose-950/40 text-rose-200 hover:bg-rose-900/50 border border-rose-600/40 ';
         } else if (holiday.isHoliday) {
-          classes += 'bg-rose-950/25 text-rose-200 hover:bg-rose-900/40 border border-rose-900/30 ';
+          classes += 'bg-emerald-950/30 text-emerald-200 hover:bg-emerald-900/40 border border-emerald-700/30 ';
         } else if (holiday.isWorkday) {
           classes += 'bg-amber-950/20 text-slate-200 hover:bg-slate-800 border border-amber-900/30 ';
         } else if (isWeekend) {
@@ -480,11 +488,25 @@
         numSpan.textContent = d;
         topRow.appendChild(numSpan);
 
-        if (holiday.isHoliday) {
+        if (hasVacationMilestone) {
           const restBadge = document.createElement('span');
           restBadge.className = isSelected
+            ? 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-white text-emerald-700 font-black scale-90 origin-top-right'
+            : 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-emerald-600 text-white font-black scale-90 origin-top-right shadow-xs';
+          restBadge.textContent = '休';
+          topRow.appendChild(restBadge);
+        } else if (hasOvertimeMilestone) {
+          const otBadge = document.createElement('span');
+          otBadge.className = isSelected
             ? 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-white text-rose-600 font-black scale-90 origin-top-right'
-            : 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-rose-500 text-white font-black scale-90 origin-top-right shadow-xs';
+            : 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-rose-600 text-white font-black scale-90 origin-top-right shadow-xs';
+          otBadge.textContent = '班';
+          topRow.appendChild(otBadge);
+        } else if (holiday.isHoliday) {
+          const restBadge = document.createElement('span');
+          restBadge.className = isSelected
+            ? 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-white text-emerald-600 font-black scale-90 origin-top-right'
+            : 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-emerald-600 text-white font-black scale-90 origin-top-right shadow-xs';
           restBadge.textContent = '休';
           topRow.appendChild(restBadge);
         } else if (holiday.isWorkday) {
@@ -514,25 +536,48 @@
         }
 
         const labelSpan = document.createElement('span');
-        labelSpan.className = isSelected 
-          ? 'truncate text-white font-medium text-[8px] scale-95' 
-          : isFestivalText 
-            ? (holiday.isHoliday ? 'truncate text-rose-400 font-bold text-[8px] scale-95' : 'truncate text-amber-300 font-semibold text-[8px] scale-95')
-            : 'truncate text-slate-500 text-[8px] scale-90';
+        let labelColor = 'truncate text-slate-500 text-[8px] scale-90';
+        if (isSelected) {
+          labelColor = 'truncate text-white font-medium text-[8px] scale-95';
+        } else if (hasVacationMilestone || holiday.isHoliday) {
+          // 法定节假日与休假，全部使用翠绿色展示，避免混淆
+          labelColor = 'truncate text-emerald-400 font-bold text-[8px] scale-95';
+        } else if (hasOvertimeMilestone) {
+          // 加班使用醒目红色展示
+          labelColor = 'truncate text-rose-400 font-bold text-[8px] scale-95';
+        } else if (holiday.isWorkday) {
+          // 调休上班保持黄色
+          labelColor = 'truncate text-amber-300 font-semibold text-[8px] scale-95';
+        } else if (isFestivalText) {
+          // 常规没放假的节日（如教师节、七夕、中元节等），使用纯净白色展示，不与补班的黄色混淆
+          labelColor = 'truncate text-slate-100 font-medium text-[8px] scale-95';
+        }
+
+        labelSpan.className = labelColor;
         labelSpan.textContent = bottomText;
         botRow.appendChild(labelSpan);
 
         // Indicator dots for user milestones
         if (milestones.length > 0) {
           const dot = document.createElement('span');
+          let dotColorClass = 'bg-amber-400';
+          let dotSelectedColorClass = 'bg-amber-300';
+          if (hasVacationMilestone) {
+            dotColorClass = 'bg-emerald-400';
+            dotSelectedColorClass = 'bg-emerald-200';
+          } else if (hasOvertimeMilestone) {
+            dotColorClass = 'bg-rose-500';
+            dotSelectedColorClass = 'bg-rose-200';
+          }
+
           if (milestones.length === 1) {
             dot.className = isSelected
-              ? 'w-1.5 h-1.5 rounded-full bg-amber-300 ml-0.5 flex-shrink-0'
-              : 'w-1.5 h-1.5 rounded-full bg-amber-400 ml-0.5 flex-shrink-0 shadow-sm';
+              ? `w-1.5 h-1.5 rounded-full ${dotSelectedColorClass} ml-0.5 flex-shrink-0`
+              : `w-1.5 h-1.5 rounded-full ${dotColorClass} ml-0.5 flex-shrink-0 shadow-sm`;
           } else {
             dot.className = isSelected
-              ? 'px-0.5 py-0 text-[7px] leading-none bg-amber-300 text-slate-950 font-black rounded-xs ml-0.5 flex-shrink-0'
-              : 'px-0.5 py-0 text-[7px] leading-none bg-amber-400 text-slate-950 font-black rounded-xs ml-0.5 flex-shrink-0';
+              ? `px-0.5 py-0 text-[7px] leading-none ${dotSelectedColorClass} text-slate-950 font-black rounded-xs ml-0.5 flex-shrink-0`
+              : `px-0.5 py-0 text-[7px] leading-none ${dotColorClass} text-slate-950 font-black rounded-xs ml-0.5 flex-shrink-0`;
             dot.textContent = milestones.length;
           }
           botRow.appendChild(dot);
