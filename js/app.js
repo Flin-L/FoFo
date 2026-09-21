@@ -415,7 +415,7 @@
     bgOpacity: 82,
     bgBlur: 6,
     appTitle: 'FoFo 工作台',
-    heroBannerSlogan: '保持热爱，奔赴山海！'
+    heroBannerSlogan: '请添加个性心情'
   };
 
   function readLocalWorkspaceState() {
@@ -446,28 +446,30 @@
   async function initData() {
     const localState = readLocalWorkspaceState();
     try {
-      const resp = await fetch('/api/data');
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3000);
+      const resp = await fetch('/api/data', { signal: controller.signal });
+      clearTimeout(timer);
       if (resp.ok) {
-        // A successful empty response still means the local server is available;
-        // subsequent saves should create workspace.json instead of remaining browser-only.
+        // A successful response means the local server is active and managing storage
         hasBackend = true;
         const remoteData = await resp.json();
         if (remoteData && Object.keys(remoteData).length > 0) {
-          state = mergeLocalPersonalization(remoteData, localState);
-        } else if (localState) {
-          state = localState;
+          state = remoteData;
+        } else {
+          // Brand new directory / first installation: initialize pure default seed,
+          // never pollute from old localhost:3210 browser localStorage!
+          state = getSeedData();
         }
       }
     } catch (e) {
+      console.warn('[FoFo] Backend fetch timed out or unavailable, fallback to local/seed:', e);
       hasBackend = false;
     }
 
     if (!state) {
-      state = localState;
-    }
-
-    if (!state) {
-      state = getSeedData();
+      // Standalone static file mode (e.g. file:///): fall back to browser localStorage
+      state = localState || getSeedData();
     }
 
     const todayStr = formatDateStr(new Date());
@@ -3044,17 +3046,29 @@
 
   // --- App Bootstrap ---
   async function startApp() {
-    confetti = new ConfettiCelebration('confetti-canvas');
-    await initData();
-    initPomodoro();
-    initHeatmap();
-    initCalendar();
-    initEvents();
-    initAiSecretary();
+    try {
+      confetti = new ConfettiCelebration('confetti-canvas');
+    } catch (e) {
+      console.warn('[FoFo] Confetti init skipped:', e);
+    }
+    try {
+      await initData();
+    } catch (e) {
+      console.error('[FoFo] initData failure:', e);
+    }
+    try {
+      initPomodoro();
+      initHeatmap();
+      initCalendar();
+      initEvents();
+      initAiSecretary();
 
-    switchGoalsTab('weekly');
-    switchActiveDate(state.currentDate);
-    console.log('[FoFo WorkStation] Initialized with UI aesthetic optimizations.');
+      switchGoalsTab('weekly');
+      switchActiveDate(state ? state.currentDate : formatDateStr(new Date()));
+      console.log('[FoFo WorkStation] Initialized with UI aesthetic optimizations.');
+    } catch (e) {
+      console.error('[FoFo] UI sub-component init error:', e);
+    }
   }
 
   window.addEventListener('DOMContentLoaded', startApp);

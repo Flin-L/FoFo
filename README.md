@@ -1,7 +1,7 @@
 # 🚀 FoFo 个人工作台 (FoFo Personal WorkStation)
 
 <p align="left">
-  <img src="https://img.shields.io/badge/version-2.0.1-emerald?style=flat-square" alt="Version 2.0.1" />
+  <img src="https://img.shields.io/badge/version-2.0.2-emerald?style=flat-square" alt="Version 2.0.2" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=flat-square" alt="Cross Platform" />
   <img src="https://img.shields.io/badge/license-MIT-purple?style=flat-square" alt="License MIT" />
   <img src="https://img.shields.io/badge/storage-100%25%20Local-success?style=flat-square" alt="100% Local" />
@@ -25,6 +25,19 @@
 > - **修订号 (Patch)**：针对已有功能的缺陷修复 (Bugfix)、性能优化或细节微调；
 > 
 > **后续每次发布新版本，必须在此区域以倒序方式（最新版本置顶）追加记录，清晰列出新版本号、发布日期及功能更新明细。**
+
+---
+
+### [v2.0.2] - 2026-09-21
+
+**服务并发与启动加载稳定性优化**：
+- **多线程 HTTP 服务重构**：底层服务架构升级为多线程模型（`ThreadingTCPServer`），支持浏览器多路并发请求静态资源与接口，消除单线程排队导致的偶发加载缓慢或首屏需刷新问题；
+- **Windows 单实例互斥机制 (Named Mutex)**：采用内核级命名互斥体，防止重复启动导致的后台多进程端口争用；重复运行同一工作区时自动激活已有浏览器窗口并退出重复进程；
+- **HTTP 响应协议规范加固**：服务端接口补齐 `Content-Length` 标头，前端初始化数据请求增加超时熔断保护，提升网络异常时的容错恢复能力。
+
+**多工作区数据隔离加固**：
+- **消除浏览器跨实例 LocalStorage 串扰**：修复不同工作区路径在同源策略下读取浏览器历史 LocalStorage 导致旧数据混入新工作区的问题；
+- **严格遵循本地单数据源原则**：当前工作区数据为空时强制使用标准初始化种子，不再从浏览器历史缓存反向同步，确保各工作区物理隔离。
 
 ---
 

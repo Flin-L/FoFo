@@ -29,16 +29,6 @@ os.makedirs(EXPORT_DIR, exist_ok=True)
 os.makedirs(DOCS_DIR, exist_ok=True)
 os.makedirs(AI_SESSION_DIR, exist_ok=True)
 
-# If running inside dist/FoFo and local data is empty, seed from project data if available
-workspace_file = os.path.join(DATA_DIR, "workspace.json")
-if not os.path.exists(workspace_file):
-    parent_data_file = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), "data", "workspace.json")
-    if os.path.exists(parent_data_file):
-        try:
-            import shutil
-            shutil.copy2(parent_data_file, workspace_file)
-        except Exception:
-            pass
 
 class FoFoHandler(http.server.SimpleHTTPRequestHandler):
     server_instance = None
@@ -56,13 +46,33 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
         except Exception:
             pass
 
+    def send_bytes_response(self, content_bytes, content_type="application/json; charset=utf-8", status=200, extra_headers=None):
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(content_bytes)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        if extra_headers:
+            for k, v in extra_headers.items():
+                self.send_header(k, v)
+        self.end_headers()
+        self.wfile.write(content_bytes)
+
+    def send_json_response(self, data, status=200):
+        body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        self.send_bytes_response(body, "application/json; charset=utf-8", status)
+
     def do_GET(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/api/ping":
+            self.send_json_response({
+                "status": "ok",
+                "app": "FoFo",
+                "version": "2.0.2",
+                "dir": os.path.abspath(BASE_DIR)
+            })
+            return
+
         if parsed.path == "/api/ai/sessions":
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
             default_session = {
                 "id": "chat-default",
                 "title": "新会话",
@@ -83,38 +93,31 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
                         }
                 except (OSError, ValueError, TypeError):
                     pass
-            self.wfile.write(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+            self.send_json_response(payload)
             return
 
         if parsed.path == "/api/data":
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
             data_file = os.path.join(DATA_DIR, "workspace.json")
             if os.path.exists(data_file):
                 with open(data_file, "rb") as f:
-                    self.wfile.write(f.read())
+                    content = f.read()
+                self.send_bytes_response(content, "application/json; charset=utf-8")
             else:
-                self.wfile.write(b"{}")
+                self.send_bytes_response(b"{}", "application/json; charset=utf-8")
             return
 
         if parsed.path == "/api/reading":
             params = parse_qs(parsed.query)
             date_str = params.get("date", [""])[0]
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            
             if date_str:
                 safe_date = os.path.basename(date_str)
                 file_path = os.path.join(DOCS_DIR, f"reading_{safe_date}.json")
                 if os.path.exists(file_path):
                     with open(file_path, "rb") as f:
-                        self.wfile.write(f.read())
-                        return
-            self.wfile.write(b"[]")
+                        content = f.read()
+                    self.send_bytes_response(content, "application/json; charset=utf-8")
+                    return
+            self.send_bytes_response(b"[]", "application/json; charset=utf-8")
             return
         
         if parsed.path.startswith("/osimg/"):
@@ -123,21 +126,16 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
             if not os.path.exists(target):
                 target = os.path.join(RESOURCE_DIR, rel_path)
             if os.path.exists(target) and os.path.isfile(target):
-                self.send_response(200)
                 ext = os.path.splitext(target)[1].lower()
-                if ext == ".png":
-                    self.send_header("Content-Type", "image/png")
-                elif ext in (".jpg", ".jpeg"):
-                    self.send_header("Content-Type", "image/jpeg")
-                elif ext == ".webp":
-                    self.send_header("Content-Type", "image/webp")
-                else:
-                    self.send_header("Content-Type", "application/octet-stream")
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.send_header("Cache-Control", "public, max-age=86400")
-                self.end_headers()
+                content_type = {
+                    ".png": "image/png",
+                    ".jpg": "image/jpeg",
+                    ".jpeg": "image/jpeg",
+                    ".webp": "image/webp"
+                }.get(ext, "application/octet-stream")
                 with open(target, "rb") as f:
-                    self.wfile.write(f.read())
+                    content = f.read()
+                self.send_bytes_response(content, content_type, extra_headers={"Cache-Control": "public, max-age=86400"})
                 return
             self.send_response(404)
             self.end_headers()
@@ -151,11 +149,7 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
         body = self.rfile.read(content_length)
 
         if parsed.path == "/api/shutdown":
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(b'{"status":"stopping"}')
+            self.send_json_response({"status": "stopping"})
             if self.server_instance:
                 threading.Thread(target=self.server_instance.shutdown, daemon=True).start()
             return
@@ -187,33 +181,17 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
                 with open(temp_file, "w", encoding="utf-8") as f:
                     json.dump(saved_payload, f, ensure_ascii=False, indent=2)
                 os.replace(temp_file, AI_SESSION_FILE)
-                response = {"status": "saved", "currentId": current_id, "count": len(safe_sessions)}
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.end_headers()
-                self.wfile.write(json.dumps(response, ensure_ascii=False).encode("utf-8"))
+                self.send_json_response({"status": "saved", "currentId": current_id, "count": len(safe_sessions)})
             except (ValueError, OSError, TypeError) as error:
-                self.send_response(400)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.end_headers()
-                self.wfile.write(json.dumps({"status": "error", "message": str(error)}, ensure_ascii=False).encode("utf-8"))
+                self.send_json_response({"status": "error", "message": str(error)}, status=400)
             return
 
         if parsed.path == "/api/ai":
-            def send_json(status_code, payload):
-                self.send_response(status_code)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.end_headers()
-                self.wfile.write(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
-
             try:
                 payload = json.loads(body.decode("utf-8"))
                 prompt = str(payload.get("prompt", "")).strip()
                 if not prompt:
-                    send_json(400, {"status": "error", "message": "缺少 AI 请求内容"})
+                    self.send_json_response({"status": "error", "message": "缺少 AI 请求内容"}, status=400)
                     return
 
                 provider = str(payload.get("provider", "")).strip().lower() or os.environ.get("FOFO_AI_PROVIDER", "openai").strip().lower() or "openai"
@@ -232,16 +210,16 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
                     }
                 }
                 if provider not in provider_configs:
-                    send_json(400, {"status": "error", "message": f"不支持的 AI 服务商：{provider}"})
+                    self.send_json_response({"status": "error", "message": f"不支持的 AI 服务商：{provider}"}, status=400)
                     return
 
                 provider_config = provider_configs[provider]
                 api_key = os.environ.get(provider_config["env_key"], "").strip()
                 if not api_key:
-                    send_json(503, {
+                    self.send_json_response({
                         "status": "disabled",
                         "message": f"未配置 {provider_config['env_key']}。请按 AI 配置中的本地服务教程设置环境变量，或复制工作上下文到 ChatGPT 网页。"
-                    })
+                    }, status=503)
                     return
 
                 model = str(payload.get("model", "")).strip() or os.environ.get("FOFO_AI_MODEL", "").strip() or provider_config["default_model"]
@@ -287,24 +265,19 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
                     if isinstance(content, str) and content:
                         output_parts.append(content)
                 output = "\n".join(dict.fromkeys(part for part in output_parts if part)).strip()
-                send_json(200, {"status": "ok", "output": output, "model": model, "provider": provider_config["label"]})
+                self.send_json_response({"status": "ok", "output": output, "model": model, "provider": provider_config["label"]})
             except urllib.error.HTTPError as error:
                 detail = error.read().decode("utf-8", errors="replace")
-                send_json(error.code, {"status": "error", "message": f"AI API 请求失败: {detail[:500]}"})
+                self.send_json_response({"status": "error", "message": f"AI API 请求失败: {detail[:500]}"}, status=error.code)
             except Exception as error:
-                send_json(500, {"status": "error", "message": f"AI 服务异常: {str(error)}"})
+                self.send_json_response({"status": "error", "message": f"AI 服务异常: {str(error)}"}, status=500)
             return
 
         if parsed.path == "/api/data":
             data_file = os.path.join(DATA_DIR, "workspace.json")
             with open(data_file, "wb") as f:
                 f.write(body)
-            
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "saved", "path": data_file}).encode("utf-8"))
+            self.send_json_response({"status": "saved", "path": data_file})
             return
 
         if parsed.path == "/api/reading":
@@ -315,12 +288,7 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
             target_path = os.path.join(DOCS_DIR, f"reading_{safe_date}.json")
             with open(target_path, "w", encoding="utf-8") as f:
                 json.dump(items, f, ensure_ascii=False, indent=2)
-
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "saved", "path": target_path}).encode("utf-8"))
+            self.send_json_response({"status": "saved", "path": target_path})
             return
 
         if parsed.path == "/api/open":
@@ -353,11 +321,7 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
                 success = False
                 message = f"打开失败: {str(e)}"
 
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "ok" if success else "error", "message": message}).encode("utf-8"))
+            self.send_json_response({"status": "ok" if success else "error", "message": message})
             return
 
         if parsed.path == "/api/export":
@@ -370,11 +334,7 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
             with open(target_path, "w", encoding="utf-8") as f:
                 f.write(content)
 
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "exported", "filepath": target_path}).encode("utf-8"))
+            self.send_json_response({"status": "exported", "filepath": target_path})
             return
 
         self.send_error(404, "Not Found")
@@ -386,21 +346,82 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
+import socket
+import hashlib
+import ctypes
+
+_APP_MUTEX = None
+
+def get_workspace_mutex():
+    """Ensure single process per workspace directory on Windows using a Named Mutex."""
+    global _APP_MUTEX
+    if sys.platform != "win32":
+        return True
+    try:
+        norm_dir = os.path.normcase(os.path.abspath(BASE_DIR))
+        dir_hash = hashlib.md5(norm_dir.encode("utf-8")).hexdigest()[:16]
+        mutex_name = f"Local\\FoFo_Workspace_{dir_hash}"
+        kernel32 = ctypes.windll.kernel32
+        _APP_MUTEX = kernel32.CreateMutexW(None, False, mutex_name)
+        if kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+            return False
+        return True
+    except Exception:
+        return True
+
+class FoFoServer(socketserver.ThreadingTCPServer):
+    daemon_threads = True
+    allow_reuse_address = True
+
+def check_existing_instance(port):
+    """Check if an instance of FoFo is already running on the given port."""
+    url = f"http://localhost:{port}/api/ping"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "FoFo-Launcher"})
+        with urllib.request.urlopen(req, timeout=0.6) as resp:
+            if resp.status == 200:
+                data = json.loads(resp.read().decode("utf-8"))
+                if data.get("app") == "FoFo":
+                    return data
+    except Exception:
+        pass
+    return None
+
 def run_server():
-    socketserver.TCPServer.allow_reuse_address = True
     port = PORT
-    for attempt in range(10):
+    max_attempts = 10
+
+    # 1. Single-instance check via Named Mutex & Ping
+    is_primary = get_workspace_mutex()
+    if not is_primary:
+        # Another instance for this exact workspace is already running!
+        for test_port in range(PORT, PORT + max_attempts):
+            existing = check_existing_instance(test_port)
+            if existing:
+                existing_dir = os.path.normcase(os.path.abspath(existing.get("dir", "")))
+                current_dir = os.path.normcase(os.path.abspath(BASE_DIR))
+                if existing_dir == current_dir:
+                    print(f"[FoFo] 检测到当前工作区服务已在后台运行 (端口 {test_port})，正在直接唤起浏览器...")
+                    webbrowser.open(f"http://localhost:{test_port}")
+                    sys.exit(0)
+        webbrowser.open(f"http://localhost:{PORT}")
+        sys.exit(0)
+
+    # 2. Find free port and launch multithreaded server
+    for attempt in range(max_attempts):
         try:
-            with socketserver.TCPServer(("", port), FoFoHandler) as httpd:
-                FoFoHandler.server_instance = httpd
-                print(f"[FoFo Personal WorkStation] 服务已启动: http://localhost:{port}")
-                print(f"[存储目录] 数据自动保存在: {DATA_DIR}")
-                print(f"[待阅目录] 待阅文档保存在: {DOCS_DIR}")
-                print(f"[导出目录] Markdown 导出在: {EXPORT_DIR}")
-                print(f"[AI 会话] 会话记录保存在: {AI_SESSION_FILE}")
-                threading.Timer(0.8, lambda: webbrowser.open(f"http://localhost:{port}")).start()
-                httpd.serve_forever()
-                break
+            httpd = FoFoServer(("", port), FoFoHandler)
+            FoFoHandler.server_instance = httpd
+            print(f"[FoFo Personal WorkStation] 服务已启动: http://localhost:{port}")
+            print(f"[存储目录] 数据自动保存在: {DATA_DIR}")
+            print(f"[待阅目录] 待阅文档保存在: {DOCS_DIR}")
+            print(f"[导出目录] Markdown 导出在: {EXPORT_DIR}")
+            print(f"[AI 会话] 会话记录保存在: {AI_SESSION_FILE}")
+
+            target_url = f"http://localhost:{port}"
+            threading.Timer(0.5, lambda: webbrowser.open(target_url)).start()
+            httpd.serve_forever()
+            break
         except OSError:
             port += 1
 
