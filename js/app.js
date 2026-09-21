@@ -332,6 +332,31 @@
         }
       }
     });
+
+    // Highlight active system wallpaper button
+    document.querySelectorAll('.system-wallpaper-btn').forEach(btn => {
+      const wp = btn.dataset.wallpaper;
+      if (state.customBgImage && state.customBgImage === wp) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // Update custom background status text
+    const customBgStatus = document.getElementById('custom-bg-status');
+    if (customBgStatus) {
+      if (!state.customBgImage) {
+        customBgStatus.textContent = '未启用';
+        customBgStatus.className = 'text-[10px] text-slate-500';
+      } else if (state.customBgImage.startsWith('data:')) {
+        customBgStatus.textContent = '已启用自定义壁纸';
+        customBgStatus.className = 'text-[10px] text-emerald-400 font-medium';
+      } else {
+        customBgStatus.textContent = '使用系统壁纸';
+        customBgStatus.className = 'text-[10px] text-emerald-400 font-medium';
+      }
+    }
   }
 
   function applyAvatar() {
@@ -399,14 +424,62 @@
   }
 
   // --- Data Persistence Layer ---
+  const PERSONALIZATION_KEYS = [
+    'theme',
+    'bgOpacity',
+    'bgBlur',
+    'userAvatar',
+    'customBgImage',
+    'appTitle',
+    'heroBannerImage',
+    'heroBannerSlogan'
+  ];
+  const PERSONALIZATION_DEFAULTS = {
+    theme: 'midnight',
+    bgOpacity: 82,
+    bgBlur: 6,
+    appTitle: 'FoFo 工作台',
+    heroBannerSlogan: '保持热爱，奔赴山海！'
+  };
+
+  function readLocalWorkspaceState() {
+    try {
+      const raw = localStorage.getItem('fofo_workspace_v1');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.warn('本地工作台数据读取失败，将继续使用服务端数据或默认数据。', e);
+      return null;
+    }
+  }
+
+  function mergeLocalPersonalization(remoteState, localState) {
+    if (!remoteState || !localState) return remoteState;
+    PERSONALIZATION_KEYS.forEach(key => {
+      const localValue = localState[key];
+      const remoteValue = remoteState[key];
+      if (localValue === undefined || localValue === null || localValue === '') return;
+      const remoteMissing = remoteValue === undefined || remoteValue === null || remoteValue === '';
+      const remoteIsDefault = Object.prototype.hasOwnProperty.call(PERSONALIZATION_DEFAULTS, key)
+        && remoteValue === PERSONALIZATION_DEFAULTS[key]
+        && localValue !== PERSONALIZATION_DEFAULTS[key];
+      if (remoteMissing || remoteIsDefault) remoteState[key] = localValue;
+    });
+    return remoteState;
+  }
+
   async function initData() {
+    const localState = readLocalWorkspaceState();
     try {
       const resp = await fetch('/api/data');
       if (resp.ok) {
+        // A successful empty response still means the local server is available;
+        // subsequent saves should create workspace.json instead of remaining browser-only.
+        hasBackend = true;
         const remoteData = await resp.json();
         if (remoteData && Object.keys(remoteData).length > 0) {
-          state = remoteData;
-          hasBackend = true;
+          state = mergeLocalPersonalization(remoteData, localState);
+        } else if (localState) {
+          state = localState;
         }
       }
     } catch (e) {
@@ -414,14 +487,7 @@
     }
 
     if (!state) {
-      const local = localStorage.getItem('fofo_workspace_v1');
-      if (local) {
-        try {
-          state = JSON.parse(local);
-        } catch (e) {
-          state = null;
-        }
-      }
+      state = localState;
     }
 
     if (!state) {
@@ -1278,6 +1344,839 @@
     calendar.setSelectedDate(dateStr);
   }
 
+  // --- FoFo AI Workflow Secretary ---
+  function getAiWorkspaceContext() {
+    const dateStr = state.currentDate;
+    const day = state.dailyData[dateStr] || { tasks: [], milestones: [], readingList: [], notes: '', waterIntake: 0 };
+    const date = new Date(`${dateStr}T12:00:00`);
+    const weekStr = getWeekStr(date);
+    const monthStr = getMonthStr(date);
+    const tasks = (day.tasks || []).map(t => ({
+      text: t.text,
+      done: !!t.done,
+      priority: t.priority || 'P2',
+      pomodoros: t.pomodoros || 0
+    }));
+    return {
+      date: dateStr,
+      weekday: getWeekdayName(date),
+      week: weekStr,
+      month: monthStr,
+      monthlyGoals: (state.monthlyGoals || []).filter(g => !g.month || g.month === monthStr).map(g => ({ text: g.text, done: !!g.done, progress: g.progress || 0 })),
+      weeklyGoals: (state.weeklyGoals || []).filter(g => !g.week || g.week === weekStr).map(g => ({ text: g.text, done: !!g.done })),
+      today: {
+        tasks,
+        milestones: (day.milestones || []).map(m => ({ text: m.text, type: m.type || 'event' })),
+        reading: (day.readingList || []).map(r => r.title || r.path || '').filter(Boolean),
+        notes: String(day.notes || '').slice(0, 4000),
+        waterMl: day.waterIntake || 0
+      },
+      scratchpad: (state.scratchpad || []).slice(-8).map(s => s.text).filter(Boolean),
+      bulletin: (state.bulletin || []).slice(-5).map(b => b.text).filter(Boolean)
+    };
+  }
+
+  function buildAiPrompt(action, userInput) {
+    const actionText = {
+      plan: '请根据目标、日程和待办，给出今天最重要的 1-3 件事、建议顺序和番茄钟安排。',
+      organize: '请把用户补充的这段记录整理成简洁的工作日志，并提取可执行的待办或日程。',
+      review: '请根据今日记录进行简短复盘：完成了什么、卡点是什么、明天最值得延续的一件事是什么。',
+      tomorrow: '请根据当前目标、未完成任务和日程，给出明天的工作安排草案。'
+    }[action] || '请帮助我处理当前工作上下文。';
+    return `你是 FoFo 的工作流秘书，不是泛泛聊天助手。只基于提供的工作上下文进行判断，避免空泛鼓励；优先给出可执行、可确认的建议。不要擅自声称已经修改了 FoFo 数据。\n\n任务：${actionText}\n用户补充：${userInput || '无'}\n\n当前 FoFo 工作上下文（JSON）：\n${JSON.stringify(getAiWorkspaceContext(), null, 2)}\n\n请用中文回答，正文不超过 8 行，最多给出 3 条建议，每条建议尽量不超过 30 字。若建议中包含待办或日程，请在回答末尾追加以下机器可读区块（不要放在代码块中），没有可写入项时 tasks 和 schedules 都返回空数组：\n<FOFO_ACTIONS>\n{"tasks":[{"text":"待办内容","priority":"P1","date":"${dateStr}"}],"schedules":[{"text":"日程内容","date":"${dateStr}","type":"event"}]}\n</FOFO_ACTIONS>\n其中 priority 只能使用 P0/P1/P2，type 只能使用 event/vacation/overtime；写入前必须等待用户在 FoFo 中确认。`;
+  }
+
+  async function copyTextToClipboard(text) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+      const temp = document.createElement('textarea');
+      temp.value = text;
+      temp.style.position = 'fixed';
+      temp.style.opacity = '0';
+      document.body.appendChild(temp);
+      temp.select();
+      const copied = document.execCommand('copy');
+      temp.remove();
+      return copied;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function getAiPromptFromUi() {
+    const active = document.querySelector('.ai-action-btn.bg-emerald-950\\/40');
+    const action = active ? active.dataset.aiAction : 'plan';
+    const input = document.getElementById('ai-assistant-input');
+    return buildAiPrompt(action, input ? input.value.trim() : '');
+  }
+
+  const AI_CONFIG_STORAGE_KEY = 'fofo_ai_config_v1';
+  const AI_PROVIDERS = {
+    openai: {
+      label: 'OpenAI',
+      model: 'gpt-5-mini',
+      envKey: 'OPENAI_API_KEY',
+      endpoint: 'https://api.openai.com/v1/responses'
+    },
+    deepseek: {
+      label: 'DeepSeek',
+      model: 'deepseek-flash',
+      envKey: 'DEEPSEEK_API_KEY',
+      endpoint: 'https://api.deepseek.com/responses'
+    }
+  };
+
+  function getAiProviderConfig(provider) {
+    return AI_PROVIDERS[provider] || AI_PROVIDERS.openai;
+  }
+
+  function getAiModeHelp(mode, provider) {
+    const providerConfig = getAiProviderConfig(provider);
+    if (mode === 'chatgpt-web') {
+      return '新手推荐｜步骤：①保存此模式 ②点击“复制并打开 ChatGPT” ③在 ChatGPT 中粘贴并发送。无需 API Key，也不需要 Python。';
+    }
+    if (mode === 'direct-api') {
+      return `个人电脑模式（${providerConfig.label}）｜步骤：①在下方填写 ${providerConfig.label} API Key ②确认模型名称 ③保存并测试连接 ④点击“生成秘书建议”。无需 Python，但 Key 会保存在本机浏览器中；若提示 Failed to fetch，通常是浏览器跨域限制，请改用本地服务模式。`;
+    }
+    return `安全模式（${providerConfig.label}）｜Windows 配置步骤：
+①先关闭正在运行的 FoFo 服务；
+②打开开始菜单，搜索并进入“编辑系统环境变量”→“环境变量”；
+③在“用户变量”区域点击“新建”，变量名填写 ${providerConfig.envKey}，变量值粘贴你的 ${providerConfig.label} API Key；
+④连续点击“确定”，重新打开 FoFo 的 start.bat（已打开的终端不会自动读到新变量）；
+⑤回到这里选择“${providerConfig.label}”并保存配置，再点击“测试连接”。
+也可以在 PowerShell 临时运行：$env:${providerConfig.envKey}="你的Key"；然后在同一个窗口启动 server.py。Key 只由本地 server.py 读取，不会进入浏览器或项目文件。`;
+  }
+
+  function getAiConfig() {
+    const defaults = { mode: 'chatgpt-web', provider: 'openai', apiKey: '', model: 'gpt-5-mini' };
+    try {
+      const raw = localStorage.getItem(AI_CONFIG_STORAGE_KEY);
+      if (!raw) return defaults;
+      const saved = JSON.parse(raw);
+      const provider = AI_PROVIDERS[saved.provider] ? saved.provider : defaults.provider;
+      return { ...defaults, ...saved, provider, model: saved.model || getAiProviderConfig(provider).model };
+    } catch (e) {
+      return defaults;
+    }
+  }
+
+  function saveAiConfig(config) {
+    localStorage.setItem(AI_CONFIG_STORAGE_KEY, JSON.stringify({
+      mode: config.mode || 'chatgpt-web',
+      provider: config.provider || 'openai',
+      apiKey: config.apiKey || '',
+      model: config.model || getAiProviderConfig(config.provider).model
+    }));
+  }
+
+  function updateAiConfigUi(config = getAiConfig()) {
+    const providerSelect = document.getElementById('ai-provider-select');
+    const modeSelect = document.getElementById('ai-mode-select');
+    const keyRow = document.getElementById('ai-api-key-row');
+    const modelRow = document.getElementById('ai-model-row');
+    const keyInput = document.getElementById('ai-api-key-input');
+    const keyLabel = document.getElementById('ai-api-key-label');
+    const modelInput = document.getElementById('ai-model-input');
+    const help = document.getElementById('ai-mode-help');
+    const provider = getAiProviderConfig(config.provider);
+    if (providerSelect) providerSelect.value = AI_PROVIDERS[config.provider] ? config.provider : 'openai';
+    if (modeSelect) modeSelect.value = config.mode;
+    if (keyInput) keyInput.value = config.apiKey || '';
+    if (keyLabel) keyLabel.textContent = `${provider.label} API Key`;
+    if (modelInput) modelInput.value = config.model || provider.model;
+    if (help) help.textContent = getAiModeHelp(config.mode, config.provider);
+    const providerRow = document.getElementById('ai-provider-row');
+    if (providerRow) providerRow.classList.toggle('hidden', config.mode === 'chatgpt-web');
+    if (keyRow) keyRow.classList.toggle('hidden', config.mode !== 'direct-api');
+    if (modelRow) modelRow.classList.toggle('hidden', config.mode === 'chatgpt-web');
+  }
+
+  function readAiConfigFromUi() {
+    return {
+      mode: document.getElementById('ai-mode-select')?.value || 'chatgpt-web',
+      provider: document.getElementById('ai-provider-select')?.value || 'openai',
+      apiKey: document.getElementById('ai-api-key-input')?.value.trim() || '',
+      model: document.getElementById('ai-model-input')?.value.trim() || getAiProviderConfig(document.getElementById('ai-provider-select')?.value).model
+    };
+  }
+
+  function collectAiText(value) {
+    if (!value) return [];
+    if (typeof value === 'string') return [value];
+    if (Array.isArray(value)) return value.flatMap(collectAiText);
+    if (typeof value !== 'object') return [];
+    if (value.type === 'reasoning_text' || value.type === 'reasoning') return [];
+    if (value.type === 'output_text' && typeof value.text === 'string') return [value.text];
+    if (typeof value.output_text === 'string') return [value.output_text];
+    if (typeof value.text === 'string') return [value.text];
+    if (typeof value.content === 'string') return [value.content];
+    if (value.content) return collectAiText(value.content);
+    if (value.message) return collectAiText(value.message);
+    return [];
+  }
+
+  function extractAiOutput(result) {
+    const parts = [
+      ...collectAiText(result.output_text),
+      ...collectAiText(result.output),
+      ...collectAiText(result.choices),
+      ...collectAiText(result.message)
+    ].filter(Boolean);
+    return [...new Set(parts)].join('\n').trim();
+  }
+
+  async function callDirectAi(prompt, config) {
+    if (!config.apiKey) throw new Error('请先在 AI 配置中填写 API Key。');
+    const provider = getAiProviderConfig(config.provider);
+    const model = config.model || provider.model;
+    const requestBody = {
+      model,
+      instructions: '你是 FoFo 的工作流秘书。只基于用户提供的工作上下文回答，给出可执行、可确认的建议，不要声称已经修改本地数据。',
+      input: prompt,
+      max_output_tokens: 1200
+    };
+    if (config.provider === 'deepseek') {
+      requestBody.reasoning = { effort: 'none' };
+    }
+    let response;
+    try {
+      response = await fetch(provider.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${config.apiKey}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+    } catch (error) {
+      throw new Error(`${provider.label} 请求未到达接口，浏览器可能拦截了跨域请求（${error.message || 'Failed to fetch'}）。可改用本地服务模式。`);
+    }
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error?.message || `${provider.label} API 请求失败`);
+    const output = extractAiOutput(result);
+    if (!output) throw new Error(`${provider.label} 已返回响应，但未提取到文本内容，请重试或检查模型设置。`);
+    return { output, model, provider: provider.label };
+  }
+
+  async function callLocalAi(prompt, config) {
+    const response = await fetch('/api/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, provider: config.provider, model: config.model })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || '本地 AI 服务暂不可用');
+    if (!result.output) throw new Error(`${result.provider || 'AI'} 已返回响应，但未提取到文本内容，请重试或检查模型设置。`);
+    return result;
+  }
+
+  let pendingAiActions = [];
+  let lastChatSuggestion = '';
+  const AI_CHAT_STORAGE_KEY = 'fofo_ai_chat_sessions_v1';
+  const AI_CHAT_FILE_ENDPOINT = '/api/ai/sessions';
+  let aiChatStateCache = null;
+  let aiChatFileSync = false;
+
+  function cleanAiSuggestionText(text) {
+    return String(text || '').replace(/<FOFO_ACTIONS>[\s\S]*?<\/FOFO_ACTIONS>/gi, '').trim();
+  }
+
+  function parseAiActions(text) {
+    const raw = String(text || '');
+    const blockMatch = raw.match(/<FOFO_ACTIONS>\s*([\s\S]*?)\s*<\/FOFO_ACTIONS>/i);
+    let parsed = null;
+    if (blockMatch) {
+      try { parsed = JSON.parse(blockMatch[1]); } catch (e) { parsed = null; }
+    }
+    if (!parsed) {
+      const jsonMatch = raw.match(/```json\s*([\s\S]*?)\s*```/i);
+      if (jsonMatch) {
+        try { parsed = JSON.parse(jsonMatch[1]); } catch (e) { parsed = null; }
+      }
+    }
+    const listFrom = (value) => Array.isArray(value) ? value : (value ? [value] : []);
+    const textOf = (item) => typeof item === 'string' ? item.trim() : String(item?.text || item?.title || item?.content || '').trim();
+    const dateOf = (item) => /^\d{4}-\d{2}-\d{2}$/.test(item?.date || '') ? item.date : state.currentDate;
+    const actions = [];
+    const source = Array.isArray(parsed) ? { tasks: parsed } : (parsed || {});
+    listFrom(source.tasks || source.todos || source.todo).forEach(item => {
+      const textValue = textOf(item);
+      if (textValue) actions.push({ kind: 'task', text: textValue, date: dateOf(item), priority: ['P0', 'P1', 'P2'].includes(item?.priority) ? item.priority : 'P1' });
+    });
+    listFrom(source.schedules || source.schedule || source.events || source.milestones).forEach(item => {
+      const textValue = textOf(item);
+      if (textValue) actions.push({ kind: 'schedule', text: textValue, date: dateOf(item), type: ['event', 'vacation', 'overtime'].includes(item?.type) ? item.type : 'event' });
+    });
+    if (!actions.length && !blockMatch) {
+      raw.split('\n').forEach(line => {
+        const taskMatch = line.match(/^\s*(?:[-*•]\s*)?(?:待办|任务)[：:]\s*(.+)$/);
+        const scheduleMatch = line.match(/^\s*(?:[-*•]\s*)?(?:日程|安排)[：:]\s*(.+)$/);
+        if (taskMatch) actions.push({ kind: 'task', text: taskMatch[1].trim(), date: state.currentDate, priority: 'P1' });
+        if (scheduleMatch) actions.push({ kind: 'schedule', text: scheduleMatch[1].trim(), date: state.currentDate, type: 'event' });
+      });
+    }
+    return actions;
+  }
+
+  function renderAiSuggestedActions(actions) {
+    const panel = document.getElementById('ai-suggested-actions');
+    if (!panel) return;
+    pendingAiActions = actions || [];
+    panel.innerHTML = '';
+    if (!pendingAiActions.length) {
+      panel.classList.add('hidden');
+      return;
+    }
+    panel.classList.remove('hidden');
+    const title = document.createElement('div');
+    title.className = 'flex items-center justify-between';
+    title.innerHTML = '<span class="text-xs font-semibold text-emerald-300">可写入工作台的建议</span><span class="text-[10px] text-slate-500">勾选后确认写入</span>';
+    panel.appendChild(title);
+    const list = document.createElement('div');
+    list.className = 'space-y-1.5';
+    pendingAiActions.forEach((action, index) => {
+      const label = document.createElement('label');
+      label.className = 'flex items-start space-x-2 rounded border border-slate-800 bg-slate-950/60 px-2.5 py-2 cursor-pointer hover:border-emerald-800/70';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.dataset.aiActionIndex = String(index);
+      checkbox.checked = true;
+      checkbox.className = 'mt-0.5 accent-emerald-500';
+      const textWrap = document.createElement('span');
+      textWrap.className = 'text-[11px] leading-relaxed text-slate-300';
+      const kind = document.createElement('strong');
+      kind.className = 'text-emerald-400';
+      kind.textContent = action.kind === 'task' ? '待办' : '日程';
+      textWrap.append(kind, document.createTextNode(` · ${action.text}`));
+      const meta = document.createElement('span');
+      meta.className = 'block text-[10px] text-slate-500';
+      meta.textContent = `${action.date}${action.kind === 'task' ? ` · ${action.priority}` : ''}`;
+      textWrap.appendChild(meta);
+      label.append(checkbox, textWrap);
+      list.appendChild(label);
+    });
+    panel.appendChild(list);
+    const actionsBar = document.createElement('div');
+    actionsBar.className = 'flex justify-end space-x-2 pt-1';
+    actionsBar.innerHTML = '<button id="btn-ai-confirm-actions" class="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold">确认写入选中项</button><button id="btn-ai-dismiss-actions" class="px-2.5 py-1.5 rounded text-slate-400 hover:text-slate-200 text-[11px]">暂不写入</button>';
+    panel.appendChild(actionsBar);
+    document.getElementById('btn-ai-confirm-actions').onclick = confirmSelectedAiActions;
+    document.getElementById('btn-ai-dismiss-actions').onclick = () => renderAiSuggestedActions([]);
+  }
+
+  function setAiSuggestion(rawOutput) {
+    const output = cleanAiSuggestionText(rawOutput);
+    const outputEl = document.getElementById('ai-assistant-output');
+    if (outputEl) outputEl.textContent = output || 'AI 没有返回可显示的建议。';
+    renderAiSuggestedActions(parseAiActions(rawOutput));
+  }
+
+  function writeAiActions(selected) {
+    let taskCount = 0;
+    let scheduleCount = 0;
+    selected.forEach(action => {
+      const targetDate = /^\d{4}-\d{2}-\d{2}$/.test(action.date) ? action.date : state.currentDate;
+      ensureCurrentDayExists(targetDate);
+      const day = state.dailyData[targetDate];
+      if (action.kind === 'task') {
+        if (!(day.tasks || []).some(task => task.text === action.text)) {
+          day.tasks.push({ id: `t-ai-${Date.now()}-${taskCount}`, text: action.text, done: false, priority: action.priority || 'P1', pomodoros: 0 });
+          taskCount += 1;
+        }
+      } else if (!(day.milestones || []).some(milestone => milestone.text === action.text)) {
+        day.milestones.push({ id: `m-ai-${Date.now()}-${scheduleCount}`, text: action.text, type: action.type || 'event' });
+        scheduleCount += 1;
+      }
+    });
+    saveState();
+    renderTasks();
+    renderMilestones();
+    refreshHeatmap();
+    calendar.render();
+    pendingAiActions = [];
+    showToast(`已写入 ${taskCount} 项待办、${scheduleCount} 项日程。`, 'success');
+  }
+
+  function confirmSelectedAiActions() {
+    const selected = [...document.querySelectorAll('#ai-suggested-actions input[data-ai-action-index]:checked')]
+      .map(input => pendingAiActions[Number(input.dataset.aiActionIndex)])
+      .filter(Boolean);
+    if (!selected.length) {
+      showToast('请至少勾选一项建议后再写入。', 'info');
+      return;
+    }
+    writeAiActions(selected);
+  }
+
+  async function requestAiSecretary() {
+    const statusEl = document.getElementById('ai-assistant-status');
+    const outputEl = document.getElementById('ai-assistant-output');
+    if (!statusEl || !outputEl) return;
+    statusEl.textContent = '正在整理工作上下文并请求 AI…';
+    outputEl.textContent = 'FoFo AI 正在思考…';
+    renderAiSuggestedActions([]);
+    const config = readAiConfigFromUi();
+    const provider = getAiProviderConfig(config.provider);
+    try {
+      if (config.mode === 'chatgpt-web') throw new Error('当前为 ChatGPT 网页协同模式，请点击“复制并打开 ChatGPT”。');
+      const result = config.mode === 'direct-api'
+        ? await callDirectAi(getAiPromptFromUi(), config)
+        : await callLocalAi(getAiPromptFromUi(), config);
+      setAiSuggestion(result.output);
+      statusEl.textContent = `已生成建议 · ${result.provider ? `${result.provider} · ` : ''}${result.model || 'FoFo AI'}`;
+    } catch (e) {
+      const detail = e.message || 'AI 服务暂不可用';
+      outputEl.textContent = `${provider.label} 请求失败：${detail}\n\n如果你刚修改了服务商或 API Key，请先点击“保存配置”；如果错误是 Failed to fetch，通常是浏览器跨域限制，可改用本地服务模式。`;
+      statusEl.textContent = `${provider.label}：${detail}`;
+    }
+  }
+
+  function newAiChatSession() {
+    return { id: `chat-${Date.now()}`, title: '新会话', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), messages: [] };
+  }
+
+  function normalizeAiChatState(rawState) {
+    const rawSessions = Array.isArray(rawState?.sessions) ? rawState.sessions : [];
+    const sessions = rawSessions.map(session => ({
+      ...session,
+      id: String(session.id || `chat-${Date.now()}-${Math.random().toString(16).slice(2)}`),
+      title: String(session.title || '新会话'),
+      messages: Array.isArray(session.messages) ? session.messages : []
+    }));
+    if (!sessions.length) {
+      const session = newAiChatSession();
+      return { currentId: session.id, sessions: [session] };
+    }
+    const currentId = sessions.some(session => session.id === rawState?.currentId)
+      ? rawState.currentId
+      : sessions[0].id;
+    return { currentId, sessions };
+  }
+
+  function getLocalAiChatState() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(AI_CHAT_STORAGE_KEY) || '{}');
+      return normalizeAiChatState(saved);
+    } catch (e) { /* use a clean session */ }
+    return normalizeAiChatState(null);
+  }
+
+  function getAiChatState() {
+    if (!aiChatStateCache) aiChatStateCache = getLocalAiChatState();
+    return aiChatStateCache;
+  }
+
+  function saveAiChatState(chatState) {
+    aiChatStateCache = normalizeAiChatState(chatState);
+    try { localStorage.setItem(AI_CHAT_STORAGE_KEY, JSON.stringify(aiChatStateCache)); } catch (e) { console.warn('AI 会话浏览器缓存失败', e); }
+    if (aiChatFileSync) {
+      fetch(AI_CHAT_FILE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(aiChatStateCache)
+      }).catch(error => {
+        aiChatFileSync = false;
+        updateAiChatPersistenceStatus();
+        console.warn('AI 会话文件保存失败', error);
+      });
+    }
+  }
+
+  function isMeaningfulAiChatState(chatState) {
+    return chatState.sessions.length > 1
+      || chatState.sessions.some(session => session.messages.length || session.title !== '新会话');
+  }
+
+  function updateAiChatPersistenceStatus() {
+    const status = document.getElementById('ai-chat-status');
+    if (!status) return;
+    status.textContent = aiChatFileSync
+      ? '会话记录保存在 FoFo/.FoFoAI'
+      : '会话记录保存在当前浏览器（本地服务未连接时使用）';
+  }
+
+  async function loadAiChatStateFromServer() {
+    try {
+      const response = await fetch(AI_CHAT_FILE_ENDPOINT, { headers: { 'Accept': 'application/json' } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      const serverState = normalizeAiChatState(payload);
+      const localState = getLocalAiChatState();
+      aiChatFileSync = true;
+      if (payload.persisted || isMeaningfulAiChatState(serverState)) {
+        aiChatStateCache = serverState;
+        localStorage.setItem(AI_CHAT_STORAGE_KEY, JSON.stringify(serverState));
+      } else {
+        aiChatStateCache = localState;
+        await fetch(AI_CHAT_FILE_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(localState)
+        });
+      }
+      updateAiChatPersistenceStatus();
+      renderAiChatSessions();
+      renderAiChatMessages();
+    } catch (error) {
+      aiChatFileSync = false;
+      updateAiChatPersistenceStatus();
+      console.info('FoFo 本地会话文件不可用，继续使用浏览器存储', error);
+    }
+  }
+
+  function getCurrentAiChatSession(chatState = getAiChatState()) {
+    return chatState.sessions.find(session => session.id === chatState.currentId) || chatState.sessions[0];
+  }
+
+  function renderAiChatSessions() {
+    const select = document.getElementById('ai-chat-session-select');
+    if (!select) return;
+    const chatState = getAiChatState();
+    select.innerHTML = '';
+    chatState.sessions.forEach(session => {
+      const option = document.createElement('option');
+      option.value = session.id;
+      option.textContent = session.title || '新会话';
+      option.selected = session.id === chatState.currentId;
+      select.appendChild(option);
+    });
+  }
+
+  function renameCurrentAiChatSession() {
+    const chatState = getAiChatState();
+    const session = getCurrentAiChatSession(chatState);
+    if (!session) return;
+    const nextTitle = window.prompt('请输入新的会话名称：', session.title || '新会话');
+    if (nextTitle === null) return;
+    const title = nextTitle.trim();
+    if (!title) {
+      showToast('会话名称不能为空。', 'info');
+      return;
+    }
+    session.title = title.slice(0, 40);
+    session.updatedAt = new Date().toISOString();
+    saveAiChatState(chatState);
+    renderAiChatSessions();
+    showToast('会话名称已更新。', 'success');
+  }
+
+  function deleteCurrentAiChatSession() {
+    const chatState = getAiChatState();
+    const index = chatState.sessions.findIndex(session => session.id === chatState.currentId);
+    if (index < 0) return;
+    const session = chatState.sessions[index];
+    if (!window.confirm(`确认删除会话“${session.title || '新会话'}”吗？删除后无法恢复。`)) return;
+    chatState.sessions.splice(index, 1);
+    if (!chatState.sessions.length) {
+      const fresh = newAiChatSession();
+      chatState.sessions.push(fresh);
+      chatState.currentId = fresh.id;
+    } else {
+      chatState.currentId = chatState.sessions[Math.max(0, index - 1)].id;
+    }
+    saveAiChatState(chatState);
+    renderAiChatSessions();
+    renderAiChatMessages();
+    showToast('会话已删除。', 'success');
+  }
+
+  function renderAiChatMessages() {
+    const list = document.getElementById('ai-chat-messages');
+    if (!list) return;
+    const chatState = getAiChatState();
+    const session = getCurrentAiChatSession(chatState);
+    list.innerHTML = '';
+    if (!session.messages.length) {
+      list.innerHTML = '<div class="h-full flex items-center justify-center text-center text-xs text-slate-500 px-8">这是一个持续会话。FoFo AI 会结合当前工作台目标、待办和日程回答。</div>';
+    }
+    session.messages.forEach(message => {
+      const wrapper = document.createElement('div');
+      wrapper.className = `flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`;
+      const bubble = document.createElement('div');
+      bubble.className = `max-w-[88%] rounded-lg px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap ${message.role === 'user' ? 'bg-emerald-900/70 text-emerald-100' : 'bg-slate-900 border border-slate-800 text-slate-300'}`;
+      const role = document.createElement('div');
+      role.className = 'text-[10px] opacity-60 mb-1';
+      role.textContent = message.role === 'user' ? '你' : 'FoFo AI';
+      const text = document.createElement('div');
+      text.textContent = message.role === 'assistant' ? (cleanAiSuggestionText(message.content) || '已生成可写入工作台的建议。') : message.content;
+      bubble.append(role, text);
+      wrapper.appendChild(bubble);
+      list.appendChild(wrapper);
+    });
+    list.scrollTop = list.scrollHeight;
+    const lastAssistant = [...session.messages].reverse().find(message => message.role === 'assistant');
+    lastChatSuggestion = lastAssistant ? lastAssistant.content : '';
+    const lastActions = document.getElementById('ai-chat-last-actions');
+    if (lastActions) lastActions.classList.toggle('hidden', !parseAiActions(lastChatSuggestion).length);
+  }
+
+  function buildAiChatPrompt(session, userText) {
+    const history = session.messages.slice(-12).map(message => `${message.role === 'user' ? '用户' : 'FoFo AI'}：${message.content}`).join('\n\n');
+    return `你是 FoFo 的工作流秘书，正在进行多轮工作协作。请结合当前工作台上下文和会话历史回答，不要泛泛聊天，也不要声称已经修改了本地数据。\n\n当前工作台上下文（JSON）：\n${JSON.stringify(getAiWorkspaceContext(), null, 2)}\n\n会话历史：\n${history || '无'}\n\n用户最新消息：\n${userText}\n\n请用中文给出简洁、可执行的回答，正文不超过 8 行，最多 3 条建议。若形成了明确的待办或日程，请在末尾追加：\n<FOFO_ACTIONS>\n{"tasks":[{"text":"待办内容","priority":"P1","date":"${state.currentDate}"}],"schedules":[{"text":"日程内容","date":"${state.currentDate}","type":"event"}]}\n</FOFO_ACTIONS>\n没有可写入项时返回空数组；写入前等待用户确认。`;
+  }
+
+  async function sendAiChatMessage(presetText = '') {
+    const input = document.getElementById('ai-chat-input');
+    const sendBtn = document.getElementById('btn-ai-chat-send');
+    const text = String(presetText || (input ? input.value : '')).trim();
+    if (!text) return;
+    const chatState = getAiChatState();
+    const session = getCurrentAiChatSession(chatState);
+    const config = getAiConfig();
+    if (config.mode === 'chatgpt-web') {
+      showToast('多轮会话需要先在 AI 配置中选择直连 API 或本地服务模式。', 'info');
+      return;
+    }
+    session.messages.push({ role: 'user', content: text, createdAt: new Date().toISOString() });
+    if (session.title === '新会话') session.title = text.slice(0, 22);
+    session.updatedAt = new Date().toISOString();
+    if (input) input.value = '';
+    saveAiChatState(chatState);
+    renderAiChatSessions();
+    renderAiChatMessages();
+    if (sendBtn) sendBtn.disabled = true;
+    try {
+      const prompt = buildAiChatPrompt(session, text);
+      const result = config.mode === 'direct-api' ? await callDirectAi(prompt, config) : await callLocalAi(prompt, config);
+      session.messages.push({ role: 'assistant', content: result.output || 'AI 没有返回文本。', createdAt: new Date().toISOString() });
+    } catch (e) {
+      session.messages.push({ role: 'assistant', content: `请求失败：${e.message || 'AI 服务暂不可用'}`, createdAt: new Date().toISOString() });
+    } finally {
+      session.updatedAt = new Date().toISOString();
+      saveAiChatState(chatState);
+      renderAiChatSessions();
+      renderAiChatMessages();
+      if (sendBtn) sendBtn.disabled = false;
+    }
+  }
+
+  function confirmLatestChatSuggestion() {
+    const actions = parseAiActions(lastChatSuggestion);
+    if (!actions.length) {
+      showToast('最近一条回复中没有识别到可写入的待办或日程。', 'info');
+      return;
+    }
+    const summary = actions.map(action => `${action.kind === 'task' ? '待办' : '日程'}：${action.text}`).join('\n');
+    if (window.confirm(`确认将以下秘书建议写入当前工作台吗？\n\n${summary}`)) {
+      writeAiActions(actions);
+      document.getElementById('ai-chat-last-actions')?.classList.add('hidden');
+    }
+  }
+
+  function openAiChatSidebar() {
+    const sidebar = document.getElementById('ai-chat-sidebar');
+    if (!sidebar) return;
+    sidebar.classList.remove('hidden');
+    renderAiChatSessions();
+    renderAiChatMessages();
+    document.getElementById('ai-chat-input')?.focus();
+  }
+
+  function openAiConfigModal() {
+    const modal = document.getElementById('modal-ai-assistant');
+    if (!modal) return;
+    document.getElementById('ai-chat-sidebar')?.classList.add('hidden');
+    modal.classList.remove('hidden');
+    updateAiConfigUi();
+    document.getElementById('ai-provider-select')?.focus();
+  }
+
+  function initAiPetInteraction() {
+    const pet = document.getElementById('btn-ai-chat-sidebar');
+    if (!pet || pet.dataset.petBound === 'true') return;
+    pet.dataset.petBound = 'true';
+    const bubble = pet.querySelector('.fofo-ai-pet-bubble');
+    const lines = ['今天也要轻轻松松完成一件大事！', '嘿，看到我就说明该休息一下啦～', 'AI 助理已就位，随时听你安排！', '小声说：先做最重要的那一件。', '来碰一下，我给你打打气！'];
+    const interactions = ['jump', 'squash', 'shake'];
+    const PET_KEY = 'fofo_ai_pet_layout_v2';
+    const MIN_SCALE = 0.8;
+    const MAX_SCALE = 2;
+    // Clear legacy corrupted layout if exists
+    try { localStorage.removeItem('fofo_ai_pet_layout_v1'); } catch (e) {}
+    let petLayout = { scale: 1, left: 0, top: 0 };
+    try { petLayout = { ...petLayout, ...(JSON.parse(localStorage.getItem(PET_KEY) || '{}')) }; } catch (e) { /* defaults */ }
+    const applyLayout = () => {
+      pet.style.setProperty('--pet-scale', String(Math.max(MIN_SCALE, Math.min(MAX_SCALE, Number(petLayout.scale) || 1))));
+      pet.style.setProperty('--pet-left', `${Number(petLayout.left) || 0}px`);
+      pet.style.setProperty('--pet-top', `${Number(petLayout.top) || 0}px`);
+    };
+    const saveLayout = () => localStorage.setItem(PET_KEY, JSON.stringify(petLayout));
+    applyLayout();
+    let interactionIndex = 0;
+    let bubbleTimer = null;
+    let animationTimer = null;
+
+    const toggleEditing = (event) => {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      pet.classList.toggle('is-editing');
+      if (bubble) {
+        bubble.textContent = pet.classList.contains('is-editing') ? '拖动我调整位置，按＋−缩放' : '调整完成！';
+        bubble.classList.add('is-visible');
+        window.clearTimeout(bubbleTimer);
+        bubbleTimer = window.setTimeout(() => bubble.classList.remove('is-visible'), 2000);
+      }
+    };
+
+    pet.addEventListener('dblclick', toggleEditing);
+    pet.addEventListener('contextmenu', toggleEditing);
+
+    pet.querySelectorAll('[data-pet-action]').forEach(button => {
+      button.addEventListener('click', event => {
+        event.stopPropagation();
+        const action = button.dataset.petAction;
+        if (action === 'larger') petLayout.scale = Math.min(MAX_SCALE, (Number(petLayout.scale) || 1) + 0.1);
+        if (action === 'smaller') petLayout.scale = Math.max(MIN_SCALE, (Number(petLayout.scale) || 1) - 0.1);
+        if (action === 'reset') petLayout = { scale: 1, left: 0, top: 0 };
+        applyLayout();
+        saveLayout();
+      });
+    });
+
+    let drag = null;
+    pet.addEventListener('pointerdown', event => {
+      if (!pet.classList.contains('is-editing') || event.button !== 0 || event.target.closest('[data-pet-action]')) return;
+      event.preventDefault();
+      drag = { x: event.clientX, y: event.clientY, left: Number(petLayout.left) || 0, top: Number(petLayout.top) || 0 };
+      pet.classList.add('is-dragging');
+      try { pet.setPointerCapture(event.pointerId); } catch (e) { /* ignore */ }
+    });
+    pet.addEventListener('pointermove', event => {
+      if (!drag) return;
+      petLayout.left = Math.round(drag.left + event.clientX - drag.x);
+      petLayout.top = Math.round(drag.top + event.clientY - drag.y);
+      applyLayout();
+    });
+    pet.addEventListener('pointerup', event => {
+      if (!drag) return;
+      drag = null;
+      pet.classList.remove('is-dragging');
+      try { pet.releasePointerCapture(event.pointerId); } catch (e) { /* ignore */ }
+      saveLayout();
+    });
+
+    const triggerInteraction = () => {
+      if (pet.classList.contains('is-editing')) return;
+      const interaction = interactions[interactionIndex % interactions.length];
+      interactionIndex += 1;
+      pet.dataset.interaction = interaction;
+      if (bubble) {
+        window.clearTimeout(bubbleTimer);
+        bubble.textContent = lines[Math.floor(Math.random() * lines.length)];
+        bubble.classList.add('is-visible');
+        bubbleTimer = window.setTimeout(() => bubble.classList.remove('is-visible'), 2400);
+      }
+      window.clearTimeout(animationTimer);
+      animationTimer = window.setTimeout(() => {
+        pet.removeAttribute('data-interaction');
+      }, 780);
+    };
+
+    pet.addEventListener('pointerenter', triggerInteraction);
+    pet.addEventListener('focus', triggerInteraction);
+    pet.addEventListener('pointerleave', () => {
+      if (bubble && !pet.classList.contains('is-editing')) bubble.classList.remove('is-visible');
+    });
+    pet.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        if (!pet.classList.contains('is-editing')) {
+          event.preventDefault();
+          openAiChatSidebar();
+        }
+      }
+    });
+  }
+
+  function initAiSecretary() {
+    const modal = document.getElementById('modal-ai-assistant');
+    const closeBtn = document.getElementById('modal-ai-close');
+    const providerSelect = document.getElementById('ai-provider-select');
+    const modeSelect = document.getElementById('ai-mode-select');
+    const saveConfigBtn = document.getElementById('btn-ai-save-config');
+    const testConfigBtn = document.getElementById('btn-ai-test-config');
+    const clearConfigBtn = document.getElementById('btn-ai-clear-config');
+    const statusEl = document.getElementById('ai-config-status');
+    if (!modal) return;
+
+    document.getElementById('btn-ai-chat-sidebar')?.addEventListener('click', openAiChatSidebar);
+    initAiPetInteraction();
+    document.getElementById('btn-ai-chat-config')?.addEventListener('click', openAiConfigModal);
+    document.getElementById('btn-ai-chat-close')?.addEventListener('click', () => document.getElementById('ai-chat-sidebar')?.classList.add('hidden'));
+    if (closeBtn) closeBtn.onclick = () => modal.classList.add('hidden');
+    if (modeSelect) modeSelect.onchange = () => updateAiConfigUi(readAiConfigFromUi());
+    if (providerSelect) providerSelect.onchange = () => {
+      const modelInput = document.getElementById('ai-model-input');
+      const knownDefaultModels = Object.values(AI_PROVIDERS).map(provider => provider.model);
+      if (modelInput && knownDefaultModels.includes(modelInput.value.trim())) modelInput.value = getAiProviderConfig(providerSelect.value).model;
+      updateAiConfigUi(readAiConfigFromUi());
+    };
+    if (saveConfigBtn) saveConfigBtn.onclick = () => {
+      const config = readAiConfigFromUi();
+      saveAiConfig(config);
+      updateAiConfigUi(config);
+      if (statusEl) statusEl.textContent = `AI 配置已保存：${getAiProviderConfig(config.provider).label} · ${config.mode}`;
+    };
+    if (clearConfigBtn) clearConfigBtn.onclick = () => {
+      localStorage.removeItem(AI_CONFIG_STORAGE_KEY);
+      updateAiConfigUi();
+      if (statusEl) statusEl.textContent = 'AI 配置已清除，已恢复 ChatGPT 网页协同模式。';
+    };
+    if (testConfigBtn) testConfigBtn.onclick = async () => {
+      const config = readAiConfigFromUi();
+      if (config.mode === 'chatgpt-web') {
+        if (statusEl) statusEl.textContent = '网页协同模式无需测试连接，请复制上下文并打开 ChatGPT。';
+        return;
+      }
+      if (statusEl) statusEl.textContent = '正在测试 AI 连接…';
+      try {
+        const result = config.mode === 'direct-api' ? await callDirectAi('请只回复：FoFo AI 连接正常。', config) : await callLocalAi('请只回复：FoFo AI 连接正常。', config);
+        if (statusEl) statusEl.textContent = `连接成功 · ${result.provider ? `${result.provider} · ` : ''}${result.model || config.model}`;
+      } catch (e) {
+        if (statusEl) statusEl.textContent = e.message || '连接测试失败';
+      }
+    };
+    document.getElementById('ai-chat-session-select')?.addEventListener('change', (event) => {
+      const chatState = getAiChatState();
+      chatState.currentId = event.target.value;
+      saveAiChatState(chatState);
+      renderAiChatMessages();
+    });
+    document.getElementById('btn-ai-chat-new')?.addEventListener('click', () => {
+      const chatState = getAiChatState();
+      const session = newAiChatSession();
+      chatState.sessions.unshift(session);
+      chatState.currentId = session.id;
+      saveAiChatState(chatState);
+      renderAiChatSessions();
+      renderAiChatMessages();
+    });
+    document.getElementById('btn-ai-chat-rename')?.addEventListener('click', renameCurrentAiChatSession);
+    document.getElementById('btn-ai-chat-delete')?.addEventListener('click', deleteCurrentAiChatSession);
+    document.getElementById('btn-ai-chat-send')?.addEventListener('click', () => sendAiChatMessage());
+    document.querySelectorAll('.ai-chat-preset').forEach(button => {
+      button.addEventListener('click', () => sendAiChatMessage(button.dataset.prompt || ''));
+    });
+    document.getElementById('ai-chat-input')?.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        sendAiChatMessage();
+      }
+    });
+    document.getElementById('btn-ai-chat-apply-last')?.addEventListener('click', () => {
+      confirmLatestChatSuggestion();
+    });
+    updateAiConfigUi();
+    renderAiChatSessions();
+    renderAiChatMessages();
+    updateAiChatPersistenceStatus();
+    loadAiChatStateFromServer();
+  }
+
   // --- Event Binding ---
   function initEvents() {
     // Prev / Next / Today
@@ -1737,7 +2636,7 @@
         compressImageFile(file, 1920, 1080, 0.92, (compressedDataUrl) => {
           state.heroBannerImage = compressedDataUrl;
           applyHeroBanner();
-          saveState();
+          saveState(true);
           showToast('已更新动态展板背景图！', 'theme');
         });
       };
@@ -1749,7 +2648,7 @@
         state.heroBannerImage = '';
         if (bannerFileInput) bannerFileInput.value = '';
         applyHeroBanner();
-        saveState();
+        saveState(true);
         showToast('已恢复展板默认背景', 'info');
       };
     }
@@ -1768,14 +2667,15 @@
           state.heroBannerSlogan = inputBannerSlogan.value.trim() || '保持热爱，奔赴山海！';
         }
         applyHeroBanner();
-        saveState();
+        saveState(true);
         if (modalBanner) modalBanner.classList.add('hidden');
         showToast('动态心情标语与展板已更新！', 'success');
       };
     }
 
     // Editable Workspace Name (Syncs with browser document title)
-    const handleEditAppTitle = () => {
+    const handleEditAppTitle = (e) => {
+      if (e && e.stopPropagation) e.stopPropagation();
       const current = state.appTitle || 'FoFo 工作台';
       const newTitle = prompt('请输入新的工作台名称（将同步至网页标题）：', current);
       if (newTitle !== null) {
@@ -1816,6 +2716,20 @@
       };
     });
 
+    // System wallpaper preset buttons
+    document.querySelectorAll('.system-wallpaper-btn').forEach(btn => {
+      btn.onclick = () => {
+        const wp = btn.dataset.wallpaper;
+        state.customBgImage = wp;
+        const bgInput = document.getElementById('bg-file-input');
+        if (bgInput) bgInput.value = '';
+        applyTheme();
+        saveState(true);
+        const wpName = btn.querySelector('span') ? btn.querySelector('span').textContent.trim() : '系统壁纸';
+        showToast(`已应用系统壁纸: ${wpName}`, 'theme', 2000);
+      };
+    });
+
     // Custom Background Upload
     const bgFileInput = document.getElementById('bg-file-input');
     document.getElementById('btn-choose-bg-image').onclick = () => {
@@ -1828,17 +2742,18 @@
       compressImageFile(file, 1920, 1080, 0.82, (compressedDataUrl) => {
         state.customBgImage = compressedDataUrl;
         applyTheme();
-        saveState();
+        saveState(true);
         showToast('自定义背景壁纸已应用！', 'theme');
       });
     };
 
     document.getElementById('btn-remove-bg-image').onclick = () => {
       state.customBgImage = '';
-      bgFileInput.value = '';
+      const bgInput = document.getElementById('bg-file-input');
+      if (bgInput) bgInput.value = '';
       applyTheme();
-      saveState();
-      showToast('已清除自定义壁纸，恢复经典配色', 'info');
+      saveState(true);
+      showToast('已清除背景壁纸，恢复纯色配色', 'info');
     };
 
     // Background Opacity & Blur Sliders
@@ -1860,7 +2775,8 @@
 
     // Avatar Upload
     const avatarFileInput = document.getElementById('avatar-file-input');
-    document.getElementById('btn-trigger-avatar').onclick = () => {
+    document.getElementById('btn-trigger-avatar').onclick = (e) => {
+      if (e && e.stopPropagation) e.stopPropagation();
       avatarFileInput.click();
     };
     document.getElementById('btn-upload-avatar-modal').onclick = () => {
@@ -1873,7 +2789,7 @@
       compressImageFile(file, 256, 256, 0.88, (compressedDataUrl) => {
         state.userAvatar = compressedDataUrl;
         applyAvatar();
-        saveState();
+        saveState(true);
         showToast('个人头像更新成功！', 'info');
       });
     };
@@ -1882,7 +2798,7 @@
       state.userAvatar = '';
       avatarFileInput.value = '';
       applyAvatar();
-      saveState();
+      saveState(true);
       showToast('已恢复默认头像', 'info');
     };
 
@@ -2158,6 +3074,7 @@
     initHeatmap();
     initCalendar();
     initEvents();
+    initAiSecretary();
 
     switchGoalsTab('weekly');
     switchActiveDate(state.currentDate);

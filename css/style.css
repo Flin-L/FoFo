@@ -11,6 +11,248 @@
   --text-muted: #94a3b8;
 }
 
+/* FoFo AI desk pet styles are declared below */
+
+
+/* ================= FoFo AI LinaBell Desk Pet ================= */
+.fofo-ai-pet {
+  --pet-scale: 1;
+  --pet-left: 0px;
+  --pet-top: 0px;
+  position: relative;
+  width: 50px;
+  height: 74px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  cursor: pointer;
+  overflow: visible;
+  transform-origin: center bottom;
+  transform: translate(var(--pet-left), var(--pet-top)) scale(var(--pet-scale));
+  z-index: 50;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.fofo-ai-pet:hover,
+.fofo-ai-pet:focus-visible,
+.fofo-ai-pet:active {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+.fofo-ai-pet.is-dragging {
+  cursor: grabbing;
+}
+
+.fofo-ai-pet::after {
+  content: "双击：移动 / 缩放";
+  position: absolute;
+  left: 50%;
+  bottom: -18px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  color: #fbcfe8;
+  font: 9px/1.2 "Microsoft YaHei", sans-serif;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  transition: opacity 0.18s ease;
+}
+
+.fofo-ai-pet:hover::after {
+  opacity: 0.85;
+}
+
+.fofo-ai-pet.is-editing::after {
+  display: none;
+}
+
+.fofo-ai-pet-controls {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -28px;
+  display: none;
+  gap: 3px;
+  padding: 2px 4px;
+  border: 1px solid rgba(244, 114, 182, 0.4);
+  border-radius: 8px;
+  background: rgba(30, 15, 35, 0.96);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 70;
+}
+
+.fofo-ai-pet.is-editing .fofo-ai-pet-controls {
+  display: flex !important;
+}
+
+.fofo-ai-pet-controls button {
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  color: #fbcfe8;
+  background: rgba(157, 23, 77, 0.6);
+  font: 700 12px/18px sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.fofo-ai-pet-controls button:hover {
+  background: rgba(219, 39, 119, 0.85);
+}
+
+.fofo-ai-pet-image {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  transform: translateX(-50%);
+  transform-origin: center bottom;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 3px 5px rgba(2, 6, 23, 0.45));
+  transition: filter 0.2s ease;
+}
+
+.fofo-ai-pet:hover .fofo-ai-pet-image {
+  filter: drop-shadow(0 4px 8px rgba(244, 114, 182, 0.5));
+}
+
+.fofo-ai-pet-bubble {
+  position: absolute;
+  z-index: 60;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  transform: translate(-50%, 4px) scale(0.9);
+  max-width: 180px;
+  min-width: max-content;
+  padding: 5px 9px;
+  border: 1px solid rgba(244, 114, 182, 0.5);
+  border-radius: 10px;
+  background: rgba(255, 247, 237, 0.98);
+  color: #7c2d4f;
+  font: 600 10.5px/1.3 "Microsoft YaHei", sans-serif;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.fofo-ai-pet-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  margin-left: -4px;
+  width: 8px;
+  height: 8px;
+  border-right: 1px solid rgba(244, 114, 182, 0.5);
+  border-bottom: 1px solid rgba(244, 114, 182, 0.5);
+  background: rgba(255, 247, 237, 0.98);
+  transform: rotate(45deg);
+}
+
+.fofo-ai-pet-bubble.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.fofo-ai-pet-label {
+  position: absolute;
+  right: 0px;
+  bottom: 2px;
+  z-index: 4;
+  padding: 1px 3.5px;
+  border-radius: 4px;
+  color: #fce7f3;
+  background: rgba(124, 45, 79, 0.9);
+  border: 1px solid rgba(251, 207, 232, 0.4);
+  font: 700 8px/1 sans-serif;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+.fofo-ai-pet[data-interaction="jump"] .fofo-ai-pet-image {
+  animation: fofo-pet-jump 0.65s cubic-bezier(.2,.8,.3,1);
+}
+
+.fofo-ai-pet[data-interaction="squash"] .fofo-ai-pet-image {
+  animation: fofo-pet-squash 0.65s ease-in-out;
+}
+
+.fofo-ai-pet[data-interaction="shake"] .fofo-ai-pet-image {
+  animation: fofo-pet-shake 0.65s ease-in-out;
+}
+
+@keyframes fofo-pet-jump {
+  0%, 100% { transform: translateX(-50%) translateY(0) rotate(0); }
+  35% { transform: translateX(-50%) translateY(-10px) rotate(-3deg); }
+  65% { transform: translateX(-50%) translateY(1px) rotate(3deg); }
+}
+
+@keyframes fofo-pet-squash {
+  0%, 100% { transform: translateX(-50%) scale(1, 1); }
+  30% { transform: translateX(-50%) translateY(3px) scale(1.1, 0.85); }
+  58% { transform: translateX(-50%) translateY(-3px) scale(0.94, 1.06); }
+}
+
+@keyframes fofo-pet-shake {
+  0%, 100% { transform: translateX(-50%) rotate(0); }
+  20% { transform: translateX(calc(-50% - 3px)) rotate(-4deg); }
+  40% { transform: translateX(calc(-50% + 3px)) rotate(4deg); }
+  60% { transform: translateX(calc(-50% - 2px)) rotate(-3deg); }
+  80% { transform: translateX(calc(-50% + 2px)) rotate(2deg); }
+}
+
+/* Fluid, multi-DPI & cross-screen adaptive scaling */
+@media (max-width: 1366px) {
+  #heatmap-container {
+    transform: scale(0.85);
+    transform-origin: left center;
+  }
+}
+
+@media (max-width: 1100px) {
+  header {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  header > div {
+    gap: 8px !important;
+  }
+  #hero-banner-card {
+    min-width: 280px !important;
+    max-width: 340px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  header {
+    overflow-x: auto;
+  }
+  header > div {
+    min-width: 760px;
+  }
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   color: var(--text-main);
@@ -388,6 +630,25 @@ body.theme-space-gray {
 .theme-swatch.active {
   border-color: #38bdf8;
   box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+/* System Wallpaper Preset Buttons */
+.system-wallpaper-btn {
+  transition: all 0.2s ease;
+}
+
+.system-wallpaper-btn:hover {
+  transform: translateY(-2px);
+}
+
+.system-wallpaper-btn.active {
+  border-color: #10b981 !important;
+  background-color: rgba(6, 78, 59, 0.3) !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+}
+
+.system-wallpaper-btn.active .wallpaper-check-badge {
+  opacity: 1 !important;
 }
 
 /* ================= Dynamic Hero Banner Showcase Board ================= */

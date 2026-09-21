@@ -105,7 +105,7 @@
     '2026-06-19': { name: '端午节', type: 'holiday' },
     '2026-06-20': { name: '端午节', type: 'holiday' },
     '2026-06-21': { name: '端午节', type: 'holiday' },
-    '2026-09-20': { name: '中秋节调休', type: 'workday' },
+    '2026-09-20': { name: '国庆节调休', type: 'workday' },
     '2026-09-25': { name: '中秋节', type: 'holiday' },
     '2026-09-26': { name: '中秋节', type: 'holiday' },
     '2026-09-27': { name: '中秋节', type: 'holiday' },

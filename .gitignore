@@ -11,6 +11,14 @@ documents/*.json
 exports/*.md
 !exports/.gitkeep
 
+# FoFo AI local session history (may contain private work context)
+.FoFoAI/
+build/
+dist/
+*.spec
+*.exe
+FoFo.exe
+
 # Operating System files
 .DS_Store
 Thumbs.db

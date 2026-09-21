@@ -1,10 +1,14 @@
 # 🚀 FoFo 个人工作台 (FoFo Personal WorkStation)
 
 <p align="left">
-  <img src="https://img.shields.io/badge/version-1.1.0-emerald?style=flat-square" alt="Version 1.1.0" />
+  <img src="https://img.shields.io/badge/version-2.0.0-emerald?style=flat-square" alt="Version 2.0.0" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=flat-square" alt="Cross Platform" />
   <img src="https://img.shields.io/badge/license-MIT-purple?style=flat-square" alt="License MIT" />
   <img src="https://img.shields.io/badge/storage-100%25%20Local-success?style=flat-square" alt="100% Local" />
+</p>
+
+<p align="center">
+  <img src="readmeimg/工作台预览.png" alt="FoFo 个人工作台全景预览" width="100%" style="border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
 </p>
 
 > **专为重度依赖 Markdown 记录工作流、追求极简高效与时间感知的知识工作者打造的轻量本地化个人生产力中枢。**  
@@ -21,6 +25,48 @@
 > - **修订号 (Patch)**：针对已有功能的缺陷修复 (Bugfix)、性能优化或细节微调；
 > 
 > **后续每次发布新版本，必须在此区域以倒序方式（最新版本置顶）追加记录，清晰列出新版本号、发布日期及功能更新明细。**
+
+---
+
+### [v2.0.0] - 2026-09-20
+
+🎉 **FoFo V2.0.0 重大版本里程碑发布！** 引入 AI 智能工作流与独立桌面可执行程序，全面进化为本地优先的智能生产力中枢。
+
+#### 📸 V2.0.0 视觉新特性展示
+
+| 🤖 AI 会话抽屉 | 🐱 玲娜贝儿 AI 桌面伴侣 | ⚙️ 双通道 AI 模型配置 |
+| :---: | :---: | :---: |
+| <img src="readmeimg/AI会话抽屉.png" width="300" /> | <img src="readmeimg/AI助理.png" width="220" /> | <img src="readmeimg/AI配置.png" width="250" /> |
+
+| 🎨 系统官方精选壁纸与 5 色 iOS 经典方案 | 🚀 根目录单文件绿色桌面版 (`FoFo.exe`) |
+| :---: | :---: |
+| <img src="readmeimg/配色主题与个性化背景.png" width="400" /> | <img src="readmeimg/可执行程序FoFo.png" width="400" /> |
+
+#### 🌟 核心新特性
+
+- **FoFo AI 智能工作流秘书**：
+  - **抽屉式会话空间**：顶部栏新增 AI 会话快捷抽屉，支持创建多轮持久化会话、会话重命名与归档管理；
+  - **智能上下文提取**：一键自动整理并注入当前未完成待办、重要日程与近期日志，辅助快速拆解任务与生成建议；
+  - **双通道模型接入**：支持 OpenAI 与 DeepSeek，支持“本地服务环境变量模式”（高安全性）与“浏览器直连配置模式”；
+  - **智能落地**：AI 给出的结构化行动建议支持一键转存为今日待办或日程节点。
+- **玲娜贝儿 AI 桌面伴侣 (Desk Pet)**：
+  - 右下角常驻互动桌面伴侣，支持智能状态气泡互动；
+  - 双击或右键呼出快捷控制面板，支持自由拖拽移动与无级缩放，伴随工作心流。
+- **系统内置官方高清壁纸**：
+  - 在“配色主题与个性化背景”中新增 3 款 macOS 原生 4K 精选壁纸（`macOS Ventura 炫彩`、`macOS Mojave 沙丘`、`macOS Sonoma 幻境`）；
+  - 支持一键切换、与 5 种 iOS 暗色微光渐变即时联动，支持灵活调节毛玻璃与遮罩暗度，同时继续保留用户自定义壁纸上传功能。
+- **🚀 独立单文件绿色桌面版 (`FoFo.exe`)**：
+  - 根目录内置独立编译的可执行程序 `FoFo.exe`，免安装 Python 与任何第三方依赖，双击即开；
+  - 匹配专属 `sparkle.ico` 高清图标，原生后台静默托管本地服务并秒级拉起浏览器。
+
+#### 🛠️ 架构加固与体验优化
+
+- **全屏幕跨 DPI 响应式自适应**：重构顶部栏弹性盒子布局与三栏工作台网格，彻底消除旧版负边距位移硬编码，完美适配多显示器跨屏切换、浏览器任意比例缩放（100%~175%）以及笔记本小屏显示；
+- **中国大陆节假日历表勘误**：修正 2026年9月20日为国庆节调休补班（非中秋节调休）；
+- **全离线化设计**：本地化集成 Tailwind CSS 与 Marked Markdown 渲染引擎，摆脱外部 CDN 限制，断网环境下 100% 稳定运行；
+- **DOM 交互规范重构**：重构桌面伴侣按钮嵌套结构，彻底解决原生浏览器解析导致的节点错位与触发偏差；
+- **Windows 无控制台环境异常防护**：针对 PyInstaller 打包环境补充标准输入输出流自愈保护，彻底解决静默模式下的启动崩溃；
+- **项目结构标准化**：精炼根目录布局，清晰划分源码、构建脚本、静态资源与运行数据，提供专业且干净的工程结构。
 
 ---
 
@@ -89,23 +135,30 @@
 
 ## 🏃 快速启动指南
 
-### 方式 1：一键双击启动（推荐 · 全功能模式）
-直接双击根目录下的 **`start.bat`**：
-- 自动调用 Python 轻量服务托管，并在默认浏览器中秒级打开（`http://localhost:3210`）；
-- 此模式下，点击“今日待阅”卡片可直接调用 Windows 原生应用（如 Word、PDF 阅读器、Typora）打开本地文档。
+### 方式 1：独立绿色桌面版（强烈推荐 · 零环境依赖）
+直接双击根目录下的 **`FoFo.exe`**：
+- 独立 Windows 可执行程序，免装 Python 或任何外部运行时环境；
+- 后台自启动本地安全服务并秒级拉起默认浏览器（`http://localhost:3210`）；
+- 内置专属工作台图标，所有数据全本地安全留存。
 
-### 方式 2：纯浏览器模式（零配置 · 跨平台）
-直接双击 **`index.html`** 用任意现代浏览器（Chrome / Edge / Safari）打开体验。无需安装任何环境，离线完全可用！
+### 方式 2：脚本启动模式（推荐 · 开发者模式）
+双击根目录下的 **`start.bat`**：
+- 自动检测并调用 Python 环境托管轻量服务，打开默认浏览器；
+- 支持调用本地原生应用打开“今日待阅”中的各类格式文档。
+
+### 方式 3：纯浏览器模式（零配置 · 跨平台）
+直接双击 **`index.html`** 用任意现代浏览器打开体验。数据基于本地 LocalStorage 存储。
 
 ---
 
 ## 📚 开发者手册与交接文档索引
 
-FoFo 当前仅保留一份精简的 AI 接手文档：
+FoFo 当前保留精简的 AI 协作与接手规范文档：
 
 | 文档名称 | 路径 | 内容简介 |
 | :--- | :--- | :--- |
-| **📖 AI 接手文档** | [docs/AI_HANDOVER_AND_DEV_MANUAL.md](docs/AI_HANDOVER_AND_DEV_MANUAL.md) | 当前版本状态、主要文件和后续协作规则 |
+| **📖 AI 接手文档** | [docs/AI_HANDOVER_AND_DEV_MANUAL.md](docs/AI_HANDOVER_AND_DEV_MANUAL.md) | 当前版本状态、主要文件、AI 接入与后续协作规则 |
+| **🤖 AI 协作规则** | [AGENTS.md](AGENTS.md) | AI 开发者操作红线、留痕要求与版本控制原则 |
 
 ---
 
@@ -113,16 +166,27 @@ FoFo 当前仅保留一份精简的 AI 接手文档：
 
 ```text
 FoFo/
-├── index.html            # 主工作台页面骨架 (v1.0.0)
-├── start.bat             # Windows 一键启动脚本
-├── server.py             # 极轻量本地服务 (提供原生文件打开与本地磁盘读写)
+├── FoFo.exe              # 独立单文件绿色桌面程序 (双击即用，免 Python 环境)
+├── sparkle.ico           # 应用程序专属高清图标
+├── sparkle.png           # 网页版 Favicon 标徽
+├── index.html            # 主工作台骨架与布局 (v2.0.0)
+├── start.bat             # Windows 开发者启动脚本
+├── build_fofo_exe.bat    # 桌面独立版一键构建编译脚本
+├── server.py             # 轻量本地托管与文件接口服务
 ├── README.md             # 项目说明与版本更新日志 (Changelog)
+├── AGENTS.md             # AI 协作开发准则
+├── LICENSE               # MIT 开源协议
 ├── .gitignore            # Git 忽略配置文件
 │
+├── assets/               # 静态资源与桌宠模型图
+├── osimg/                # 系统内置官方高清壁纸 (macOS Ventura, Mojave, Sonoma)
+├── readmeimg/            # README 功能展示图与特性视觉图
 ├── css/
 │   └── style.css         # 毛玻璃、iOS 5色渐变、热力图、Toast 浮窗样式
 ├── js/
 │   ├── app.js            # 主逻辑控制器、状态机、图像压缩与自适应存储
+│   ├── tailwind.min.js   # 本地化离线 CSS 引擎
+│   ├── marked.min.js     # 本地化离线 Markdown 解析引擎
 │   └── components/
 │       ├── pomodoro.js   # 静音番茄钟计时器组件
 │       ├── heatmap.js    # 18 周活跃度热力图组件
@@ -132,8 +196,7 @@ FoFo/
 ├── data/                 # 物理存储目录 (workspace.json 快照)
 ├── documents/            # 每日待阅文档与索引归档目录
 ├── exports/              # 生成的月度 Markdown 归档文件
-├── user_comment/         # 用户体验反馈与建议归档
-└── docs/                 # 精简的 AI 接手文档
+└── docs/                 # AI 接手文档与开发手册
 ```
 
 ---
