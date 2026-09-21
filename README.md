@@ -1,7 +1,7 @@
 # 🚀 FoFo 个人工作台 (FoFo Personal WorkStation)
 
 <p align="left">
-  <img src="https://img.shields.io/badge/version-2.0.0-emerald?style=flat-square" alt="Version 2.0.0" />
+  <img src="https://img.shields.io/badge/version-2.0.1-emerald?style=flat-square" alt="Version 2.0.1" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=flat-square" alt="Cross Platform" />
   <img src="https://img.shields.io/badge/license-MIT-purple?style=flat-square" alt="License MIT" />
   <img src="https://img.shields.io/badge/storage-100%25%20Local-success?style=flat-square" alt="100% Local" />
@@ -25,6 +25,18 @@
 > - **修订号 (Patch)**：针对已有功能的缺陷修复 (Bugfix)、性能优化或细节微调；
 > 
 > **后续每次发布新版本，必须在此区域以倒序方式（最新版本置顶）追加记录，清晰列出新版本号、发布日期及功能更新明细。**
+
+---
+
+### [v2.0.1] - 2026-09-21 (紧急隐私合规与初始状态纯净修复)
+
+🔒 **紧急隐私修复与开源初始纯净化**：
+- **头像初始化纯净**：新安装或首次启动工作台，默认清空头像并使用默认占位，无任何个人头像残留；
+- **动态心情标语初始化**：顶部栏左侧心情恢复为纯净默认标语 `请添加个性心情`；
+- **任务与工作流全量清空**：初始状态下完全清空演示用周目标、月目标、日程重要节点、今日待办以及备忘便签；
+- **待阅文档与本地绝对路径彻底脱敏**：完全清空内置的演示待阅清单，彻底消除包含开发者本地绝对路径的隐患；输入框示例占位符亦同步通用化脱敏；
+- **饮水打卡与专注初始归零**：新用户首次打开今日饮水量严格初始化为 0ml，番茄钟无默认绑定任务；
+- **API 与凭据零泄露审计**：全面核查本地服务与前端代码，确认无任何硬编码 API Key，全通道保持纯净离线/自配状态。
 
 ---
 

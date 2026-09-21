@@ -151,12 +151,10 @@
     }
   }
 
-  // --- Seed Demo Data ---
+  // --- Seed Demo Data (Sanitized Empty Initial State for v2.0.1) ---
   function getSeedData() {
     const today = new Date();
     const todayStr = formatDateStr(today);
-    const monthStr = getMonthStr(today);
-    const weekStr = getWeekStr(today);
 
     return {
       currentDate: todayStr,
@@ -167,42 +165,20 @@
       customBgImage: '',
       appTitle: 'FoFo 工作台',
       heroBannerImage: '',
-      heroBannerSlogan: '保持热爱，奔赴山海！',
-      monthlyGoals: [
-        { id: 'mg-1', month: monthStr, text: '完成 FoFo 工作台优化与升级', progress: 100, done: true },
-        { id: 'mg-2', month: monthStr, text: '建立每日待阅与健康饮水习惯 (≥1.5L)', progress: 60, done: false },
-        { id: 'mg-3', month: monthStr, text: '推进重点项目核心主线交付', progress: 30, done: false }
-      ],
-      weeklyGoals: [
-        { id: 'wg-1', week: weekStr, weekTitle: `第 ${getWeekNumber(today)} 周攻坚`, text: '熟练使用番茄钟与今日待阅联动', done: true, summary: '' },
-        { id: 'wg-2', week: weekStr, weekTitle: `第 ${getWeekNumber(today)} 周攻坚`, text: '整理当月工作纪要并导出 Markdown', done: false, summary: '' }
-      ],
-      bulletin: [
-        { id: 'b-1', text: '每日饮水目标：保持在 1500ml 以上，专注之余记得起身活动！', createdAt: todayStr },
-        { id: 'b-2', text: '要事第一：优先处理 P0 待办与今日待阅核心文档。', createdAt: todayStr }
-      ],
+      heroBannerSlogan: '请添加个性心情',
+      monthlyGoals: [],
+      weeklyGoals: [],
+      bulletin: [],
       dailyData: {
         [todayStr]: {
-          waterIntake: 600,
-          readingList: [
-            { id: 'r-1', title: 'FoFo 实施指南 README.md', type: 'doc', path: 'F:\\FoFo\\README.md' },
-            { id: 'r-2', title: '用户建议清单 commentV1.md', type: 'doc', path: 'F:\\FoFo\\user_comment\\commentV1.md' }
-          ],
-          tasks: [
-            { id: 't-1', text: '处理紧急核心交付任务', done: false, priority: 'P0', pomodoros: 1 },
-            { id: 't-2', text: '审阅今日待阅文档', done: false, priority: 'P1', pomodoros: 0 },
-            { id: 't-3', text: '日常事务性跟进', done: false, priority: 'P2', pomodoros: 0 }
-          ],
-          notes: '### 💡 FoFo 体验记录\n\n- 左上角标题更清晰，支持自定义圆形头像。\n- 全局支持 iOS 5 款经典配色与自定义背景壁纸（带防干扰毛玻璃遮罩）。\n- 待阅与待办均已按优先级和分类规整，专注工作更加舒适！',
-          milestones: [
-            { id: 'm-1', text: 'FoFo 体验版测试' },
-            { id: 'm-2', text: '下午 16:00 项目同步会' }
-          ]
+          waterIntake: 0,
+          readingList: [],
+          tasks: [],
+          notes: '',
+          milestones: []
         }
       },
-      scratchpad: [
-        { id: 'sp-1', text: '备忘：周五下午通过顶部【周复盘】回顾本周产出与反思', createdAt: todayStr }
-      ]
+      scratchpad: []
     };
   }
 
