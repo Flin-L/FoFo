@@ -1,14 +1,14 @@
 # 🚀 FoFo 个人工作台 (FoFo Personal WorkStation)
 
 <p align="left">
-  <img src="https://img.shields.io/badge/version-2.0.2-emerald?style=flat-square" alt="Version 2.0.2" />
+  <img src="https://img.shields.io/badge/version-2.1.0-emerald?style=flat-square" alt="Version 2.1.0" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=flat-square" alt="Cross Platform" />
   <img src="https://img.shields.io/badge/license-MIT-purple?style=flat-square" alt="License MIT" />
   <img src="https://img.shields.io/badge/storage-100%25%20Local-success?style=flat-square" alt="100% Local" />
 </p>
 
 <p align="center">
-  <img src="readmeimg/工作台预览.png" alt="FoFo 个人工作台全景预览" width="100%" style="border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
+  <img src="readmeimg/v2.0.0/工作台预览.png" alt="FoFo 个人工作台全景预览" width="100%" style="border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
 </p>
 
 > **专为重度依赖 Markdown 记录工作流、追求极简高效与时间感知的知识工作者打造的轻量本地化个人生产力中枢。**  
@@ -25,6 +25,49 @@
 > - **修订号 (Patch)**：针对已有功能的缺陷修复 (Bugfix)、性能优化或细节微调；
 > 
 > **后续每次发布新版本，必须在此区域以倒序方式（最新版本置顶）追加记录，清晰列出新版本号、发布日期及功能更新明细。**
+
+---
+
+### [v2.1.0] - 2026-09-23
+
+#### 📸 V2.1.0 视觉新特性展示
+
+| 🎨 AI 侧边栏皮肤设置 (微信风格) | 📎 手动勾选添加工作台附件 | ⏰ 番茄钟到期桌宠动态提示 |
+| :---: | :---: | :---: |
+| <img src="readmeimg/v2.1.0/AI侧边栏皮肤设置.png" width="300" /> | <img src="readmeimg/v2.1.0/AI对话功能支持手动添加工作台状态附件.png" width="280" /> | <img src="readmeimg/v2.1.0/番茄钟定时结束桌宠提示.png" width="260" /> |
+
+| 📖 今日待阅同步新建工作待办 | ⏩ 今日待办一键延期至次日 |
+| :---: | :---: |
+| <img src="readmeimg/v2.1.0/今日待阅支持同步新建工作待办.png" width="400" /> | <img src="readmeimg/v2.1.0/今日待办支持一键延期次日.png" width="400" /> |
+
+#### 🌟 核心更新详情
+
+**AI 协作与建议更新能力升级**：
+- **AI 建议支持条目删除与全量覆写**：
+  - 协议支持 `op: 'delete'` 操作标记，智能识别 AI 回复中对已有月目标、周重点、日程节点、今日待办的删除与清理建议，提供红色删除徽标与中划线高亮显示；
+  - 增加“⚡ 覆写未完成项”安全模式：经用户二次确认后，仅清空当期未完成事项，安全保留所有历史已完成数据，随后批量写入全新规划；
+  - 重构建议卡片生命周期管理：已确认或暂不更新的建议自动持久化标记为已处理，消除重复开关侧边栏或切换皮肤时的重复弹窗干扰；
+  - 规范交互文案：界面所有原偏技术性“落盘”术语统一替换为易于理解的“更新”。
+
+**AI 会话侧边栏皮肤系统与微信风格**：
+- **皮肤配置弹窗**：在侧边栏顶部新增“🎨 皮肤设置”入口，支持在“系统经典”与“微信风格”间平滑切换；
+- **微信风格界面质感**：提供微信绿（用户）与沉稳灰白（AI）对话气泡、明亮微灰背景与细腻边框，输入区标签对比度针对性优化；
+- **头像定制与智能时间戳**：用户头像无缝沿用工作台个人头像；AI 对话头像支持用户本地上传自定义图片（支持本地自动压缩与一键恢复默认）；针对多轮连续对话引入离散式智能时间戳（间隔 5 分钟以上自动呈现居中时间胶囊）。
+
+**待阅与工作待办联动**：
+- **今日待阅同步创建待办**：新建待阅时支持勾选“同步创建为今日工作待办”，支持设定 P0~P2 优先级，并自动添加“审阅”前缀与实时预览。
+
+**待办事项迁移与延期管理**：
+- **未完成待办单项顺延**：待办条目新增“推至次日”按键，未完成事项可一键转移至次日日程；
+- **未完成待办一键批量延期**：待办底部操作栏新增“⏩ 一键延期”，可将当日所有未完成事项一键顺延至次日，已完成项自动保留留存。
+
+**番茄钟到期提醒与桌宠联动**：
+- **视觉静音提醒**：专注倒计时或休息倒计时结束时，桌宠玲娜贝儿自动以连续动作与高亮气泡提醒，支持点击本体或气泡一键关闭确认，杜绝公共办公环境声音打扰，并加入防误开 AI 侧边栏的拦截保护。
+
+**UI 与排版细节优化**：
+- **输入法友好与回车发送**：AI 会话输入框支持 Enter 发送与 Shift + Enter 换行，并加入输入法组合输入拦截保护；
+- **Markdown 富文本解析**：AI 回复全面支持 Markdown 渲染（加粗、列表、代码块等）；
+- **目标长文本自适应折行**：月度目标与周重点长文本取消省略截断，改为自适应折行，并增加悬停 Tooltip 全文查看。
 
 ---
 
@@ -61,11 +104,11 @@
 
 | 🤖 AI 会话抽屉 | 🐱 玲娜贝儿 AI 桌面伴侣 | ⚙️ 双通道 AI 模型配置 |
 | :---: | :---: | :---: |
-| <img src="readmeimg/AI会话抽屉.png" width="300" /> | <img src="readmeimg/AI助理.png" width="220" /> | <img src="readmeimg/AI配置.png" width="250" /> |
+| <img src="readmeimg/v2.0.0/AI会话抽屉.png" width="300" /> | <img src="readmeimg/v2.0.0/AI助理.png" width="220" /> | <img src="readmeimg/v2.0.0/AI配置.png" width="250" /> |
 
 | 🎨 系统官方精选壁纸与 5 色 iOS 经典方案 | 🚀 根目录单文件绿色桌面版 (`FoFo.exe`) |
 | :---: | :---: |
-| <img src="readmeimg/配色主题与个性化背景.png" width="400" /> | <img src="readmeimg/可执行程序FoFo.png" width="400" /> |
+| <img src="readmeimg/v2.0.0/配色主题与个性化背景.png" width="400" /> | <img src="readmeimg/v2.0.0/可执行程序FoFo.png" width="400" /> |
 
 #### 🌟 核心新特性
 

@@ -67,7 +67,7 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_response({
                 "status": "ok",
                 "app": "FoFo",
-                "version": "2.0.2",
+                "version": "2.1.0",
                 "dir": os.path.abspath(BASE_DIR)
             })
             return
@@ -371,14 +371,23 @@ def get_workspace_mutex():
 
 class FoFoServer(socketserver.ThreadingTCPServer):
     daemon_threads = True
-    allow_reuse_address = True
+    allow_reuse_address = False
+
+    def server_bind(self):
+        # On Windows, enforce exclusive address use so two different workspaces/processes NEVER share the same port!
+        if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+            try:
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+            except OSError:
+                pass
+        super().server_bind()
 
 def check_existing_instance(port):
     """Check if an instance of FoFo is already running on the given port."""
     url = f"http://localhost:{port}/api/ping"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "FoFo-Launcher"})
-        with urllib.request.urlopen(req, timeout=0.6) as resp:
+        with urllib.request.urlopen(req, timeout=0.4) as resp:
             if resp.status == 200:
                 data = json.loads(resp.read().decode("utf-8"))
                 if data.get("app") == "FoFo":
@@ -390,25 +399,29 @@ def check_existing_instance(port):
 def run_server():
     port = PORT
     max_attempts = 10
+    current_dir = os.path.normcase(os.path.abspath(BASE_DIR))
 
-    # 1. Single-instance check via Named Mutex & Ping
+    # 1. Single-instance check: if this exact workspace is already running, activate its browser tab and exit
     is_primary = get_workspace_mutex()
     if not is_primary:
-        # Another instance for this exact workspace is already running!
         for test_port in range(PORT, PORT + max_attempts):
             existing = check_existing_instance(test_port)
             if existing:
                 existing_dir = os.path.normcase(os.path.abspath(existing.get("dir", "")))
-                current_dir = os.path.normcase(os.path.abspath(BASE_DIR))
                 if existing_dir == current_dir:
                     print(f"[FoFo] 检测到当前工作区服务已在后台运行 (端口 {test_port})，正在直接唤起浏览器...")
                     webbrowser.open(f"http://localhost:{test_port}")
                     sys.exit(0)
-        webbrowser.open(f"http://localhost:{PORT}")
         sys.exit(0)
 
-    # 2. Find free port and launch multithreaded server
+    # 2. Find an unoccupied port and launch multithreaded server
     for attempt in range(max_attempts):
+        existing = check_existing_instance(port)
+        if existing:
+            # Port is occupied by another workspace (e.g. production F:\FoFo on 3210)!
+            port += 1
+            continue
+
         try:
             httpd = FoFoServer(("", port), FoFoHandler)
             FoFoHandler.server_instance = httpd

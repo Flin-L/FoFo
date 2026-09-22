@@ -175,6 +175,32 @@
   transform: translate(-50%, 0) scale(1);
 }
 
+.fofo-ai-pet-bubble.is-alert {
+  pointer-events: auto;
+  cursor: pointer;
+  white-space: normal;
+  max-width: 220px;
+  min-width: 170px;
+  padding: 8px 12px;
+  border: 1.5px solid rgba(245, 158, 11, 0.85);
+  background: rgba(255, 251, 235, 0.98);
+  color: #92400e;
+  box-shadow: 0 6px 22px rgba(245, 158, 11, 0.35);
+  animation: fofo-bubble-pulse 1.8s infinite ease-in-out;
+  text-align: center;
+}
+
+.fofo-ai-pet-bubble.is-alert::after {
+  border-right-color: rgba(245, 158, 11, 0.85);
+  border-bottom-color: rgba(245, 158, 11, 0.85);
+  background: rgba(255, 251, 235, 0.98);
+}
+
+@keyframes fofo-bubble-pulse {
+  0%, 100% { transform: translate(-50%, 0) scale(1); }
+  50% { transform: translate(-50%, -3px) scale(1.04); }
+}
+
 .fofo-ai-pet-label {
   position: absolute;
   right: 0px;
@@ -706,3 +732,177 @@ body.theme-space-gray {
   background-color: #e11d48;
   color: #ffffff;
 }
+
+/* ================= WeChat Style Skin for AI Chat Sidebar ================= */
+#ai-chat-sidebar.skin-wechat {
+  background-color: #ededed;
+  border-left-color: rgb(220, 220, 225);
+}
+
+#ai-chat-sidebar.skin-wechat > div > div:first-child {
+  background-color: #ededed;
+  border-bottom-color: rgb(220, 220, 225);
+}
+
+#ai-chat-sidebar.skin-wechat > div > div:first-child h1,
+#ai-chat-sidebar.skin-wechat > div > div:first-child h2,
+#ai-chat-sidebar.skin-wechat > div > div:first-child h3,
+#ai-chat-sidebar.skin-wechat > div > div:first-child span,
+#ai-chat-sidebar.skin-wechat > div > div:first-child div {
+  color: #191919;
+}
+
+#ai-chat-sidebar.skin-wechat #ai-chat-status {
+  color: #7a7a7a !important;
+}
+
+#ai-chat-sidebar.skin-wechat #btn-ai-skin-config,
+#ai-chat-sidebar.skin-wechat #btn-ai-chat-config {
+  background-color: #f7f7f7;
+  border-color: rgb(220, 220, 225);
+  color: #333333;
+}
+
+#ai-chat-sidebar.skin-wechat #btn-ai-chat-close {
+  color: #555555;
+}
+
+#ai-chat-sidebar.skin-wechat > div > div:nth-child(2) {
+  background-color: #f7f7f7;
+  border-bottom-color: rgb(220, 220, 225);
+}
+
+#ai-chat-sidebar.skin-wechat #ai-chat-session-select {
+  background-color: #ffffff;
+  border-color: rgb(220, 220, 225);
+  color: #222222;
+}
+
+#ai-chat-sidebar.skin-wechat #btn-ai-chat-rename,
+#ai-chat-sidebar.skin-wechat #btn-ai-chat-delete,
+#ai-chat-sidebar.skin-wechat #btn-ai-chat-new {
+  background-color: #ffffff;
+  border-color: rgb(220, 220, 225);
+  color: #444444;
+}
+
+#ai-chat-sidebar.skin-wechat #ai-chat-messages {
+  background-color: rgb(250, 250, 250);
+}
+
+/* WeChat message bubbles and avatars */
+#ai-chat-sidebar.skin-wechat .chat-msg-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+#ai-chat-sidebar.skin-wechat .chat-msg-row.user {
+  justify-content: flex-end;
+}
+
+#ai-chat-sidebar.skin-wechat .chat-msg-row.assistant {
+  justify-content: flex-start;
+}
+
+#ai-chat-sidebar.skin-wechat .chat-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+#ai-chat-sidebar.skin-wechat .chat-msg-row.user .chat-avatar {
+  margin-left: 8px;
+}
+
+#ai-chat-sidebar.skin-wechat .chat-msg-row.assistant .chat-avatar {
+  margin-right: 8px;
+}
+
+#ai-chat-sidebar.skin-wechat .chat-bubble {
+  max-width: 82%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  position: relative;
+  word-break: break-word;
+}
+
+#ai-chat-sidebar.skin-wechat .chat-msg-row.user .chat-bubble {
+  background-color: rgb(157, 242, 159);
+  color: #111111;
+  border: 1px solid rgba(100, 200, 100, 0.25);
+}
+
+#ai-chat-sidebar.skin-wechat .chat-msg-row.assistant .chat-bubble {
+  background-color: rgb(238, 238, 240);
+  color: #1e1e1e;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+#ai-chat-sidebar.skin-wechat .chat-bubble.markdown-preview h1,
+#ai-chat-sidebar.skin-wechat .chat-bubble.markdown-preview h2,
+#ai-chat-sidebar.skin-wechat .chat-bubble.markdown-preview h3,
+#ai-chat-sidebar.skin-wechat .chat-bubble.markdown-preview p,
+#ai-chat-sidebar.skin-wechat .chat-bubble.markdown-preview li,
+#ai-chat-sidebar.skin-wechat .chat-bubble.markdown-preview strong {
+  color: #1e1e1e;
+}
+
+#ai-chat-sidebar.skin-wechat .chat-bubble.markdown-preview code {
+  background: rgba(0, 0, 0, 0.08);
+  color: #0f766e;
+}
+
+#ai-chat-sidebar.skin-wechat .wechat-timestamp {
+  display: inline-block;
+  font-size: 10px;
+  color: #8c8c8c;
+  background-color: rgba(0, 0, 0, 0.04);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  margin: 6px 0;
+  user-select: none;
+}
+
+#ai-chat-sidebar.skin-wechat .chat-input-container {
+  background-color: #ededed;
+  border-top-color: rgb(220, 220, 225);
+}
+
+#ai-chat-sidebar.skin-wechat .chat-input-container label,
+#ai-chat-sidebar.skin-wechat .chat-input-container label span,
+#ai-chat-sidebar.skin-wechat .chat-input-container > div:first-child span {
+  color: #64748b !important;
+}
+
+#ai-chat-sidebar.skin-wechat .chat-input-container label:hover,
+#ai-chat-sidebar.skin-wechat .chat-input-container label:hover span {
+  color: #07c160 !important;
+}
+
+#ai-chat-sidebar.skin-wechat #ai-chat-input {
+  background-color: #ffffff;
+  border-color: rgb(220, 220, 225);
+  color: #191919;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+#ai-chat-sidebar.skin-wechat #btn-ai-chat-send {
+  background-color: #07c160;
+  color: #ffffff;
+}
+
+#ai-chat-sidebar.skin-wechat #btn-ai-chat-send:hover {
+  background-color: #06ad56;
+}
+
+#ai-chat-sidebar.skin-wechat #ai-chat-last-actions > div {
+  background-color: #f7f7f7;
+  border-color: rgb(220, 220, 225);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
