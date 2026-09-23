@@ -70,7 +70,7 @@
             <div class="flex items-center space-x-2 group/title">
               <h1 id="app-title-text" class="font-black text-lg md:text-xl leading-tight text-slate-100 tracking-wide cursor-pointer hover:text-emerald-400 transition truncate" title="点击修改工作台名称">FoFo 工作台</h1>
               <button id="btn-edit-app-title" class="opacity-0 group-hover/title:opacity-100 text-slate-400 hover:text-emerald-400 text-xs transition flex-shrink-0" title="修改工作台名称">✎</button>
-              <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950/90 text-emerald-400 border border-emerald-800/60 font-semibold font-mono flex-shrink-0">v2.1.0</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950/90 text-emerald-400 border border-emerald-800/60 font-semibold font-mono flex-shrink-0">v2.2.0</span>
             </div>
             <span class="text-xs text-slate-300 font-medium truncate mt-0.5" id="header-date-sub">加载中...</span>
           </div>
@@ -108,6 +108,10 @@
             <button id="pomo-btn-reset" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs rounded transition" title="重置计时器">
               ↺
             </button>
+            <button id="btn-fullscreen-focus" class="px-2 py-0.5 bg-indigo-600/80 hover:bg-indigo-500 text-white text-xs font-medium rounded shadow transition active:scale-95 flex items-center space-x-1" title="开启全屏沉浸专注模式">
+              <span>⛶</span>
+              <span class="hidden md:inline">全屏专注</span>
+            </button>
           </div>
 
           <div class="max-w-[110px] truncate text-[11px] text-slate-400" id="pomo-task-tag" title="无绑定任务">
@@ -123,7 +127,6 @@
         <!-- Lower row: Daily Water Intake (Under Pomodoro) -->
         <div class="flex items-center justify-between pt-1.5 pb-0.5 border-t border-slate-800/80 text-xs">
           <div class="flex items-center space-x-1.5 min-w-0">
-            <span class="text-cyan-400 text-sm">🥤</span>
             <span class="text-slate-400 font-medium text-[11px] hidden sm:inline">今日饮水:</span>
             <span id="water-intake-text" class="font-bold text-cyan-300 font-mono text-xs">0ml</span>
             <span class="text-slate-500 text-[11px]">/ 1500ml</span>
@@ -164,26 +167,31 @@
           <span class="fofo-ai-pet-label">AI</span>
         </div>
 
-        <div class="relative flex-shrink-0">
-          <button id="btn-header-actions" type="button" class="flex items-center space-x-1 px-2.5 py-1.5 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 transition text-xs" title="打开工作台功能菜单" aria-expanded="false" aria-haspopup="true">
-            <span>☰</span>
-            <span>功能</span>
-            <span class="text-[9px] opacity-70">▾</span>
-          </button>
-          <div id="header-actions-menu" class="absolute right-0 top-full mt-1 hidden min-w-[150px] p-1.5 rounded-lg border border-slate-700 bg-slate-900/95 backdrop-blur-md shadow-2xl z-50">
-            <button id="btn-theme-modal" class="w-full flex items-center space-x-2 px-2.5 py-1.5 bg-transparent hover:bg-slate-800 text-slate-200 rounded transition text-xs text-left" title="自定义背景与主题配色">
-              <span>🎨</span><span>配色 / 背景</span>
+        <div class="relative flex-shrink-0 flex flex-col space-y-1">
+          <div class="relative">
+            <button id="btn-header-actions" type="button" class="flex items-center space-x-1 px-2.5 py-1 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded border border-slate-700 transition text-xs" title="打开工作台功能菜单" aria-expanded="false" aria-haspopup="true">
+              <span>☰</span>
+              <span>功能</span>
+              <span class="text-[9px] opacity-70">▾</span>
             </button>
-            <button id="btn-export-markdown" class="w-full flex items-center space-x-2 px-2.5 py-1.5 bg-transparent hover:bg-slate-800 text-slate-200 rounded transition text-xs text-left" title="生成并导出本月 Markdown 完整归档">
-              <span>📦</span><span>导出月报</span>
-            </button>
-            <button id="btn-weekly-review" class="w-full flex items-center space-x-2 px-2.5 py-1.5 bg-transparent hover:bg-slate-800 text-slate-200 rounded transition text-xs text-left" title="进行本周工作复盘与规划">
-              <span>📋</span><span>周复盘</span>
-            </button>
-            <button id="btn-data-modal" class="w-full flex items-center space-x-2 px-2.5 py-1.5 bg-transparent hover:bg-slate-800 text-slate-200 rounded transition text-xs text-left" title="数据备份与设置">
-              <span>⚙️</span><span>数据与设置</span>
-            </button>
+            <div id="header-actions-menu" class="absolute right-0 top-full mt-1 hidden min-w-[150px] p-1.5 rounded-lg border border-slate-700 bg-slate-900/95 backdrop-blur-md shadow-2xl z-50">
+              <button id="btn-theme-modal" class="w-full flex items-center space-x-2 px-2.5 py-1.5 bg-transparent hover:bg-slate-800 text-slate-200 rounded transition text-xs text-left" title="自定义背景与主题配色">
+                <span>🎨</span><span>配色 / 背景</span>
+              </button>
+              <button id="btn-export-markdown" class="w-full flex items-center space-x-2 px-2.5 py-1.5 bg-transparent hover:bg-slate-800 text-slate-200 rounded transition text-xs text-left" title="生成并导出本月 Markdown 完整归档">
+                <span>📦</span><span>导出月报</span>
+              </button>
+              <button id="btn-weekly-review" class="w-full flex items-center space-x-2 px-2.5 py-1.5 bg-transparent hover:bg-slate-800 text-slate-200 rounded transition text-xs text-left" title="进行本周工作复盘与规划">
+                <span>📋</span><span>周复盘</span>
+              </button>
+              <button id="btn-data-modal" class="w-full flex items-center space-x-2 px-2.5 py-1.5 bg-transparent hover:bg-slate-800 text-slate-200 rounded transition text-xs text-left" title="数据备份与设置">
+                <span>⚙️</span><span>数据与设置</span>
+              </button>
+            </div>
           </div>
+          <button id="btn-off-work" type="button" class="w-full flex items-center justify-center space-x-1 px-2 py-0.5 bg-amber-600/90 hover:bg-amber-500 text-white rounded border border-amber-500/80 shadow transition text-xs font-semibold active:scale-95" title="点击打卡下班与事务交接">
+            <span>下班</span>
+          </button>
         </div>
       </div>
     </div>
@@ -201,12 +209,10 @@
         <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
           <div class="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-xs">
             <button id="tab-btn-weekly" class="px-2.5 py-1 rounded-md font-semibold bg-emerald-600 text-white transition flex items-center space-x-1">
-              <span>📌</span>
               <span>本周重点</span>
               <span class="text-[10px] opacity-80 font-mono ml-0.5" id="current-week-label">W38</span>
             </button>
             <button id="tab-btn-monthly" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 transition flex items-center space-x-1">
-              <span>🎯</span>
               <span>本月目标</span>
             </button>
           </div>
@@ -243,9 +249,14 @@
             <span class="text-sm">🗓️</span>
             <h2 class="font-bold text-xs text-slate-200">日程与重要节点</h2>
           </div>
-          <button id="btn-set-milestone" class="text-xs text-amber-400 hover:text-amber-300 font-medium transition" title="为选中日期添加日程节点">
-            + 标记节点
-          </button>
+          <div class="flex items-center space-x-2">
+            <button id="btn-course-schedule" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition flex items-center space-x-1" title="设置与同步每周循环课程表">
+              <span>+ 课程表信息</span>
+            </button>
+            <button id="btn-set-milestone" class="text-xs text-amber-400 hover:text-amber-300 font-medium transition" title="为选中日期添加日程节点">
+              + 标记节点
+            </button>
+          </div>
         </div>
 
         <div id="calendar-widget-container" class="my-auto">
@@ -339,7 +350,7 @@
         </div>
 
         <!-- Task List Items (Sorted by P0 > P1 > P2) -->
-        <div id="daily-task-list" class="flex-1 overflow-y-auto space-y-2 pr-1">
+        <div id="daily-task-list" class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[380px] lg:max-h-[440px]">
           <!-- Populated by JS -->
         </div>
 
@@ -366,11 +377,9 @@
       <!-- Tab Switcher -->
       <div class="fofo-card p-1 flex items-center space-x-1">
         <button id="tab-btn-notes" class="flex-1 py-1.5 text-xs font-semibold rounded-md bg-emerald-600 text-white transition flex items-center justify-center space-x-1.5">
-          <span>📝</span>
           <span>工作日志与会议纪要</span>
         </button>
         <button id="tab-btn-scratchpad" class="flex-1 py-1.5 text-xs font-semibold rounded-md text-slate-400 hover:text-white transition flex items-center justify-center space-x-1.5">
-          <span>📢</span>
           <span>公告栏与灵感</span>
         </button>
       </div>
@@ -880,9 +889,23 @@
         <div id="ai-provider-row" class="space-y-1">
           <label class="block text-[11px] text-slate-300">AI 服务商</label>
           <select id="ai-provider-select" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
-            <option value="openai">OpenAI</option>
+            <option value="gemini">Google Gemini (🌟 免费通道推荐)</option>
             <option value="deepseek">DeepSeek</option>
+            <option value="openai">OpenAI</option>
           </select>
+        </div>
+        <!-- Google Gemini Free Tier Banner -->
+        <div id="gemini-free-banner" class="p-2.5 rounded-lg bg-emerald-950/50 border border-emerald-700/60 text-emerald-300 text-[11px] space-y-1">
+          <div class="flex items-center justify-between font-semibold">
+            <span class="flex items-center space-x-1"><span>🎁</span><span>Google Gemini 官方免费额度</span></span>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-xs text-cyan-400 hover:text-cyan-300 underline flex items-center space-x-0.5" title="点击前往 Google AI Studio 免费创建 API Key">
+              <span>免费获取 Key</span>
+              <span>↗</span>
+            </a>
+          </div>
+          <p class="text-[10px] text-emerald-400/80 leading-relaxed">
+            无需绑定信用卡、无需预存！普通 Google 账号在 Google AI Studio 点击“创建 API 密钥”即可免费畅享。每分钟 15 次、每天 1500 次调用配额，足够个人日常使用。
+          </p>
         </div>
         <select id="ai-mode-select" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
           <option value="chatgpt-web">ChatGPT 网页协同（无需 API Key）</option>
@@ -891,13 +914,37 @@
         </select>
         <p id="ai-mode-help" class="text-[10px] leading-relaxed whitespace-pre-line text-slate-400"></p>
         <div id="ai-api-key-row" class="hidden space-y-1">
-          <label id="ai-api-key-label" class="block text-[11px] text-slate-300">OpenAI API Key</label>
-          <input id="ai-api-key-input" type="password" autocomplete="off" placeholder="sk-..." class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500" />
+          <div class="flex items-center justify-between">
+            <label id="ai-api-key-label" class="block text-[11px] text-slate-300">API Key</label>
+            <div class="flex items-center space-x-2">
+              <button type="button" id="btn-toggle-key-visibility" class="text-[10px] text-slate-400 hover:text-slate-200 transition" title="显示或隐藏明文">👁️ 显示明文</button>
+              <button type="button" id="btn-clear-key-input" class="text-[10px] text-rose-400 hover:text-rose-300 transition" title="清空已填写的 Key">清空</button>
+            </div>
+          </div>
+          <input id="ai-api-key-input" type="password" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" name="fofo_gemini_token_no_fill" placeholder="粘贴您的 API Key（如 Google AI Studio 生成的 Key）..." class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500" />
           <p class="text-[10px] text-amber-400/80">直接配置模式会将 Key 保存在本机浏览器中，仅建议个人电脑使用。</p>
         </div>
-        <div id="ai-model-row" class="hidden space-y-1">
-          <label class="block text-[11px] text-slate-300">模型名称（随服务商变化）</label>
-          <input id="ai-model-input" type="text" value="gpt-5-mini" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500" />
+        <div id="ai-model-row" class="hidden space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="block text-[11px] text-slate-300">模型选择与可用列表</label>
+            <button type="button" id="btn-ai-detect-models" class="text-[10px] text-cyan-400 hover:text-cyan-300 hover:underline flex items-center space-x-1" title="根据当前 API Key 自动查询并加载您账号全部可用模型">
+              <span>🔍 自动加载全部可用模型</span>
+            </button>
+          </div>
+          <!-- Model Selection Dropdown -->
+          <select id="ai-model-select" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+            <option value="gemini-3.6-flash">gemini-3.6-flash (稳健推荐 · 高可用不易拥挤)</option>
+            <option value="gemini-3.7-flash">gemini-3.7-flash (进阶推荐)</option>
+            <option value="gemini-3.8-flash">gemini-3.8-flash (最新款 · 偶有流量高峰)</option>
+            <option value="gemini-3.5-flash">gemini-3.5-flash (轻量备用)</option>
+            <option value="custom">✏️ 自定义输入模型名称...</option>
+          </select>
+          <div id="ai-custom-model-box" class="hidden pt-0.5">
+            <input id="ai-model-input" type="text" value="gemini-3.6-flash" placeholder="手动输入模型名称..." class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500" />
+          </div>
+          <p class="text-[10px] text-slate-500 leading-normal">
+            💡 若遇最新模型高负载（High demand）拥挤，请在此下拉框中切至 3.6 或 3.7，避开流量高峰。
+          </p>
         </div>
         <div class="flex items-center justify-between space-x-2">
           <span id="ai-config-status" class="text-[10px] text-slate-500">配置与工作区数据分离保存</span>
@@ -976,6 +1023,205 @@
     </div>
   </div>
 
+  <!-- 7.6 Fullscreen Focus Setup Modal -->
+  <div id="modal-fs-focus-setup" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="fofo-card max-w-sm w-full p-5 bg-slate-900 border border-slate-700 shadow-2xl flex flex-col space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <div class="flex items-center space-x-2">
+          <span class="text-base text-indigo-400">⛶</span>
+          <h3 class="font-bold text-sm text-slate-100">全屏沉浸专注</h3>
+        </div>
+        <button id="modal-fs-focus-close" class="text-slate-400 hover:text-white text-base">✕</button>
+      </div>
+      <div class="space-y-3.5 text-xs">
+        <div class="space-y-1.5">
+          <label class="block text-[11px] text-slate-300 font-medium">专注时长 (分钟)</label>
+          <div class="grid grid-cols-4 gap-1.5" id="fs-focus-preset-group">
+            <button type="button" class="btn-fs-preset-time px-2 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono font-medium border border-slate-700 transition active:scale-95" data-minutes="15">15m</button>
+            <button type="button" class="btn-fs-preset-time px-2 py-1.5 rounded bg-indigo-600 text-white text-xs font-mono font-bold border border-indigo-500 transition active:scale-95 is-active" data-minutes="25">25m</button>
+            <button type="button" class="btn-fs-preset-time px-2 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono font-medium border border-slate-700 transition active:scale-95" data-minutes="45">45m</button>
+            <button type="button" class="btn-fs-preset-time px-2 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono font-medium border border-slate-700 transition active:scale-95" data-minutes="60">60m</button>
+          </div>
+          <div class="flex items-center space-x-2 pt-1">
+            <span class="text-[11px] text-slate-400">自定义时长:</span>
+            <input type="number" id="fs-focus-custom-minutes" min="1" max="720" value="25" class="w-20 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-center text-emerald-400 font-mono font-bold focus:outline-none focus:border-indigo-500" />
+            <span class="text-[11px] text-slate-400">分钟</span>
+          </div>
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-[11px] text-slate-300 font-medium">专注任务名称 (选填)</label>
+          <input type="text" id="fs-focus-task-name" placeholder="本次专注做些什么？放空则不显示" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500" />
+        </div>
+        <p class="text-[10px] text-slate-400 leading-relaxed bg-slate-950/40 p-2 rounded border border-slate-800/80">
+          💡 开启后工作台将全屏模糊遮罩，助你心无旁骛；每实际专注满 25 分钟将自动累计 1 个番茄钟。
+        </p>
+        <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-800">
+          <button type="button" id="btn-fs-focus-cancel" class="px-3 py-1.5 rounded text-slate-400 hover:text-slate-200 text-xs transition">取消</button>
+          <button type="button" id="btn-fs-focus-start" class="px-4 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md transition active:scale-95">开始全屏专注</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7.7 Fullscreen Focus Overlay (全屏专注遮罩视图) -->
+  <div id="fullscreen-focus-overlay" class="fixed inset-0 z-[100] backdrop-blur-2xl bg-slate-950/92 flex flex-col items-center justify-center select-none text-slate-100 hidden transition-opacity duration-500">
+    <!-- Canvas for Fireworks celebration -->
+    <canvas id="fs-focus-fireworks-canvas" class="absolute inset-0 pointer-events-none z-10 w-full h-full"></canvas>
+
+    <!-- Center Focus Content -->
+    <div class="relative z-20 flex flex-col items-center justify-center text-center space-y-6 px-4 max-w-2xl mx-auto">
+      <!-- Task Title (Hidden if empty) -->
+      <div id="fs-focus-task-badge" class="hidden px-5 py-2 rounded-full bg-indigo-950/80 border border-indigo-700/60 shadow-xl max-w-lg">
+        <span class="text-sm md:text-base font-semibold text-indigo-200 truncate flex items-center space-x-2">
+          <span id="fs-focus-task-title-text"></span>
+        </span>
+      </div>
+
+      <!-- Huge Countdown Display -->
+      <div class="flex flex-col items-center">
+        <div id="fs-focus-countdown-display" class="font-mono text-7xl sm:text-8xl md:text-9xl font-black text-emerald-400 tracking-wider drop-shadow-[0_0_40px_rgba(52,211,153,0.35)]">
+          25:00
+        </div>
+        <p id="fs-focus-quote" class="text-xs md:text-sm text-slate-400 mt-4 tracking-wide font-light">
+          心无旁骛 · 一次只做好一件事
+        </p>
+      </div>
+
+      <!-- Celebration message during fireworks -->
+      <div id="fs-focus-celebration-box" class="hidden flex flex-col items-center space-y-2 animate-bounce">
+        <h2 class="text-2xl md:text-3xl font-bold text-amber-300 drop-shadow-lg">专注达成！太棒了！</h2>
+        <p id="fs-focus-celebration-detail" class="text-xs text-slate-300 font-medium"></p>
+      </div>
+    </div>
+
+    <!-- Exit Focus Button (Bottom Right) -->
+    <button id="btn-fs-focus-exit" class="fixed bottom-8 right-8 z-30 px-4 py-2.5 rounded-xl bg-slate-900/80 hover:bg-rose-950/80 border border-slate-700/80 hover:border-rose-700/60 text-slate-400 hover:text-rose-200 text-xs font-medium transition shadow-lg flex items-center space-x-2 backdrop-blur-md">
+      <span>✕</span>
+      <span>退出专注</span>
+    </button>
+  </div>
+
+  <!-- 7.8 Course Schedule Modal (课程表设置与日程排课弹窗) -->
+  <div id="modal-course-schedule" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="fofo-card max-w-6xl w-full p-5 bg-slate-900 border border-slate-700 shadow-2xl flex flex-col space-y-4 max-h-[92vh]">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800 flex-shrink-0">
+        <div>
+          <h3 class="font-bold text-sm text-slate-100">课程表设置与日程排课</h3>
+          <p class="text-[10px] text-slate-400 mt-0.5">支持为每门课程独立设置时分时段与结课日期。每周课程将自动同步生成到日历与日程节点中。</p>
+        </div>
+        <button id="modal-course-close" class="text-slate-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <!-- Settings Bar: Node Color & Tips -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-950/60 rounded-lg border border-slate-800 text-xs flex-shrink-0">
+        <div class="text-slate-400 text-xs">
+          提示：结课日期未填时默认按本学期 18 周自动排课。
+        </div>
+
+        <!-- Color Palette -->
+        <div class="flex items-center space-x-2">
+          <label class="text-slate-300 font-medium whitespace-nowrap">日程标记配色：</label>
+          <div id="course-color-picker" class="flex items-center space-x-1.5">
+            <button type="button" data-color="indigo" class="course-color-btn w-5 h-5 rounded-full bg-indigo-500 ring-2 ring-white transition" title="经典靛蓝 (默认)"></button>
+            <button type="button" data-color="purple" class="course-color-btn w-5 h-5 rounded-full bg-purple-500 hover:scale-110 transition" title="典雅紫罗兰"></button>
+            <button type="button" data-color="sky" class="course-color-btn w-5 h-5 rounded-full bg-sky-500 hover:scale-110 transition" title="湛蓝晴空"></button>
+            <button type="button" data-color="teal" class="course-color-btn w-5 h-5 rounded-full bg-teal-500 hover:scale-110 transition" title="冰晶湖绿"></button>
+            <button type="button" data-color="pink" class="course-color-btn w-5 h-5 rounded-full bg-pink-500 hover:scale-110 transition" title="樱花粉黛"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Course Rows List -->
+      <div class="flex-1 overflow-y-auto pr-1 space-y-2 min-h-[200px]">
+        <div class="flex items-center justify-between text-[11px] text-slate-400 px-1 font-medium">
+          <span>每周课程列表</span>
+          <button type="button" id="btn-course-add-row" class="text-indigo-400 hover:text-indigo-300 flex items-center space-x-1 font-semibold">
+            <span>+</span>
+            <span>添加一门课程</span>
+          </button>
+        </div>
+        <div id="course-rows-container" class="space-y-2">
+          <!-- Dynamically populated rows -->
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex items-center justify-between pt-2.5 border-t border-slate-800 flex-shrink-0 text-xs">
+        <button type="button" id="btn-course-clear-all" class="text-rose-400 hover:text-rose-300 text-xs transition">清空全部课程</button>
+        <div class="flex items-center space-x-2">
+          <button type="button" id="modal-course-cancel" class="px-3.5 py-1.5 rounded text-slate-400 hover:text-slate-200 transition">取消</button>
+          <button type="button" id="btn-course-save-sync" class="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-md transition active:scale-95">保存并同步到日程表</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7.9 Off Work Modal (下班打卡与事务交接弹窗) -->
+  <div id="modal-off-work" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="fofo-card max-w-xl w-full p-6 bg-slate-900 border border-slate-700 shadow-2xl flex flex-col space-y-4 max-h-[90vh]">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 flex-shrink-0">
+        <div>
+          <h3 class="font-bold text-base text-slate-100">下班打卡与事务交接</h3>
+          <p id="off-work-greeting" class="text-xs text-amber-400/90 mt-1 font-medium leading-relaxed"></p>
+        </div>
+        <button id="modal-off-work-close" class="text-slate-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto pr-1 space-y-3.5 text-xs">
+        <!-- Transfer Unfinished Reading List (Itemized) -->
+        <div id="off-work-reading-box" class="p-3 rounded-lg border border-slate-800 bg-slate-950/60 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="font-semibold text-slate-200">今日待阅事项处理</span>
+              <span id="off-work-reading-badge" class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 text-[10px] font-mono">0</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button type="button" id="btn-toggle-reading-all" class="text-[11px] text-cyan-400 hover:text-cyan-300 transition hidden">全选/全不选</button>
+            </div>
+          </div>
+          <div id="off-work-reading-status" class="text-[11px] text-slate-400 leading-relaxed"></div>
+          <div id="off-work-reading-items" class="space-y-1.5 max-h-36 overflow-y-auto pr-1 hidden">
+            <!-- Populated dynamically with checkboxes -->
+          </div>
+        </div>
+
+        <!-- Transfer Unfinished Tasks (Itemized) -->
+        <div id="off-work-task-box" class="p-3 rounded-lg border border-slate-800 bg-slate-950/60 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="font-semibold text-slate-200">今日工作待办处理</span>
+              <span id="off-work-task-badge" class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 text-[10px] font-mono">0</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button type="button" id="btn-toggle-tasks-all" class="text-[11px] text-cyan-400 hover:text-cyan-300 transition hidden">全选/全不选</button>
+            </div>
+          </div>
+          <div id="off-work-task-status" class="text-[11px] text-slate-400 leading-relaxed"></div>
+          <div id="off-work-task-items" class="space-y-1.5 max-h-40 overflow-y-auto pr-1 hidden">
+            <!-- Populated dynamically with checkboxes -->
+          </div>
+        </div>
+
+        <!-- Tomorrow's Milestones Reminder -->
+        <div class="p-3 rounded-lg border border-slate-800 bg-slate-950/60 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold text-slate-200">明日日程节点提醒</span>
+            <span id="off-work-tomorrow-date" class="text-[10px] text-slate-400 font-mono"></span>
+          </div>
+          <div id="off-work-tomorrow-milestones" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-end space-x-2.5 pt-3 border-t border-slate-800 flex-shrink-0">
+        <button type="button" id="modal-off-work-cancel" class="px-3.5 py-1.5 rounded text-slate-400 hover:text-slate-200 transition text-xs">取消</button>
+        <button type="button" id="btn-off-work-confirm" class="px-5 py-1.5 rounded bg-amber-600 hover:bg-amber-500 text-white font-semibold shadow-md transition active:scale-95 text-xs">确认下班</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 8. Persistent FoFo AI conversation drawer -->
   <aside id="ai-chat-sidebar" class="fixed top-0 right-0 bottom-0 z-[60] hidden w-full max-w-md border-l border-emerald-900/60 bg-slate-950/98 shadow-2xl backdrop-blur-xl">
     <div class="h-full flex flex-col">
@@ -1004,7 +1250,11 @@
             <input type="checkbox" id="check-ai-attach-workspace" class="accent-emerald-500 rounded cursor-pointer" />
             <span class="font-medium">📎 添加工作台状态附件</span>
           </label>
-          <span class="text-[10px] text-slate-500">勾选后附带目标与待办状态</span>
+          <div id="ai-chat-compress-status" class="hidden flex items-center space-x-1 text-[10px] text-cyan-400 animate-pulse font-medium">
+            <span>⚡</span>
+            <span>正在自动压缩上下文...</span>
+          </div>
+          <span id="ai-chat-attach-hint" class="text-[10px] text-slate-500">勾选后附带目标与待办状态</span>
         </div>
         <textarea id="ai-chat-input" class="w-full h-20 bg-slate-900 border border-slate-700 rounded p-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 resize-none" placeholder="输入消息，按 Enter 发送，Shift + Enter 换行…"></textarea>
         <div class="flex items-center justify-between">

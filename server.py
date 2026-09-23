@@ -61,13 +61,21 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
         body = json.dumps(data, ensure_ascii=False).encode("utf-8")
         self.send_bytes_response(body, "application/json; charset=utf-8", status)
 
+    def end_headers(self):
+        parsed = urlparse(self.path)
+        if parsed.path.endswith((".html", ".js")) or parsed.path in {"", "/"}:
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
+        super().end_headers()
+
     def do_GET(self):
         parsed = urlparse(self.path)
         if parsed.path == "/api/ping":
             self.send_json_response({
                 "status": "ok",
                 "app": "FoFo",
-                "version": "2.1.0",
+                "version": "2.2.0",
                 "dir": os.path.abspath(BASE_DIR)
             })
             return
@@ -194,8 +202,14 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
                     self.send_json_response({"status": "error", "message": "缺少 AI 请求内容"}, status=400)
                     return
 
-                provider = str(payload.get("provider", "")).strip().lower() or os.environ.get("FOFO_AI_PROVIDER", "openai").strip().lower() or "openai"
+                provider = str(payload.get("provider", "")).strip().lower() or os.environ.get("FOFO_AI_PROVIDER", "gemini").strip().lower() or "gemini"
                 provider_configs = {
+                    "gemini": {
+                        "label": "Google Gemini",
+                        "env_key": "GEMINI_API_KEY",
+                        "default_model": "gemini-3.6-flash",
+                        "endpoint": "https://generativelanguage.googleapis.com/v1beta/models"
+                    },
                     "openai": {
                         "label": "OpenAI",
                         "env_key": "OPENAI_API_KEY",
@@ -218,32 +232,63 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
                 if not api_key:
                     self.send_json_response({
                         "status": "disabled",
-                        "message": f"未配置 {provider_config['env_key']}。请按 AI 配置中的本地服务教程设置环境变量，或复制工作上下文到 ChatGPT 网页。"
+                        "message": f"未配置 {provider_config['env_key']}。请按 AI 配置中的教程设置环境变量，或改用直接配置 API Key 模式。"
                     }, status=503)
                     return
 
                 model = str(payload.get("model", "")).strip() or os.environ.get("FOFO_AI_MODEL", "").strip() or provider_config["default_model"]
-                request_payload = {
-                    "model": model,
-                    "instructions": "你是 FoFo 的工作流秘书。只基于用户提供的工作上下文回答，给出可执行、可确认的建议，不要声称已经修改本地数据。",
-                    "input": prompt,
-                    "max_output_tokens": 1200
-                }
-                if provider == "deepseek":
-                    request_payload["reasoning"] = {"effort": "none"}
-                request = urllib.request.Request(
-                    provider_config["endpoint"],
-                    data=json.dumps(request_payload, ensure_ascii=False).encode("utf-8"),
-                    headers={
-                        "Authorization": f"Bearer {api_key}",
-                        "Content-Type": "application/json"
-                    },
-                    method="POST"
-                )
+
+                if provider == "gemini":
+                    gemini_url = f"{provider_config['endpoint']}/{model}:generateContent?key={api_key}"
+                    request_payload = {
+                        "system_instruction": {
+                            "parts": [{"text": "你是 FoFo 的工作流秘书。只基于用户提供的工作上下文回答，给出可执行、可确认的建议，不要声称已经修改本地数据。"}]
+                        },
+                        "contents": [
+                            {"role": "user", "parts": [{"text": prompt}]}
+                        ],
+                        "generationConfig": {
+                            "maxOutputTokens": 1500
+                        }
+                    }
+                    request = urllib.request.Request(
+                        gemini_url,
+                        data=json.dumps(request_payload, ensure_ascii=False).encode("utf-8"),
+                        headers={"Content-Type": "application/json"},
+                        method="POST"
+                    )
+                else:
+                    request_payload = {
+                        "model": model,
+                        "instructions": "你是 FoFo 的工作流秘书。只基于用户提供的工作上下文回答，给出可执行、可确认的建议，不要声称已经修改本地数据。",
+                        "input": prompt,
+                        "max_output_tokens": 1200
+                    }
+                    if provider == "deepseek":
+                        request_payload["reasoning"] = {"effort": "none"}
+                    request = urllib.request.Request(
+                        provider_config["endpoint"],
+                        data=json.dumps(request_payload, ensure_ascii=False).encode("utf-8"),
+                        headers={
+                            "Authorization": f"Bearer {api_key}",
+                            "Content-Type": "application/json"
+                        },
+                        method="POST"
+                    )
+
                 with urllib.request.urlopen(request, timeout=60) as response:
                     result = json.loads(response.read().decode("utf-8"))
 
                 output_parts = []
+                for cand in result.get("candidates", []):
+                    cand_content = cand.get("content", {})
+                    parts = cand_content.get("parts", []) if isinstance(cand_content, dict) else []
+                    for p in parts:
+                        if isinstance(p, dict) and p.get("text"):
+                            output_parts.append(p["text"])
+                        elif isinstance(p, str):
+                            output_parts.append(p)
+
                 output_text = result.get("output_text")
                 if isinstance(output_text, str):
                     output_parts.append(output_text)

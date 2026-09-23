@@ -906,3 +906,26 @@ body.theme-space-gray {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* Enhanced Date Picker Inputs in Dark Theme */
+input[type="date"] {
+  color-scheme: dark;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.9) brightness(1.25);
+  opacity: 0.85;
+  padding: 3px;
+  border-radius: 4px;
+  background-color: rgba(99, 102, 241, 0.25);
+  transition: all 0.2s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: invert(1) brightness(1.5);
+  background-color: rgba(99, 102, 241, 0.5);
+  transform: scale(1.15);
+}
+
+

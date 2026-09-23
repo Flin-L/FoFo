@@ -557,6 +557,8 @@
         labelSpan.textContent = bottomText;
         botRow.appendChild(labelSpan);
 
+        const hasCourseMilestone = milestones.some(m => m.type === 'course');
+
         // Indicator dots for user milestones
         if (milestones.length > 0) {
           const dot = document.createElement('span');
@@ -568,6 +570,18 @@
           } else if (hasOvertimeMilestone) {
             dotColorClass = 'bg-rose-500';
             dotSelectedColorClass = 'bg-rose-200';
+          } else if (hasCourseMilestone) {
+            const courseItem = milestones.find(m => m.type === 'course');
+            const cColor = courseItem?.color || 'indigo';
+            const colorMap = {
+              indigo: 'bg-indigo-400',
+              purple: 'bg-purple-400',
+              sky: 'bg-sky-400',
+              teal: 'bg-teal-400',
+              pink: 'bg-pink-400'
+            };
+            dotColorClass = colorMap[cColor] || 'bg-indigo-400';
+            dotSelectedColorClass = 'bg-indigo-200';
           }
 
           if (milestones.length === 1) {

@@ -637,18 +637,26 @@
       const holiday = window.CalendarWidget ? window.CalendarWidget.getHolidayInfo(state.currentDate) : null;
       if (holiday && holiday.isHoliday) {
         holidayBadge.classList.remove('hidden');
-        holidayBadge.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-950 text-rose-300 border border-rose-800/60 flex items-center space-x-1';
-        holidayBadge.innerHTML = `<span>🇨🇳</span><span>${holiday.name} · 休</span>`;
+        holidayBadge.className = 'px-2.5 py-0.5 text-[10px] font-bold rounded-full text-slate-900 shadow-sm flex items-center space-x-1';
+        holidayBadge.style.background = 'linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%)';
+        holidayBadge.style.border = 'none';
+        holidayBadge.innerHTML = `<span>🇨🇳</span><span class="font-black text-slate-900">${holiday.name} · 休</span>`;
       } else if (holiday && holiday.isWorkday) {
         holidayBadge.classList.remove('hidden');
+        holidayBadge.style.background = '';
+        holidayBadge.style.border = '';
         holidayBadge.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-950 text-amber-300 border border-amber-800/60 flex items-center space-x-1';
         holidayBadge.innerHTML = `<span>💼</span><span>${holiday.name} · 班</span>`;
       } else if (holiday && holiday.name) {
         holidayBadge.classList.remove('hidden');
-        holidayBadge.className = 'px-2 py-0.5 text-[10px] font-semibold rounded-full bg-slate-800 text-emerald-300 border border-slate-700';
-        holidayBadge.textContent = holiday.name;
+        holidayBadge.className = 'px-2.5 py-0.5 text-[10px] font-bold rounded-full text-slate-900 shadow-sm flex items-center space-x-1';
+        holidayBadge.style.background = 'linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%)';
+        holidayBadge.style.border = 'none';
+        holidayBadge.innerHTML = `<span>🎉</span><span class="font-bold text-slate-900">${holiday.name}</span>`;
       } else {
         holidayBadge.classList.add('hidden');
+        holidayBadge.style.background = '';
+        holidayBadge.style.border = '';
       }
     }
 
@@ -686,7 +694,7 @@
 
     if (prev < 1500 && day.waterIntake >= 1500) {
       confetti.fire();
-      showToast('🎉 恭喜！今日 1.5L 健康饮水目标已达成！', 'water');
+      showToast('恭喜！今日 1.5L 健康饮水目标已达成！', 'water');
     } else {
       showToast(`已记录饮水 +${amount}ml (今日: ${day.waterIntake}ml)`, 'water', 2000);
     }
@@ -945,12 +953,42 @@
         <div class="flex items-center space-x-1.5">
           ${typeBadge}
           <div class="flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition">
+            <button class="btn-defer text-[10px] px-1 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-amber-200" title="推至次日">次日</button>
             <button class="btn-up text-[10px] px-1 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300" title="上移">↑</button>
             <button class="btn-down text-[10px] px-1 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300" title="下移">↓</button>
             <button class="btn-del text-slate-500 hover:text-red-400 text-xs px-1" title="删除">✕</button>
           </div>
         </div>
       `;
+
+      const btnDefer = card.querySelector('.btn-defer');
+      if (btnDefer) {
+        btnDefer.onclick = (e) => {
+          e.stopPropagation();
+          const nextDate = getNextDateStr(state.currentDate);
+          ensureCurrentDayExists(nextDate);
+          day.readingList = items.filter(r => r.id !== item.id);
+          if (!state.dailyData[nextDate].readingList) {
+            state.dailyData[nextDate].readingList = [];
+          }
+          state.dailyData[nextDate].readingList.push({ ...item });
+          saveState();
+          renderReadingList();
+          if (hasBackend) {
+            try {
+              fetch('/api/reading', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  date: nextDate,
+                  items: state.dailyData[nextDate].readingList
+                })
+              });
+            } catch (err) {}
+          }
+          showToast(`已将待阅「${item.title}」推至次日 (${nextDate})`, 'info');
+        };
+      }
 
       card.querySelector('.btn-open').onclick = async () => {
         if (hasBackend) {
@@ -1097,7 +1135,7 @@
       item.querySelector('.btn-focus').onclick = () => {
         pomodoro.setLinkedTask(task);
         pomodoro.start();
-        document.getElementById('pomo-task-tag').textContent = `🎯 ${task.text}`;
+        document.getElementById('pomo-task-tag').textContent = task.text;
         document.getElementById('pomo-task-tag').className = 'max-w-[130px] truncate text-[11px] text-emerald-400 font-semibold';
       };
 
@@ -1187,12 +1225,12 @@
       const item = document.createElement('div');
       const isVacation = m.type === 'vacation' || (m.text && (m.text.includes('休假') || m.text.includes('请假') || m.text.includes('年假')));
       const isOvertime = m.type === 'overtime' || (m.text && m.text.includes('加班'));
+      const isCourse = m.type === 'course';
 
       if (isVacation) {
         item.className = 'flex items-center justify-between bg-emerald-950/50 border border-emerald-800/50 text-emerald-200 px-2.5 py-1.5 rounded text-[11px] mb-1.5';
         item.innerHTML = `
           <div class="flex items-center space-x-1.5 truncate flex-1 mr-1">
-            <span>🌴</span>
             <span class="font-medium">${m.text}</span>
           </div>
           <div class="flex items-center space-x-1.5 flex-shrink-0">
@@ -1204,7 +1242,6 @@
         item.className = 'flex items-center justify-between bg-rose-950/50 border border-rose-800/50 text-rose-200 px-2.5 py-1.5 rounded text-[11px] mb-1.5';
         item.innerHTML = `
           <div class="flex items-center space-x-1.5 truncate flex-1 mr-1">
-            <span>💼</span>
             <span class="font-medium">${m.text}</span>
           </div>
           <div class="flex items-center space-x-1.5 flex-shrink-0">
@@ -1212,10 +1249,33 @@
             <button class="btn-del text-rose-400/60 hover:text-red-400">✕</button>
           </div>
         `;
+      } else if (isCourse) {
+        const color = m.color || 'indigo';
+        const colorMap = {
+          indigo: { wrap: 'bg-indigo-950/50 border-indigo-800/50 text-indigo-200', badge: 'bg-indigo-600 text-white', btn: 'text-indigo-400/60 hover:text-red-400' },
+          purple: { wrap: 'bg-purple-950/50 border-purple-800/50 text-purple-200', badge: 'bg-purple-600 text-white', btn: 'text-purple-400/60 hover:text-red-400' },
+          sky: { wrap: 'bg-sky-950/50 border-sky-800/50 text-sky-200', badge: 'bg-sky-600 text-white', btn: 'text-sky-400/60 hover:text-red-400' },
+          teal: { wrap: 'bg-teal-950/50 border-teal-800/50 text-teal-200', badge: 'bg-teal-600 text-white', btn: 'text-teal-400/60 hover:text-red-400' },
+          pink: { wrap: 'bg-pink-950/50 border-pink-800/50 text-pink-200', badge: 'bg-pink-600 text-white', btn: 'text-pink-400/60 hover:text-red-400' }
+        };
+        const cTheme = colorMap[color] || colorMap.indigo;
+        item.className = `flex items-center justify-between border px-2.5 py-1.5 rounded text-[11px] mb-1.5 ${cTheme.wrap}`;
+        const titleText = m.courseName || m.text || '课程';
+        const subInfo = [m.time, m.classroom].filter(Boolean).join(' · ');
+        item.innerHTML = `
+          <div class="flex items-center space-x-1.5 truncate flex-1 mr-1">
+            <span class="font-medium">${titleText}</span>
+            ${subInfo ? `<span class="text-[10px] opacity-80 font-normal">(${subInfo})</span>` : ''}
+          </div>
+          <div class="flex items-center space-x-1.5 flex-shrink-0">
+            <span class="px-1.5 py-0.2 font-bold text-[10px] rounded shadow-xs ${cTheme.badge}">课程</span>
+            <button class="btn-del ${cTheme.btn}" title="移除单次课程标记">✕</button>
+          </div>
+        `;
       } else {
         item.className = 'flex items-center justify-between text-slate-300 bg-slate-800/80 border border-slate-700/60 px-2.5 py-1 rounded text-[11px] mb-1';
         item.innerHTML = `
-          <span class="truncate flex-1 mr-1">🚩 ${m.text}</span>
+          <span class="truncate flex-1 mr-1">${m.text}</span>
           <button class="btn-del text-slate-500 hover:text-red-400">✕</button>
         `;
       }
@@ -1383,6 +1443,55 @@
     };
   }
 
+  function getCompactAiWorkspaceContext() {
+    const ctx = getAiWorkspaceContext();
+    const lines = [
+      `【FoFo 工作台实时状态 · ${ctx.date} ${ctx.weekday} (${ctx.month} / ${ctx.week})】`
+    ];
+
+    if (ctx.monthlyGoals && ctx.monthlyGoals.length > 0) {
+      const pendingM = ctx.monthlyGoals.filter(g => !g.done).map(g => g.text);
+      const doneMCount = ctx.monthlyGoals.filter(g => g.done).length;
+      if (pendingM.length > 0) {
+        lines.push(`本月目标(进行中 ${pendingM.length}): ${pendingM.map((t, i) => `${i + 1}.${t}`).join('; ')}${doneMCount > 0 ? ` (已达成 ${doneMCount} 项)` : ''}`);
+      } else if (doneMCount > 0) {
+        lines.push(`本月目标: 已全部达成(${doneMCount}项)`);
+      }
+    } else {
+      lines.push('本月目标: 暂无设定');
+    }
+
+    if (ctx.weeklyGoals && ctx.weeklyGoals.length > 0) {
+      const pendingW = ctx.weeklyGoals.filter(g => !g.done).map(g => g.text);
+      const doneWCount = ctx.weeklyGoals.filter(g => g.done).length;
+      if (pendingW.length > 0) {
+        lines.push(`本周重点(进行中 ${pendingW.length}): ${pendingW.map((t, i) => `${i + 1}.${t}`).join('; ')}${doneWCount > 0 ? ` (已达成 ${doneWCount} 项)` : ''}`);
+      } else if (doneWCount > 0) {
+        lines.push(`本周重点: 已全部达成(${doneWCount}项)`);
+      }
+    } else {
+      lines.push('本周重点: 暂无设定');
+    }
+
+    if (ctx.tasks && ctx.tasks.length > 0) {
+      const pendingT = ctx.tasks.filter(t => !t.done);
+      const doneTCount = ctx.tasks.filter(t => t.done).length;
+      if (pendingT.length > 0) {
+        lines.push(`今日待办(待完成 ${pendingT.length}): ${pendingT.map(t => `[${t.priority || 'P1'}] ${t.text}`).join('; ')}${doneTCount > 0 ? ` (已完成 ${doneTCount} 项)` : ''}`);
+      } else if (doneTCount > 0) {
+        lines.push(`今日待办: 已全部完成(${doneTCount}项)`);
+      }
+    } else {
+      lines.push('今日待办: 暂无条目');
+    }
+
+    if (ctx.schedules && ctx.schedules.length > 0) {
+      lines.push(`今日日程/节点(${ctx.schedules.length}): ${ctx.schedules.map(s => `[${s.type || 'event'}] ${s.text}`).join('; ')}`);
+    }
+
+    return lines.join('\n');
+  }
+
   function buildAiPrompt(action, userInput) {
     const actionText = {
       plan: '请根据目标、日程和待办，给出今天最重要的 1-3 件事、建议顺序和番茄钟安排。',
@@ -1394,7 +1503,7 @@
     const curDate = new Date(dateStr + 'T12:00:00');
     const weekStr = getWeekStr(curDate);
     const monthStr = getMonthStr(curDate);
-    return `你是 FoFo 的工作流秘书，不是泛泛聊天助手。只基于提供的工作上下文进行判断，避免空泛鼓励；优先给出可执行、可确认的建议。不要擅自声称已经修改了 FoFo 数据。\n\n任务：${actionText}\n用户补充：${userInput || '无'}\n\n当前 FoFo 工作上下文（JSON）：\n${JSON.stringify(getAiWorkspaceContext(), null, 2)}\n\n请用中文回答，正文不超过 10 行，给出简洁建议。若建议中显式包含月目标、周目标、待办或日程节点，请在回答末尾追加以下机器可读区块（不要放在 markdown 代码块中），没有可写入项时对应数组留空：\n<FOFO_ACTIONS>\n{\n  "monthGoals": [{"text": "月目标内容", "month": "${monthStr}"}],\n  "weekGoals": [{"text": "周目标内容", "week": "${weekStr}"}],\n  "tasks": [{"text": "今日/指定日待办内容", "priority": "P1", "date": "${dateStr}"}],\n  "schedules": [{"text": "日程节点内容", "date": "${dateStr}", "type": "event"}]\n}\n</FOFO_ACTIONS>\n说明：priority 只能使用 P0/P1/P2，type 只能使用 event/vacation/overtime；若涉及未来的具体日期节点，请在 schedules 的 date 中填写具体日期（YYYY-MM-DD）；写入前必须等待用户在 FoFo 中确认。`;
+    return `你是 FoFo 的工作流秘书，不是泛泛聊天助手。只基于提供的工作上下文进行判断，避免空泛鼓励；优先给出可执行、可确认的建议。不要擅自声称已经修改了 FoFo 数据。\n\n任务：${actionText}\n用户补充：${userInput || '无'}\n\n当前 FoFo 工作台状态：\n${getCompactAiWorkspaceContext()}\n\n请用中文回答，正文不超过 10 行，给出简洁建议。若建议中显式包含月目标、周目标、待办或日程节点，请在回答末尾追加以下机器可读区块（不要放在 markdown 代码块中），没有可写入项时对应数组留空：\n<FOFO_ACTIONS>\n{\n  "monthGoals": [{"text": "月目标内容", "month": "${monthStr}"}],\n  "weekGoals": [{"text": "周目标内容", "week": "${weekStr}"}],\n  "tasks": [{"text": "今日/指定日待办内容", "priority": "P1", "date": "${dateStr}"}],\n  "schedules": [{"text": "日程节点内容", "date": "${dateStr}", "type": "event"}]\n}\n</FOFO_ACTIONS>\n说明：priority 只能使用 P0/P1/P2，type 只能使用 event/vacation/overtime；若涉及未来的具体日期节点，请在 schedules 的 date 中填写具体日期（YYYY-MM-DD）；写入前必须等待用户在 FoFo 中确认。`;
   }
 
   async function copyTextToClipboard(text) {
@@ -1426,6 +1535,12 @@
 
   const AI_CONFIG_STORAGE_KEY = 'fofo_ai_config_v1';
   const AI_PROVIDERS = {
+    gemini: {
+      label: 'Google Gemini',
+      model: 'gemini-3.6-flash',
+      envKey: 'GEMINI_API_KEY',
+      endpoint: 'https://generativelanguage.googleapis.com/v1beta/models'
+    },
     openai: {
       label: 'OpenAI',
       model: 'gpt-5-mini',
@@ -1440,8 +1555,124 @@
     }
   };
 
+  const cachedDetectedModels = {
+    gemini: null
+  };
+
+  const PROVIDER_DEFAULT_MODELS = {
+    gemini: [
+      { value: 'gemini-3.6-flash', label: 'gemini-3.6-flash (稳健推荐 · 高可用不易拥挤)' },
+      { value: 'gemini-3.7-flash', label: 'gemini-3.7-flash (进阶推荐)' },
+      { value: 'gemini-3.8-flash', label: 'gemini-3.8-flash (最新款 · 偶有流量高峰)' },
+      { value: 'gemini-3.5-flash', label: 'gemini-3.5-flash (轻量备用)' }
+    ],
+    openai: [
+      { value: 'gpt-5-mini', label: 'gpt-5-mini (官方推荐)' },
+      { value: 'gpt-4o-mini', label: 'gpt-4o-mini (轻量极速)' },
+      { value: 'gpt-4o', label: 'gpt-4o (全能旗舰)' }
+    ],
+    deepseek: [
+      { value: 'deepseek-chat', label: 'deepseek-chat (通用对话 V3)' },
+      { value: 'deepseek-reasoner', label: 'deepseek-reasoner (深度思考 R1)' }
+    ]
+  };
+
+  function pickBestGeminiModel(models) {
+    if (!models || models.length === 0) return 'gemini-3.6-flash';
+    // 优先推荐稳健不易拥挤的 3.6-flash，其次 3.7-flash，3.8-flash 偶发高峰
+    const preferredOrder = ['gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-3.8-flash', 'gemini-3.5-flash'];
+    for (const pref of preferredOrder) {
+      if (models.includes(pref)) return pref;
+    }
+    const flashModels = models.filter(m => m.toLowerCase().includes('flash'));
+    const pool = flashModels.length > 0 ? flashModels : models;
+    const sorted = [...pool].sort((a, b) => {
+      const vaMatch = a.match(/(\d+(?:\.\d+)*)/);
+      const vbMatch = b.match(/(\d+(?:\.\d+)*)/);
+      const va = vaMatch ? parseFloat(vaMatch[1]) : 0;
+      const vb = vbMatch ? parseFloat(vbMatch[1]) : 0;
+      return vb - va;
+    });
+    return sorted[0];
+  }
+
+  function renderModelSelectOptions(provider, activeModel) {
+    const select = document.getElementById('ai-model-select');
+    if (!select) return;
+    const customBox = document.getElementById('ai-custom-model-box');
+    const modelInput = document.getElementById('ai-model-input');
+    select.innerHTML = '';
+
+    const presets = PROVIDER_DEFAULT_MODELS[provider] || PROVIDER_DEFAULT_MODELS.gemini;
+    let found = false;
+
+    // Presets group
+    const presetGroup = document.createElement('optgroup');
+    presetGroup.label = '🌟 推荐精选模型';
+    presets.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.value;
+      opt.textContent = p.label;
+      if (p.value === activeModel) {
+        opt.selected = true;
+        found = true;
+      }
+      presetGroup.appendChild(opt);
+    });
+    select.appendChild(presetGroup);
+
+    // If Gemini and we have dynamically loaded models from user's account
+    if (provider === 'gemini' && Array.isArray(cachedDetectedModels.gemini) && cachedDetectedModels.gemini.length > 0) {
+      const dynamicGroup = document.createElement('optgroup');
+      dynamicGroup.label = `📋 账号检测到的全部可用模型 (${cachedDetectedModels.gemini.length} 个)`;
+      const presetValues = new Set(presets.map(p => p.value));
+      cachedDetectedModels.gemini.forEach(m => {
+        if (!presetValues.has(m)) {
+          const opt = document.createElement('option');
+          opt.value = m;
+          opt.textContent = m;
+          if (m === activeModel) {
+            opt.selected = true;
+            found = true;
+          }
+          dynamicGroup.appendChild(opt);
+        }
+      });
+      select.appendChild(dynamicGroup);
+    }
+
+    // Custom option
+    const customOpt = document.createElement('option');
+    customOpt.value = 'custom';
+    customOpt.textContent = '✏️ 自定义输入模型名称...';
+    if (!found && activeModel) {
+      customOpt.selected = true;
+    }
+    select.appendChild(customOpt);
+
+    if (customBox) {
+      customBox.classList.toggle('hidden', found);
+    }
+    if (modelInput) {
+      modelInput.value = activeModel || (presets[0] ? presets[0].value : '');
+    }
+  }
+
+  async function detectAvailableGeminiModels(apiKey) {
+    if (!apiKey) throw new Error('请先填写 Gemini API Key。');
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      throw new Error(data.error?.message || `获取可用模型失败 (HTTP ${resp.status})`);
+    }
+    const models = (data.models || [])
+      .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+      .map(m => m.name.replace(/^models\//, ''));
+    return models;
+  }
+
   function getAiProviderConfig(provider) {
-    return AI_PROVIDERS[provider] || AI_PROVIDERS.openai;
+    return AI_PROVIDERS[provider] || AI_PROVIDERS.gemini;
   }
 
   function getAiModeHelp(mode, provider) {
@@ -1450,6 +1681,13 @@
       return '新手推荐｜步骤：①保存此模式 ②点击“复制并打开 ChatGPT” ③在 ChatGPT 中粘贴并发送。无需 API Key，也不需要 Python。';
     }
     if (mode === 'direct-api') {
+      if (provider === 'gemini') {
+        return `个人电脑模式（Google Gemini 官方免费）｜步骤：
+①点击上方链接前往 Google AI Studio 免费创建 API Key（无需信用卡、无需预存）；
+②将 API Key 粘贴在下方输入框；
+③模型默认推荐 gemini-3.6-flash（最新一代极速响应且免费，也可点击“自动匹配可用模型”）；
+④点击“保存配置”并“测试连接”。Key 仅保存在本机浏览器中。`;
+      }
       return `个人电脑模式（${providerConfig.label}）｜步骤：①在下方填写 ${providerConfig.label} API Key ②确认模型名称 ③保存并测试连接 ④点击“生成秘书建议”。无需 Python，但 Key 会保存在本机浏览器中；若提示 Failed to fetch，通常是浏览器跨域限制，请改用本地服务模式。`;
     }
     return `安全模式（${providerConfig.label}）｜Windows 配置步骤：
@@ -1462,24 +1700,49 @@
   }
 
   function getAiConfig() {
-    const defaults = { mode: 'chatgpt-web', provider: 'openai', apiKey: '', model: 'gpt-5-mini' };
+    const defaults = {
+      mode: 'direct-api',
+      provider: 'gemini',
+      apiKey: '',
+      apiKeys: { gemini: '', openai: '', deepseek: '' },
+      model: 'gemini-3.6-flash'
+    };
     try {
       const raw = localStorage.getItem(AI_CONFIG_STORAGE_KEY);
       if (!raw) return defaults;
       const saved = JSON.parse(raw);
       const provider = AI_PROVIDERS[saved.provider] ? saved.provider : defaults.provider;
-      return { ...defaults, ...saved, provider, model: saved.model || getAiProviderConfig(provider).model };
+      const apiKeys = {
+        gemini: (saved.apiKeys && typeof saved.apiKeys.gemini === 'string' ? saved.apiKeys.gemini : (saved.provider === 'gemini' ? saved.apiKey : '')) || '',
+        openai: (saved.apiKeys && typeof saved.apiKeys.openai === 'string' ? saved.apiKeys.openai : (saved.provider === 'openai' ? saved.apiKey : '')) || '',
+        deepseek: (saved.apiKeys && typeof saved.apiKeys.deepseek === 'string' ? saved.apiKeys.deepseek : (saved.provider === 'deepseek' ? saved.apiKey : '')) || ''
+      };
+      const activeKey = apiKeys[provider] || '';
+      return {
+        ...defaults,
+        ...saved,
+        provider,
+        apiKeys,
+        apiKey: activeKey,
+        model: saved.model || getAiProviderConfig(provider).model
+      };
     } catch (e) {
       return defaults;
     }
   }
 
   function saveAiConfig(config) {
+    const provider = config.provider || 'gemini';
+    const apiKeys = config.apiKeys || {};
+    if (config.apiKey !== undefined) {
+      apiKeys[provider] = config.apiKey;
+    }
     localStorage.setItem(AI_CONFIG_STORAGE_KEY, JSON.stringify({
-      mode: config.mode || 'chatgpt-web',
-      provider: config.provider || 'openai',
-      apiKey: config.apiKey || '',
-      model: config.model || getAiProviderConfig(config.provider).model
+      mode: config.mode || 'direct-api',
+      provider: provider,
+      apiKeys: apiKeys,
+      apiKey: apiKeys[provider] || '',
+      model: config.model || getAiProviderConfig(provider).model
     }));
   }
 
@@ -1490,27 +1753,46 @@
     const modelRow = document.getElementById('ai-model-row');
     const keyInput = document.getElementById('ai-api-key-input');
     const keyLabel = document.getElementById('ai-api-key-label');
-    const modelInput = document.getElementById('ai-model-input');
     const help = document.getElementById('ai-mode-help');
+    const geminiBanner = document.getElementById('gemini-free-banner');
+    const detectBtn = document.getElementById('btn-ai-detect-models');
     const provider = getAiProviderConfig(config.provider);
-    if (providerSelect) providerSelect.value = AI_PROVIDERS[config.provider] ? config.provider : 'openai';
+    const activeKey = (config.apiKeys && config.apiKeys[config.provider]) || config.apiKey || '';
+    if (providerSelect) providerSelect.value = AI_PROVIDERS[config.provider] ? config.provider : 'gemini';
     if (modeSelect) modeSelect.value = config.mode;
-    if (keyInput) keyInput.value = config.apiKey || '';
+    if (keyInput) keyInput.value = activeKey;
     if (keyLabel) keyLabel.textContent = `${provider.label} API Key`;
-    if (modelInput) modelInput.value = config.model || provider.model;
     if (help) help.textContent = getAiModeHelp(config.mode, config.provider);
+    renderModelSelectOptions(config.provider, config.model || provider.model);
     const providerRow = document.getElementById('ai-provider-row');
     if (providerRow) providerRow.classList.toggle('hidden', config.mode === 'chatgpt-web');
+    if (geminiBanner) geminiBanner.classList.toggle('hidden', config.provider !== 'gemini' || config.mode === 'chatgpt-web');
+    if (detectBtn) detectBtn.classList.toggle('hidden', config.provider !== 'gemini');
     if (keyRow) keyRow.classList.toggle('hidden', config.mode !== 'direct-api');
     if (modelRow) modelRow.classList.toggle('hidden', config.mode === 'chatgpt-web');
   }
 
   function readAiConfigFromUi() {
+    const provider = document.getElementById('ai-provider-select')?.value || 'gemini';
+    const modelSelect = document.getElementById('ai-model-select');
+    const modelInput = document.getElementById('ai-model-input');
+    let model = getAiProviderConfig(provider).model;
+    if (modelSelect && modelSelect.value !== 'custom') {
+      model = modelSelect.value;
+    } else if (modelInput && modelInput.value.trim()) {
+      model = modelInput.value.trim();
+    }
+    const currentInputKey = document.getElementById('ai-api-key-input')?.value.trim() || '';
+    const stored = getAiConfig();
+    const apiKeys = stored.apiKeys || {};
+    apiKeys[provider] = currentInputKey;
+
     return {
-      mode: document.getElementById('ai-mode-select')?.value || 'chatgpt-web',
-      provider: document.getElementById('ai-provider-select')?.value || 'openai',
-      apiKey: document.getElementById('ai-api-key-input')?.value.trim() || '',
-      model: document.getElementById('ai-model-input')?.value.trim() || getAiProviderConfig(document.getElementById('ai-provider-select')?.value).model
+      mode: document.getElementById('ai-mode-select')?.value || 'direct-api',
+      provider: provider,
+      apiKeys: apiKeys,
+      apiKey: currentInputKey,
+      model: model
     };
   }
 
@@ -1524,7 +1806,9 @@
     if (typeof value.output_text === 'string') return [value.output_text];
     if (typeof value.text === 'string') return [value.text];
     if (typeof value.content === 'string') return [value.content];
+    if (value.parts) return collectAiText(value.parts);
     if (value.content) return collectAiText(value.content);
+    if (value.candidates) return collectAiText(value.candidates);
     if (value.message) return collectAiText(value.message);
     return [];
   }
@@ -1534,6 +1818,7 @@
       ...collectAiText(result.output_text),
       ...collectAiText(result.output),
       ...collectAiText(result.choices),
+      ...collectAiText(result.candidates),
       ...collectAiText(result.message)
     ].filter(Boolean);
     return [...new Set(parts)].join('\n').trim();
@@ -1543,33 +1828,102 @@
     if (!config.apiKey) throw new Error('请先在 AI 配置中填写 API Key。');
     const provider = getAiProviderConfig(config.provider);
     const model = config.model || provider.model;
-    const requestBody = {
-      model,
-      instructions: '你是 FoFo 的工作流秘书。只基于用户提供的工作上下文回答，给出可执行、可确认的建议，不要声称已经修改本地数据。',
-      input: prompt,
-      max_output_tokens: 1200
-    };
-    if (config.provider === 'deepseek') {
-      requestBody.reasoning = { effort: 'none' };
-    }
     let response;
     try {
-      response = await fetch(provider.endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.apiKey}`
-        },
-        body: JSON.stringify(requestBody)
-      });
+      if (config.provider === 'gemini') {
+        const geminiUrl = `${provider.endpoint}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(config.apiKey)}`;
+        const requestBody = {
+          system_instruction: {
+            parts: [{ text: '你是 FoFo 的工作流秘书。只基于用户提供的工作上下文回答，给出可执行、可确认的建议，不要声称已经修改本地数据。' }]
+          },
+          contents: [
+            { role: 'user', parts: [{ text: prompt }] }
+          ],
+          generationConfig: {
+            maxOutputTokens: 1500
+          }
+        };
+        response = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+        });
+      } else {
+        const requestBody = {
+          model,
+          instructions: '你是 FoFo 的工作流秘书。只基于用户提供的工作上下文回答，给出可执行、可确认的建议，不要声称已经修改本地数据。',
+          input: prompt,
+          max_output_tokens: 1200
+        };
+        if (config.provider === 'deepseek') {
+          requestBody.reasoning = { effort: 'none' };
+        }
+        response = await fetch(provider.endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.apiKey}`
+          },
+          body: JSON.stringify(requestBody)
+        });
+      }
     } catch (error) {
       throw new Error(`${provider.label} 请求未到达接口，浏览器可能拦截了跨域请求（${error.message || 'Failed to fetch'}）。可改用本地服务模式。`);
     }
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error?.message || `${provider.label} API 请求失败`);
+    if (!response.ok) {
+      const errDetail = result.error?.message || result.message || `${provider.label} API 请求失败 (HTTP ${response.status})`;
+      if (config.provider === 'gemini') {
+        // 1. If Google explicitly recommends a model in the error message e.g. "use models/gemini-3.6-flash"
+        const recMatch = errDetail.match(/use\s+(?:models\/)?([a-zA-Z0-9\.\-_]+)/i);
+        if (recMatch && recMatch[1] && recMatch[1] !== model) {
+          const recModel = recMatch[1];
+          config.model = recModel;
+          saveAiConfig(config);
+          updateAiConfigUi(config);
+          showToast(`已自动切换至 Google 推荐的最新模型: ${recModel}`, 'info', 4000);
+          return await callDirectAi(prompt, config);
+        }
+
+        // 2. High demand / 429 temporary spike fallback
+        const isHighDemand = response.status === 429 || 
+          /high demand|spikes in demand|temporarily unavailable|overloaded/i.test(errDetail);
+        if (isHighDemand && model !== 'gemini-3.6-flash') {
+          const fallbackModel = 'gemini-3.6-flash';
+          config.model = fallbackModel;
+          saveAiConfig(config);
+          updateAiConfigUi(config);
+          showToast(`检测到 ${model} 暂时高峰拥挤，FoFo 已为您自动切换至稳健高可用模型 ${fallbackModel} 并重试`, 'info', 4500);
+          return await callDirectAi(prompt, config);
+        }
+
+        // 3. Otherwise auto-detect available models and pick the best version
+        if (response.status === 404 || errDetail.includes('not found') || errDetail.includes('no longer available')) {
+          try {
+            const availableModels = await detectAvailableGeminiModels(config.apiKey);
+            if (availableModels.length > 0) {
+              cachedDetectedModels.gemini = availableModels;
+              const preferred = pickBestGeminiModel(availableModels);
+              if (preferred && preferred !== model) {
+                config.model = preferred;
+                saveAiConfig(config);
+                updateAiConfigUi(config);
+                showToast(`已自动匹配并切换至当前 API 实际支持的稳健模型: ${preferred}`, 'info', 4000);
+                return await callDirectAi(prompt, config);
+              }
+            }
+          } catch (autoErr) {}
+        }
+
+        if (isHighDemand) {
+          throw new Error(`当前模型遇到 Google 官方流量高峰拥挤（High demand）。请在配置中下拉切换至 gemini-3.7-flash 或稍后重试。(${errDetail})`);
+        }
+      }
+      throw new Error(errDetail);
+    }
     const output = extractAiOutput(result);
     if (!output) throw new Error(`${provider.label} 已返回响应，但未提取到文本内容，请重试或检查模型设置。`);
-    return { output, model, provider: provider.label };
+    return { output, model: config.model || model, provider: provider.label };
   }
 
   async function callLocalAi(prompt, config) {
@@ -2235,7 +2589,15 @@
   }
 
   function newAiChatSession() {
-    return { id: `chat-${Date.now()}`, title: '新会话', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), messages: [] };
+    return {
+      id: `chat-${Date.now()}`,
+      title: '新会话',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: [],
+      summary: '',
+      summarizedCount: 0
+    };
   }
 
   function normalizeAiChatState(rawState) {
@@ -2244,7 +2606,9 @@
       ...session,
       id: String(session.id || `chat-${Date.now()}-${Math.random().toString(16).slice(2)}`),
       title: String(session.title || '新会话'),
-      messages: Array.isArray(session.messages) ? session.messages : []
+      messages: Array.isArray(session.messages) ? session.messages : [],
+      summary: typeof session.summary === 'string' ? session.summary : '',
+      summarizedCount: typeof session.summarizedCount === 'number' ? session.summarizedCount : 0
     }));
     if (!sessions.length) {
       const session = newAiChatSession();
@@ -2623,8 +2987,61 @@
     };
   }
 
+  let isCompressingContext = false;
+
+  async function compressSessionHistory(session, config) {
+    if (isCompressingContext) return;
+    if (!session || !session.messages || session.messages.length < 8) return;
+    const sliceEnd = Math.max(session.messages.length - 4, 1);
+    const unsummarizedCount = sliceEnd - (session.summarizedCount || 0);
+    // 首次达到 8 条触发，或距离上次浓缩又累积了 4+ 条历史时增量触发
+    if (session.summary && unsummarizedCount < 4) return;
+
+    isCompressingContext = true;
+    const statusEl = document.getElementById('ai-chat-compress-status');
+    const hintEl = document.getElementById('ai-chat-attach-hint');
+    if (statusEl) statusEl.classList.remove('hidden');
+    if (hintEl) hintEl.classList.add('hidden');
+
+    try {
+      const messagesToSummarize = session.messages.slice(0, sliceEnd);
+      const messagesText = messagesToSummarize.map(m => {
+        const cleanContent = m.content.replace(/<FOFO_ACTIONS>[\s\S]*?<\/FOFO_ACTIONS>/g, '').trim();
+        return `${m.role === 'user' ? '用户' : 'AI'}：${cleanContent}`;
+      }).join('\n');
+
+      let prompt = '';
+      if (session.summary) {
+        prompt = `请将以下【既有共识摘要】与【后续新增对话记录】合并浓缩为一段 150 字以内的最新沟通共识备忘录。要点清晰，包含用户的核心目标、关键需求与已确认的决策等，不要寒暄与空话：\n\n【既有共识摘要】：\n${session.summary}\n\n【后续新增对话记录】：\n${messagesText}`;
+      } else {
+        prompt = `请将以下多轮工作对话提炼浓缩为一段 150 字以内的沟通共识备忘录。要点清晰，包含用户的身份背景、核心目标、关键需求与已确认的决策等，不要寒暄与空话：\n\n${messagesText}`;
+      }
+
+      const summaryResult = config.mode === 'direct-api'
+        ? await callDirectAi(prompt, config)
+        : await callLocalAi(prompt, config);
+
+      if (summaryResult && summaryResult.output) {
+        const cleanSummary = summaryResult.output
+          .replace(/<FOFO_ACTIONS>[\s\S]*?<\/FOFO_ACTIONS>/g, '')
+          .replace(/```[\s\S]*?```/g, '')
+          .trim();
+        if (cleanSummary) {
+          session.summary = cleanSummary;
+          session.summarizedCount = sliceEnd;
+          saveAiChatState(getAiChatState());
+        }
+      }
+    } catch (e) {
+      console.warn('[FoFo AI] 自动压缩上下文静默跳过:', e.message);
+    } finally {
+      isCompressingContext = false;
+      if (statusEl) statusEl.classList.add('hidden');
+      if (hintEl) hintEl.classList.remove('hidden');
+    }
+  }
+
   function buildAiChatPrompt(session, userText, attachWorkspace = false) {
-    const history = session.messages.slice(-12).map(message => `${message.role === 'user' ? '用户' : 'FoFo AI'}：${message.content}`).join('\n\n');
     const dateStr = state.currentDate;
     const curDate = new Date(dateStr + 'T12:00:00');
     const weekStr = getWeekStr(curDate);
@@ -2632,12 +3049,26 @@
 
     let workspaceContextPart = '';
     if (attachWorkspace) {
-      workspaceContextPart = `\n\n【用户附带的工作台状态附件（JSON）】：\n${JSON.stringify(getAiWorkspaceContext(), null, 2)}\n请重点结合用户附带的工作台状态进行分析、对齐与规划。若发现当前已有目标或待办不再合适，可建议删除过时项或提出全新替代建议。`;
+      workspaceContextPart = `\n\n【用户附带的工作台状态】：\n${getCompactAiWorkspaceContext()}\n请重点结合用户附带的工作台状态进行分析、对齐与规划。若发现当前已有目标或待办不再合适，可建议删除过时项或提出全新替代建议。`;
     } else {
       workspaceContextPart = '\n\n【说明】：用户本次提问未附带工作台状态附件，请直接围绕用户的输入内容和多轮历史进行沟通解答。';
     }
 
-    return `你是 FoFo 的工作流秘书，正在进行多轮工作协作。请给出简洁、务实、可执行的回答，不要泛泛空谈，也不要擅自声称已经修改了本地数据。${workspaceContextPart}\n\n会话历史：\n${history || '无'}\n\n用户最新消息：\n${userText}\n\n请用中文给出简洁、排版清晰的回答（支持 Markdown 语法如加粗、列表），正文不超过 10 行。若建议中显式包含新增或删除月目标、周目标、待办或日程节点，请在末尾追加机器可读区块（不要放在 markdown 代码块中）：\n<FOFO_ACTIONS>\n{\n  "monthGoals": [{"text": "月目标内容", "month": "${monthStr}", "op": "add"}],\n  "weekGoals": [{"text": "周目标内容", "week": "${weekStr}", "op": "add"}],\n  "tasks": [{"text": "待办内容", "priority": "P1", "date": "${dateStr}", "op": "add"}],\n  "schedules": [{"text": "日程节点内容", "date": "${dateStr}", "type": "event", "op": "add"}]\n}\n</FOFO_ACTIONS>\n说明：\n1. 若为删除或清理已有过时项，请将对应条目的 "op" 设为 "delete"（例如 {"text": "已废弃的目标或待办", "op": "delete"}）；新增项 "op" 为 "add"（或省略）。\n2. 若用户希望全面重新规划或推翻重来，可明确建议用户使用“⚡ 覆写模式”一键清空未完成项并写入新规划。\n3. 若建议规划了整月重点请放入 monthGoals；本周重点放入 weekGoals；具体待办放入 tasks；关键节点/会议/休假放入 schedules 并指定具体 date（YYYY-MM-DD）；没有变更的数组留空；所有操作必须经用户在界面勾选确认后更新到工作区。`;
+    // 组装历史：若已有浓缩摘要且历史消息较长，使用“前期共识摘要 + 近期几轮原文”进行上下文压缩
+    let historyText = '';
+    const messages = session.messages || [];
+    const pastMessages = messages.length > 0 && messages[messages.length - 1].content === userText
+      ? messages.slice(0, -1)
+      : messages;
+
+    if (session.summary && pastMessages.length > 4) {
+      const recentMessages = pastMessages.slice(-4).map(m => `${m.role === 'user' ? '用户' : 'FoFo AI'}：${m.content}`).join('\n\n');
+      historyText = `【前期沟通共识与要点摘要（已自动压缩）】：\n${session.summary}\n\n【近期对话记录】：\n${recentMessages}`;
+    } else {
+      historyText = pastMessages.slice(-10).map(m => `${m.role === 'user' ? '用户' : 'FoFo AI'}：${m.content}`).join('\n\n');
+    }
+
+    return `你是 FoFo 的工作流秘书，正在进行多轮工作协作。请给出简洁、务实、可执行的回答，不要泛泛空谈，也不要擅自声称已经修改了本地数据。${workspaceContextPart}\n\n会话历史：\n${historyText || '无'}\n\n用户最新消息：\n${userText}\n\n请用中文给出简洁、排版清晰的回答（支持 Markdown 语法如加粗、列表），正文不超过 10 行。若建议中显式包含新增或删除月目标、周目标、待办或日程节点，请在末尾追加机器可读区块（不要放在 markdown 代码块中）：\n<FOFO_ACTIONS>\n{\n  "monthGoals": [{"text": "月目标内容", "month": "${monthStr}", "op": "add"}],\n  "weekGoals": [{"text": "周目标内容", "week": "${weekStr}", "op": "add"}],\n  "tasks": [{"text": "待办内容", "priority": "P1", "date": "${dateStr}", "op": "add"}],\n  "schedules": [{"text": "日程节点内容", "date": "${dateStr}", "type": "event", "op": "add"}]\n}\n</FOFO_ACTIONS>\n说明：\n1. 若为删除或清理已有过时项，请将对应条目的 "op" 设为 "delete"（例如 {"text": "已废弃的目标或待办", "op": "delete"}）；新增项 "op" 为 "add"（或省略）。\n2. 若用户希望全面重新规划或推翻重来，可明确建议用户使用“⚡ 覆写模式”一键清空未完成项并写入新规划。\n3. 若建议规划了整月重点请放入 monthGoals；本周重点放入 weekGoals；具体待办放入 tasks；关键节点/会议/休假放入 schedules 并指定具体 date（YYYY-MM-DD）；没有变更的数组留空；所有操作必须经用户在界面勾选确认后更新到工作区。`;
   }
 
   async function sendAiChatMessage(presetText = '') {
@@ -2678,6 +3109,13 @@
       renderAiChatSessions();
       renderAiChatMessages();
       if (sendBtn) sendBtn.disabled = false;
+
+      // 触发后台轻量上下文自适应浓缩（满 8 条自动检查）
+      if (session.messages.length >= 8) {
+        setTimeout(() => {
+          compressSessionHistory(session, config);
+        }, 400);
+      }
     }
   }
 
@@ -2690,12 +3128,26 @@
     document.getElementById('ai-chat-input')?.focus();
   }
 
+  let lastActiveAiProvider = 'gemini';
+
   function openAiConfigModal() {
     const modal = document.getElementById('modal-ai-assistant');
     if (!modal) return;
     document.getElementById('ai-chat-sidebar')?.classList.add('hidden');
     modal.classList.remove('hidden');
-    updateAiConfigUi();
+    const cfg = getAiConfig();
+    lastActiveAiProvider = cfg.provider || 'gemini';
+    updateAiConfigUi(cfg);
+    const keyInput = document.getElementById('ai-api-key-input');
+    if (keyInput && !cfg.apiKey) {
+      keyInput.value = '';
+      setTimeout(() => {
+        if (!getAiConfig().apiKey && keyInput) keyInput.value = '';
+      }, 50);
+      setTimeout(() => {
+        if (!getAiConfig().apiKey && keyInput) keyInput.value = '';
+      }, 200);
+    }
     document.getElementById('ai-provider-select')?.focus();
   }
 
@@ -2910,22 +3362,137 @@
     document.getElementById('btn-ai-chat-close')?.addEventListener('click', () => document.getElementById('ai-chat-sidebar')?.classList.add('hidden'));
     if (closeBtn) closeBtn.onclick = () => modal.classList.add('hidden');
     if (modeSelect) modeSelect.onchange = () => updateAiConfigUi(readAiConfigFromUi());
-    if (providerSelect) providerSelect.onchange = () => {
-      const modelInput = document.getElementById('ai-model-input');
-      const knownDefaultModels = Object.values(AI_PROVIDERS).map(provider => provider.model);
-      if (modelInput && knownDefaultModels.includes(modelInput.value.trim())) modelInput.value = getAiProviderConfig(providerSelect.value).model;
-      updateAiConfigUi(readAiConfigFromUi());
-    };
+
+    const modelSelect = document.getElementById('ai-model-select');
+    const customModelBox = document.getElementById('ai-custom-model-box');
+    const modelInput = document.getElementById('ai-model-input');
+    const toggleKeyBtn = document.getElementById('btn-toggle-key-visibility');
+    const clearKeyBtn = document.getElementById('btn-clear-key-input');
+    const keyInput = document.getElementById('ai-api-key-input');
+
+    if (providerSelect) {
+      providerSelect.onfocus = () => {
+        lastActiveAiProvider = providerSelect.value;
+      };
+      providerSelect.onchange = () => {
+        const newProvider = providerSelect.value;
+        const currentInputKey = keyInput ? keyInput.value.trim() : '';
+        const stored = getAiConfig();
+        const apiKeys = stored.apiKeys || { gemini: '', openai: '', deepseek: '' };
+        if (lastActiveAiProvider) {
+          apiKeys[lastActiveAiProvider] = currentInputKey;
+        }
+        lastActiveAiProvider = newProvider;
+
+        stored.provider = newProvider;
+        stored.apiKeys = apiKeys;
+        stored.apiKey = apiKeys[newProvider] || '';
+        stored.model = getAiProviderConfig(newProvider).model;
+        saveAiConfig(stored);
+        updateAiConfigUi(stored);
+      };
+    }
+
+    if (toggleKeyBtn && keyInput) {
+      toggleKeyBtn.onclick = () => {
+        if (keyInput.type === 'password') {
+          keyInput.type = 'text';
+          toggleKeyBtn.textContent = '🙈 隐藏明文';
+        } else {
+          keyInput.type = 'password';
+          toggleKeyBtn.textContent = '👁️ 显示明文';
+        }
+      };
+    }
+
+    if (clearKeyBtn && keyInput) {
+      clearKeyBtn.onclick = () => {
+        keyInput.value = '';
+        const currentCfg = readAiConfigFromUi();
+        const curProvider = currentCfg.provider || 'gemini';
+        currentCfg.apiKey = '';
+        if (!currentCfg.apiKeys) currentCfg.apiKeys = {};
+        currentCfg.apiKeys[curProvider] = '';
+        saveAiConfig(currentCfg);
+        showToast(`已清空 ${getAiProviderConfig(curProvider).label} 的 API Key`, 'info', 2000);
+        if (statusEl) statusEl.textContent = `${getAiProviderConfig(curProvider).label} API Key 已清空`;
+      };
+    }
+
+    if (modelSelect) {
+      modelSelect.onchange = () => {
+        if (modelSelect.value === 'custom') {
+          if (customModelBox) customModelBox.classList.remove('hidden');
+          if (modelInput) modelInput.focus();
+        } else {
+          if (customModelBox) customModelBox.classList.add('hidden');
+          if (modelInput) modelInput.value = modelSelect.value;
+        }
+      };
+    }
+
+    if (modelInput && modelSelect) {
+      modelInput.oninput = () => {
+        const val = modelInput.value.trim();
+        const hasOpt = Array.from(modelSelect.options).some(o => o.value === val);
+        if (hasOpt) {
+          modelSelect.value = val;
+        } else {
+          modelSelect.value = 'custom';
+        }
+      };
+    }
+
+    const detectModelsBtn = document.getElementById('btn-ai-detect-models');
+    if (detectModelsBtn) {
+      detectModelsBtn.onclick = async () => {
+        const config = readAiConfigFromUi();
+        if (config.provider !== 'gemini') {
+          showToast('自动匹配模型目前仅适用于 Google Gemini', 'info');
+          return;
+        }
+        if (!config.apiKey) {
+          showToast('请先输入 Gemini API Key', 'warn');
+          return;
+        }
+        if (statusEl) statusEl.textContent = '正在向 Google 查询您账号可用的模型列表…';
+        try {
+          const models = await detectAvailableGeminiModels(config.apiKey);
+          if (models.length === 0) {
+            if (statusEl) statusEl.textContent = '未查询到支持文本生成的模型';
+            return;
+          }
+          cachedDetectedModels.gemini = models;
+          // Determine best or keep user selection if valid
+          let chosenModel = config.model;
+          if (!models.includes(chosenModel) || chosenModel === 'gemini-3.8-flash') {
+            // Note: If previously on 3.8-flash (which has high-demand spikes), recommend/switch to 3.6-flash
+            chosenModel = pickBestGeminiModel(models);
+          }
+          config.model = chosenModel;
+          saveAiConfig(config);
+          updateAiConfigUi(config);
+          if (statusEl) statusEl.textContent = `成功加载 ${models.length} 个可用模型！推荐已选用: ${chosenModel}，您可在下拉菜单中自由挑选`;
+          showToast(`已成功获取 ${models.length} 个可用模型，已更新下拉列表！`, 'success', 3500);
+        } catch (e) {
+          if (statusEl) statusEl.textContent = `检测失败: ${e.message}`;
+          showToast(e.message, 'error', 4000);
+        }
+      };
+    }
     if (saveConfigBtn) saveConfigBtn.onclick = () => {
       const config = readAiConfigFromUi();
       saveAiConfig(config);
       updateAiConfigUi(config);
       if (statusEl) statusEl.textContent = `AI 配置已保存：${getAiProviderConfig(config.provider).label} · ${config.mode}`;
+      showToast('AI 配置已成功保存！', 'success', 2000);
     };
     if (clearConfigBtn) clearConfigBtn.onclick = () => {
       localStorage.removeItem(AI_CONFIG_STORAGE_KEY);
+      if (keyInput) keyInput.value = '';
       updateAiConfigUi();
       if (statusEl) statusEl.textContent = 'AI 配置已清除，已恢复 ChatGPT 网页协同模式。';
+      showToast('AI 配置已清除', 'info', 2000);
     };
     if (testConfigBtn) testConfigBtn.onclick = async () => {
       const config = readAiConfigFromUi();
@@ -2936,7 +3503,9 @@
       if (statusEl) statusEl.textContent = '正在测试 AI 连接…';
       try {
         const result = config.mode === 'direct-api' ? await callDirectAi('请只回复：FoFo AI 连接正常。', config) : await callLocalAi('请只回复：FoFo AI 连接正常。', config);
-        if (statusEl) statusEl.textContent = `连接成功 · ${result.provider ? `${result.provider} · ` : ''}${result.model || config.model}`;
+        const usedModel = result.model || config.model;
+        if (statusEl) statusEl.textContent = `连接成功 · ${result.provider ? `${result.provider} · ` : ''}${usedModel}`;
+        showToast(`AI 连接测试成功！当前使用模型: ${usedModel}`, 'success', 3000);
       } catch (e) {
         if (statusEl) statusEl.textContent = e.message || '连接测试失败';
       }
@@ -3351,12 +3920,15 @@
         const item = document.createElement('div');
         const isVacation = m.type === 'vacation' || (m.text && (m.text.includes('休假') || m.text.includes('请假') || m.text.includes('年假')));
         const isOvertime = m.type === 'overtime' || (m.text && m.text.includes('加班'));
+        const isCourse = m.type === 'course';
 
-        let badgeHtml = '<span class="text-amber-400">🚩</span>';
+        let badgeHtml = '<span class="text-amber-400 font-bold text-xs">节点</span>';
         if (isVacation) {
           badgeHtml = '<span class="px-1.5 py-0.2 bg-emerald-600 text-white font-bold text-[10px] rounded">休假</span>';
         } else if (isOvertime) {
           badgeHtml = '<span class="px-1.5 py-0.2 bg-rose-600 text-white font-bold text-[10px] rounded">加班</span>';
+        } else if (isCourse) {
+          badgeHtml = '<span class="px-1.5 py-0.2 bg-indigo-600 text-white font-bold text-[10px] rounded">课程</span>';
         }
 
         item.className = 'flex items-center justify-between text-slate-300 bg-slate-800/80 px-2 py-1 rounded text-xs';
@@ -3815,6 +4387,892 @@
     });
   }
 
+  // --- Fullscreen Focus Mode ---
+  let fsFocusInterval = null;
+  let fsFocusStartTime = null;
+  let fsFocusTargetMinutes = 25;
+  let fsFocusTaskName = '';
+  let fsFocusCelebrationTimer = null;
+  let fsFireworksAnimId = null;
+
+  function initFullscreenFocus() {
+    const btnOpen = document.getElementById('btn-fullscreen-focus');
+    const modalSetup = document.getElementById('modal-fs-focus-setup');
+    const modalClose = document.getElementById('modal-fs-focus-close');
+    const btnCancel = document.getElementById('btn-fs-focus-cancel');
+    const btnStart = document.getElementById('btn-fs-focus-start');
+    const customMinInput = document.getElementById('fs-focus-custom-minutes');
+    const taskInput = document.getElementById('fs-focus-task-name');
+    const presetBtns = document.querySelectorAll('.btn-fs-preset-time');
+
+    const overlay = document.getElementById('fullscreen-focus-overlay');
+    const countdownDisplay = document.getElementById('fs-focus-countdown-display');
+    const taskBadge = document.getElementById('fs-focus-task-badge');
+    const taskTitleText = document.getElementById('fs-focus-task-title-text');
+    const celebrationBox = document.getElementById('fs-focus-celebration-box');
+    const celebrationDetail = document.getElementById('fs-focus-celebration-detail');
+    const btnExit = document.getElementById('btn-fs-focus-exit');
+    const canvas = document.getElementById('fs-focus-fireworks-canvas');
+
+    if (!btnOpen || !modalSetup || !overlay) return;
+
+    const setMinutes = (mins) => {
+      fsFocusTargetMinutes = Math.max(1, parseInt(mins) || 25);
+      if (customMinInput) customMinInput.value = fsFocusTargetMinutes;
+      presetBtns.forEach(btn => {
+        const bm = parseInt(btn.dataset.minutes);
+        if (bm === fsFocusTargetMinutes) {
+          btn.className = 'btn-fs-preset-time px-2 py-1.5 rounded bg-indigo-600 text-white text-xs font-mono font-bold border border-indigo-500 transition active:scale-95 is-active';
+        } else {
+          btn.className = 'btn-fs-preset-time px-2 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono font-medium border border-slate-700 transition active:scale-95';
+        }
+      });
+    };
+
+    presetBtns.forEach(btn => {
+      btn.onclick = () => {
+        setMinutes(btn.dataset.minutes);
+      };
+    });
+
+    if (customMinInput) {
+      customMinInput.oninput = () => {
+        const val = parseInt(customMinInput.value) || 1;
+        fsFocusTargetMinutes = Math.max(1, val);
+        presetBtns.forEach(btn => {
+          const bm = parseInt(btn.dataset.minutes);
+          if (bm === fsFocusTargetMinutes) {
+            btn.className = 'btn-fs-preset-time px-2 py-1.5 rounded bg-indigo-600 text-white text-xs font-mono font-bold border border-indigo-500 transition active:scale-95 is-active';
+          } else {
+            btn.className = 'btn-fs-preset-time px-2 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono font-medium border border-slate-700 transition active:scale-95';
+          }
+        });
+      };
+    }
+
+    const openSetup = () => {
+      if (pomodoro && pomodoro.linkedTask && (!taskInput.value || !taskInput.value.trim())) {
+        taskInput.value = pomodoro.linkedTask.text;
+      }
+      modalSetup.classList.remove('hidden');
+      if (taskInput) taskInput.focus();
+    };
+
+    const closeSetup = () => {
+      modalSetup.classList.add('hidden');
+    };
+
+    btnOpen.onclick = openSetup;
+    if (modalClose) modalClose.onclick = closeSetup;
+    if (btnCancel) btnCancel.onclick = closeSetup;
+
+    function startFireworks() {
+      if (!canvas) return null;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#34d399', '#10b981', '#60a5fa', '#38bdf8', '#f59e0b', '#fbbf24', '#a78bfa', '#f472b6', '#ffffff'];
+
+      function createExplosion(x, y) {
+        const count = 70 + Math.floor(Math.random() * 50);
+        const baseColor = colors[Math.floor(Math.random() * colors.length)];
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 2 + Math.random() * 7;
+          particles.push({
+            x,
+            y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            alpha: 1,
+            decay: 0.012 + Math.random() * 0.015,
+            color: Math.random() > 0.3 ? baseColor : colors[Math.floor(Math.random() * colors.length)],
+            size: 2 + Math.random() * 3
+          });
+        }
+      }
+
+      createExplosion(canvas.width * 0.3, canvas.height * 0.4);
+      createExplosion(canvas.width * 0.7, canvas.height * 0.35);
+      createExplosion(canvas.width * 0.5, canvas.height * 0.3);
+
+      const intervalBurst = setInterval(() => {
+        createExplosion(
+          canvas.width * (0.2 + Math.random() * 0.6),
+          canvas.height * (0.2 + Math.random() * 0.4)
+        );
+      }, 500);
+
+      function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.12;
+          p.vx *= 0.98;
+          p.alpha -= p.decay;
+
+          if (p.alpha <= 0) {
+            particles.splice(i, 1);
+            continue;
+          }
+
+          ctx.save();
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        fsFireworksAnimId = requestAnimationFrame(loop);
+      }
+
+      loop();
+
+      return () => {
+        clearInterval(intervalBurst);
+        if (fsFireworksAnimId) cancelAnimationFrame(fsFireworksAnimId);
+        fsFireworksAnimId = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      };
+    }
+
+    function settlePomodoros(actualMinutes, taskName) {
+      const pomosEarned = Math.floor(actualMinutes / 25);
+      if (pomosEarned <= 0) return { pomosEarned: 0, taskUpdated: false };
+
+      ensureCurrentDayExists();
+      const curDate = state.currentDate;
+      const day = state.dailyData[curDate];
+      if (!day.tasks) day.tasks = [];
+
+      let taskUpdated = false;
+      const trimmedTask = (taskName || '').trim();
+
+      if (trimmedTask) {
+        let task = day.tasks.find(t => t.text.trim().toLowerCase() === trimmedTask.toLowerCase());
+        if (!task) {
+          task = {
+            id: 't-fs-' + Date.now(),
+            text: trimmedTask,
+            priority: 'P1',
+            done: false,
+            pomodoros: pomosEarned,
+            createdAt: new Date().toISOString()
+          };
+          day.tasks.push(task);
+        } else {
+          task.pomodoros = (task.pomodoros || 0) + pomosEarned;
+        }
+        taskUpdated = true;
+      } else {
+        if (pomodoro && pomodoro.linkedTask) {
+          const task = day.tasks.find(t => t.id === pomodoro.linkedTask.id);
+          if (task) {
+            task.pomodoros = (task.pomodoros || 0) + pomosEarned;
+            taskUpdated = true;
+          }
+        }
+        if (!taskUpdated) {
+          day.unlinkedPomodoros = (day.unlinkedPomodoros || 0) + pomosEarned;
+        }
+      }
+
+      saveState();
+      renderTasks();
+      refreshHeatmap();
+      calendar.render();
+
+      const todayBadge = document.getElementById('pomo-today-count');
+      if (todayBadge) {
+        const cur = state.dailyData[state.currentDate];
+        const taskPomos = (cur.tasks || []).reduce((sum, t) => sum + (t.pomodoros || 0), 0);
+        todayBadge.textContent = taskPomos + (cur.unlinkedPomodoros || 0);
+      }
+
+      return { pomosEarned, taskUpdated };
+    }
+
+    function formatTime(remainingMs) {
+      const totalSec = Math.max(0, Math.ceil(remainingMs / 1000));
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    let stopFireworks = null;
+
+    const exitFullscreenFocus = (isComplete = false) => {
+      if (fsFocusInterval) {
+        clearInterval(fsFocusInterval);
+        fsFocusInterval = null;
+      }
+      if (fsFocusCelebrationTimer) {
+        clearTimeout(fsFocusCelebrationTimer);
+        fsFocusCelebrationTimer = null;
+      }
+      if (stopFireworks) {
+        stopFireworks();
+        stopFireworks = null;
+      }
+
+      const elapsedMs = Date.now() - fsFocusStartTime;
+      const actualMinutes = Math.floor(elapsedMs / 1000 / 60);
+      const { pomosEarned } = settlePomodoros(actualMinutes, fsFocusTaskName);
+
+      overlay.classList.add('hidden');
+      if (celebrationBox) celebrationBox.classList.add('hidden');
+      if (countdownDisplay) countdownDisplay.classList.remove('hidden');
+
+      if (isComplete) {
+        if (pomosEarned > 0) {
+          showToast(`恭喜完成全屏专注！实际专注 ${actualMinutes} 分钟，已折算计入 ${pomosEarned} 个番茄钟！`, 'success', 5000);
+        } else {
+          showToast(`恭喜完成全屏专注！实际专注 ${actualMinutes} 分钟。`, 'success', 4000);
+        }
+      } else {
+        if (pomosEarned > 0) {
+          showToast(`已退出全屏专注。本次实际专注 ${actualMinutes} 分钟，已折算计入 ${pomosEarned} 个番茄钟。`, 'info', 4000);
+        } else {
+          showToast(`已退出全屏专注。本次实际专注 ${actualMinutes} 分钟（未满 25 分钟，未折算番茄钟）。`, 'info', 3500);
+        }
+      }
+    };
+
+    btnExit.onclick = () => {
+      exitFullscreenFocus(false);
+    };
+
+    btnStart.onclick = () => {
+      const mins = Math.max(1, parseInt(customMinInput?.value) || fsFocusTargetMinutes || 25);
+      fsFocusTargetMinutes = mins;
+      fsFocusTaskName = (taskInput ? taskInput.value.trim() : '');
+
+      closeSetup();
+
+      if (fsFocusTaskName) {
+        taskTitleText.textContent = fsFocusTaskName;
+        taskBadge.classList.remove('hidden');
+      } else {
+        taskBadge.classList.add('hidden');
+      }
+
+      celebrationBox.classList.add('hidden');
+      countdownDisplay.classList.remove('hidden');
+
+      const targetTotalMs = fsFocusTargetMinutes * 60 * 1000;
+      fsFocusStartTime = Date.now();
+      countdownDisplay.textContent = formatTime(targetTotalMs);
+
+      overlay.classList.remove('hidden');
+
+      fsFocusInterval = setInterval(() => {
+        const elapsed = Date.now() - fsFocusStartTime;
+        const remaining = targetTotalMs - elapsed;
+
+        if (remaining <= 0) {
+          clearInterval(fsFocusInterval);
+          fsFocusInterval = null;
+          countdownDisplay.textContent = '00:00';
+
+          if (celebrationBox) {
+            celebrationBox.classList.remove('hidden');
+            const pomos = Math.floor(fsFocusTargetMinutes / 25);
+            if (celebrationDetail) {
+              celebrationDetail.textContent = `完整专注 ${fsFocusTargetMinutes} 分钟 · ${pomos > 0 ? `计入 ${pomos} 个番茄钟` : '心流达成'}`;
+            }
+          }
+
+          stopFireworks = startFireworks();
+
+          fsFocusCelebrationTimer = setTimeout(() => {
+            exitFullscreenFocus(true);
+          }, 3800);
+        } else {
+          countdownDisplay.textContent = formatTime(remaining);
+        }
+      }, 500);
+    };
+  }
+
+  // --- Course Schedule Management & Sync ---
+  function initCourseScheduleModal() {
+    const btnOpen = document.getElementById('btn-course-schedule');
+    const modal = document.getElementById('modal-course-schedule');
+    const btnClose = document.getElementById('modal-course-close');
+    const btnCancel = document.getElementById('modal-course-cancel');
+    const btnAddRow = document.getElementById('btn-course-add-row');
+    const btnClearAll = document.getElementById('btn-course-clear-all');
+    const btnSaveSync = document.getElementById('btn-course-save-sync');
+    const rowsContainer = document.getElementById('course-rows-container');
+    const colorBtns = document.querySelectorAll('.course-color-btn');
+
+    if (!btnOpen || !modal || !rowsContainer) return;
+
+    let selectedColor = 'indigo';
+
+    const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+    const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+
+    const DOW_OPTIONS = [
+      { val: 1, label: '周一' },
+      { val: 2, label: '周二' },
+      { val: 3, label: '周三' },
+      { val: 4, label: '周四' },
+      { val: 5, label: '周五' },
+      { val: 6, label: '周六' },
+      { val: 7, label: '周日' }
+    ];
+
+    function setColor(c) {
+      selectedColor = c || 'indigo';
+      colorBtns.forEach(btn => {
+        if (btn.dataset.color === selectedColor) {
+          btn.classList.add('ring-2', 'ring-white', 'scale-110');
+        } else {
+          btn.classList.remove('ring-2', 'ring-white', 'scale-110');
+        }
+      });
+    }
+
+    colorBtns.forEach(btn => {
+      btn.onclick = () => {
+        setColor(btn.dataset.color);
+      };
+    });
+
+    function getDefault18WeeksEndDate() {
+      const now = new Date(state.currentDate || formatDateStr(new Date()));
+      const curDay = now.getDay() === 0 ? 7 : now.getDay();
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - (curDay - 1));
+      const end = new Date(monday);
+      end.setDate(monday.getDate() + (18 * 7 - 1));
+      return formatDateStr(end);
+    }
+
+    function createCourseRow(data = {}) {
+      const row = document.createElement('div');
+      row.className = 'course-row flex flex-wrap items-center gap-2 bg-slate-950/70 p-2.5 rounded-lg border border-slate-800 hover:border-slate-700 transition';
+
+      const dow = data.dayOfWeek !== undefined ? Number(data.dayOfWeek) : 1;
+      let startH = data.startHour || '08';
+      let startM = data.startMin || '00';
+      let endH = data.endHour || '09';
+      let endM = data.endMin || '35';
+
+      if (data.startTime && !data.startHour) {
+        const parts = data.startTime.split(':');
+        if (parts.length === 2) {
+          startH = parts[0].padStart(2, '0');
+          startM = parts[1].padStart(2, '0');
+        }
+      }
+      if (data.endTime && !data.endHour) {
+        const parts = data.endTime.split(':');
+        if (parts.length === 2) {
+          endH = parts[0].padStart(2, '0');
+          endM = parts[1].padStart(2, '0');
+        }
+      }
+
+      const name = data.name || '';
+      const room = data.room || '';
+      const endDate = data.endDate || '';
+
+      const dowSelectHtml = DOW_OPTIONS.map(o => `<option value="${o.val}" ${o.val === dow ? 'selected' : ''}>${o.label}</option>`).join('');
+      const startHHtml = HOUR_OPTIONS.map(h => `<option value="${h}" ${h === startH ? 'selected' : ''}>${h}</option>`).join('');
+      const startMHtml = MINUTE_OPTIONS.map(m => `<option value="${m}" ${m === startM ? 'selected' : ''}>${m}</option>`).join('');
+      const endHHtml = HOUR_OPTIONS.map(h => `<option value="${h}" ${h === endH ? 'selected' : ''}>${h}</option>`).join('');
+      const endMHtml = MINUTE_OPTIONS.map(m => `<option value="${m}" ${m === endM ? 'selected' : ''}>${m}</option>`).join('');
+
+      row.innerHTML = `
+        <div class="flex items-center space-x-1.5 flex-shrink-0">
+          <select class="course-row-dow bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+            ${dowSelectHtml}
+          </select>
+        </div>
+        <div class="flex items-center space-x-1 flex-shrink-0 text-slate-400 text-xs">
+          <span class="text-[11px] text-slate-500">始:</span>
+          <select class="course-row-start-h bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono">
+            ${startHHtml}
+          </select>
+          <span class="text-slate-500">:</span>
+          <select class="course-row-start-m bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono">
+            ${startMHtml}
+          </select>
+          <span class="text-slate-500 px-0.5">~</span>
+          <span class="text-[11px] text-slate-500">终:</span>
+          <select class="course-row-end-h bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono">
+            ${endHHtml}
+          </select>
+          <span class="text-slate-500">:</span>
+          <select class="course-row-end-m bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono">
+            ${endMHtml}
+          </select>
+        </div>
+        <input type="text" class="course-row-name flex-1 min-w-[120px] bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500" placeholder="课程名称 (必填)" />
+        <input type="text" class="course-row-room w-24 md:w-32 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500" placeholder="教室 (选填)" />
+        <div class="course-row-date-wrap flex items-center space-x-1 flex-shrink-0 text-xs bg-slate-900 border border-slate-700 hover:border-indigo-400 rounded px-2 py-1 transition cursor-pointer group/date" title="点击选择该课程结课日期（选填，未填默认排课18周）">
+          <span class="text-[11px] text-indigo-300 font-medium whitespace-nowrap select-none">结课:</span>
+          <input type="date" class="course-row-end-date bg-transparent border-0 text-xs text-slate-100 font-mono focus:outline-none cursor-pointer" title="点击选择该课程结课日期（选填，未填默认排课18周）" />
+        </div>
+        <button type="button" class="btn-del-course-row text-slate-500 hover:text-rose-400 p-1 rounded transition text-sm flex-shrink-0 ml-auto" title="删除该课程">✕</button>
+      `;
+
+      row.querySelector('.course-row-name').value = name;
+      row.querySelector('.course-row-room').value = room;
+      const dateInput = row.querySelector('.course-row-end-date');
+      if (endDate && dateInput) {
+        dateInput.value = endDate;
+      }
+
+      const dateWrap = row.querySelector('.course-row-date-wrap');
+      if (dateWrap && dateInput) {
+        dateWrap.addEventListener('click', (e) => {
+          if (e.target !== dateInput && typeof dateInput.showPicker === 'function') {
+            try { dateInput.showPicker(); } catch (err) {}
+          }
+        });
+      }
+
+      row.querySelector('.btn-del-course-row').onclick = () => {
+        row.remove();
+        if (rowsContainer.children.length === 0) {
+          createCourseRow();
+        }
+      };
+
+      rowsContainer.appendChild(row);
+    }
+
+    function openModal() {
+      rowsContainer.innerHTML = '';
+      const schedule = state.courseSchedule;
+      if (schedule) {
+        setColor(schedule.color || 'indigo');
+        if (Array.isArray(schedule.courses) && schedule.courses.length > 0) {
+          schedule.courses.forEach(c => createCourseRow(c));
+        } else {
+          createCourseRow();
+        }
+      } else {
+        setColor('indigo');
+        createCourseRow();
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      modal.classList.add('hidden');
+    }
+
+    btnOpen.onclick = openModal;
+    if (btnClose) btnClose.onclick = closeModal;
+    if (btnCancel) btnCancel.onclick = closeModal;
+
+    if (btnAddRow) {
+      btnAddRow.onclick = () => {
+        createCourseRow();
+        rowsContainer.scrollTop = rowsContainer.scrollHeight;
+      };
+    }
+
+    if (btnClearAll) {
+      btnClearAll.onclick = () => {
+        if (!confirm('确认清空课程表及日程中已排入的所有课程标记吗？此操作将清除所有课程信息。')) return;
+        state.courseSchedule = null;
+        Object.keys(state.dailyData || {}).forEach(dateStr => {
+          const day = state.dailyData[dateStr];
+          if (day && Array.isArray(day.milestones)) {
+            day.milestones = day.milestones.filter(m => m.type !== 'course');
+          }
+        });
+        saveState();
+        renderMilestones();
+        calendar.render();
+        rowsContainer.innerHTML = '';
+        createCourseRow();
+        closeModal();
+        showToast('已清空课程表及日程中的全部课程标记', 'info');
+      };
+    }
+
+    if (btnSaveSync) {
+      btnSaveSync.onclick = () => {
+        const rows = rowsContainer.querySelectorAll('.course-row');
+        const courses = [];
+        const defaultEndDate = getDefault18WeeksEndDate();
+
+        rows.forEach(r => {
+          const dow = parseInt(r.querySelector('.course-row-dow')?.value) || 1;
+          const startH = r.querySelector('.course-row-start-h')?.value || '08';
+          const startM = r.querySelector('.course-row-start-m')?.value || '00';
+          const endH = r.querySelector('.course-row-end-h')?.value || '09';
+          const endM = r.querySelector('.course-row-end-m')?.value || '35';
+          const startTime = `${startH}:${startM}`;
+          const endTime = `${endH}:${endM}`;
+          const name = r.querySelector('.course-row-name')?.value.trim() || '';
+          const room = r.querySelector('.course-row-room')?.value.trim() || '';
+          const endDate = r.querySelector('.course-row-end-date')?.value || '';
+          if (name) {
+            courses.push({
+              dayOfWeek: dow,
+              startHour: startH,
+              startMin: startM,
+              endHour: endH,
+              endMin: endM,
+              startTime,
+              endTime,
+              name,
+              room,
+              endDate
+            });
+          }
+        });
+
+        if (courses.length === 0) {
+          showToast('请至少填写一门课程名称后再保存同步', 'warn');
+          return;
+        }
+
+        // Clean existing course milestones
+        Object.keys(state.dailyData || {}).forEach(dateStr => {
+          const day = state.dailyData[dateStr];
+          if (day && Array.isArray(day.milestones)) {
+            day.milestones = day.milestones.filter(m => m.type !== 'course');
+          }
+        });
+
+        const now = new Date(state.currentDate || formatDateStr(new Date()));
+        const curDay = now.getDay() === 0 ? 7 : now.getDay();
+        const startMonday = new Date(now);
+        startMonday.setDate(now.getDate() - (curDay - 1));
+
+        let injectedCount = 0;
+
+        courses.forEach(c => {
+          const courseEndStr = c.endDate || defaultEndDate;
+          const targetEnd = new Date(courseEndStr + 'T23:59:59');
+
+          for (let d = new Date(startMonday); d <= targetEnd; d.setDate(d.getDate() + 1)) {
+            const dow = d.getDay() === 0 ? 7 : d.getDay();
+            if (c.dayOfWeek === dow) {
+              const dateStr = formatDateStr(d);
+              ensureCurrentDayExists(dateStr);
+              const day = state.dailyData[dateStr];
+              if (!day.milestones) day.milestones = [];
+
+              const timeStr = `${c.startTime}-${c.endTime}`;
+              const roomStr = c.room ? ` @${c.room}` : '';
+              day.milestones.push({
+                id: `course-${dateStr}-${c.dayOfWeek}-${c.startTime.replace(':', '')}-${Math.random().toString(36).slice(2, 6)}`,
+                type: 'course',
+                courseName: c.name,
+                time: `${c.startTime} - ${c.endTime}`,
+                classroom: c.room,
+                text: `${c.name} (${timeStr})${roomStr}`,
+                color: selectedColor
+              });
+              injectedCount++;
+            }
+          }
+        });
+
+        state.courseSchedule = {
+          color: selectedColor,
+          courses
+        };
+
+        saveState();
+        renderMilestones();
+        calendar.render();
+        closeModal();
+        confetti.fire();
+        showToast(`课程表已成功同步！已为 ${courses.length} 门每周课程在日程中排入 ${injectedCount} 节课。`, 'success', 5000);
+      };
+    }
+  }
+
+  // --- Off Work Management & Transition ---
+  function initOffWorkModal() {
+    const btnOffWork = document.getElementById('btn-off-work');
+    const modalOffWork = document.getElementById('modal-off-work');
+    const btnClose = document.getElementById('modal-off-work-close');
+    const btnCancel = document.getElementById('modal-off-work-cancel');
+    const btnConfirm = document.getElementById('btn-off-work-confirm');
+    const greetingEl = document.getElementById('off-work-greeting');
+
+    const readingStatusEl = document.getElementById('off-work-reading-status');
+    const readingBadgeEl = document.getElementById('off-work-reading-badge');
+    const readingItemsEl = document.getElementById('off-work-reading-items');
+    const btnToggleReadingAll = document.getElementById('btn-toggle-reading-all');
+
+    const taskStatusEl = document.getElementById('off-work-task-status');
+    const taskBadgeEl = document.getElementById('off-work-task-badge');
+    const taskItemsEl = document.getElementById('off-work-task-items');
+    const btnToggleTasksAll = document.getElementById('btn-toggle-tasks-all');
+
+    const tomorrowDateEl = document.getElementById('off-work-tomorrow-date');
+    const tomorrowMilestonesEl = document.getElementById('off-work-tomorrow-milestones');
+
+    if (!btnOffWork || !modalOffWork) return;
+
+    const OFF_WORK_GREETINGS = [
+      '今天工作辛苦了，开启美好的下班生活吧~',
+      '工作暂告一段落，好好放松一下，享受属于自己的时光！',
+      '今日的努力已经沉淀，给疲惫的身心充充电，明天又是活力满满的一天！',
+      '下班铃声敲响，生活正在前方等待，祝你度过一个惬意舒适的夜晚！',
+      '劳逸结合方能行稳致远，放下手中的工作，好好享用一顿美食吧！',
+      '今天辛苦了！离开工位，拥抱星空与清风，晚安好心情~'
+    ];
+
+    const openModal = () => {
+      // 1. Pick a random greeting
+      const randomGreeting = OFF_WORK_GREETINGS[Math.floor(Math.random() * OFF_WORK_GREETINGS.length)];
+      if (greetingEl) greetingEl.textContent = randomGreeting;
+
+      ensureCurrentDayExists();
+      const today = state.dailyData[state.currentDate];
+
+      // 2. Reading list itemized checklist
+      const readingItems = today?.readingList || [];
+      if (readingBadgeEl) readingBadgeEl.textContent = readingItems.length;
+
+      if (readingItems.length === 0) {
+        if (readingStatusEl) {
+          readingStatusEl.textContent = '今日待阅已全部完成';
+          readingStatusEl.className = 'text-[11px] text-emerald-400 font-medium';
+        }
+        if (readingItemsEl) {
+          readingItemsEl.innerHTML = '';
+          readingItemsEl.classList.add('hidden');
+        }
+        if (btnToggleReadingAll) btnToggleReadingAll.classList.add('hidden');
+      } else {
+        if (readingStatusEl) {
+          readingStatusEl.textContent = `今日尚有 ${readingItems.length} 项待阅事项，勾选需要顺延至明日的内容：`;
+          readingStatusEl.className = 'text-[11px] text-slate-400 leading-relaxed';
+        }
+        if (btnToggleReadingAll) btnToggleReadingAll.classList.remove('hidden');
+        if (readingItemsEl) {
+          readingItemsEl.innerHTML = '';
+          readingItemsEl.classList.remove('hidden');
+          readingItems.forEach(item => {
+            const row = document.createElement('label');
+            row.className = 'flex items-center justify-between p-2 rounded bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition select-none';
+            const isDoc = item.type === 'doc';
+            const typeLabel = isDoc ? '文档' : '网页';
+            row.innerHTML = `
+              <div class="flex items-center space-x-2 min-w-0 flex-1 mr-2">
+                <input type="checkbox" class="off-work-reading-check accent-emerald-500 rounded cursor-pointer flex-shrink-0" data-id="${item.id}" checked />
+                <span class="truncate text-slate-200 font-medium">${item.title || item.path}</span>
+              </div>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300 font-mono flex-shrink-0">${typeLabel}</span>
+            `;
+            readingItemsEl.appendChild(row);
+          });
+        }
+      }
+
+      // 3. Task list itemized checklist
+      const uncompletedTasks = (today?.tasks || []).filter(t => !t.done);
+      if (taskBadgeEl) taskBadgeEl.textContent = uncompletedTasks.length;
+
+      if (uncompletedTasks.length === 0) {
+        if (taskStatusEl) {
+          taskStatusEl.textContent = '今日待办已全部完成';
+          taskStatusEl.className = 'text-[11px] text-emerald-400 font-medium';
+        }
+        if (taskItemsEl) {
+          taskItemsEl.innerHTML = '';
+          taskItemsEl.classList.add('hidden');
+        }
+        if (btnToggleTasksAll) btnToggleTasksAll.classList.add('hidden');
+      } else {
+        if (taskStatusEl) {
+          taskStatusEl.textContent = `今日尚有 ${uncompletedTasks.length} 项未完成待办，勾选需要顺延至明日的内容：`;
+          taskStatusEl.className = 'text-[11px] text-slate-400 leading-relaxed';
+        }
+        if (btnToggleTasksAll) btnToggleTasksAll.classList.remove('hidden');
+        if (taskItemsEl) {
+          taskItemsEl.innerHTML = '';
+          taskItemsEl.classList.remove('hidden');
+          uncompletedTasks.forEach(task => {
+            const row = document.createElement('label');
+            row.className = 'flex items-center justify-between p-2 rounded bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition select-none';
+            const priorityBadge = task.priority === 'P0'
+              ? '<span class="text-[10px] px-1.5 py-0.2 rounded bg-rose-950 text-rose-400 border border-rose-800/60 font-mono font-bold flex-shrink-0">P0 紧急</span>'
+              : task.priority === 'P1'
+                ? '<span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-950 text-amber-400 border border-amber-800/60 font-mono font-bold flex-shrink-0">P1 重要</span>'
+                : '<span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono flex-shrink-0">P2 普通</span>';
+
+            row.innerHTML = `
+              <div class="flex items-center space-x-2 min-w-0 flex-1 mr-2">
+                <input type="checkbox" class="off-work-task-check accent-emerald-500 rounded cursor-pointer flex-shrink-0" data-id="${task.id}" checked />
+                <span class="truncate text-slate-200 font-medium">${task.text}</span>
+              </div>
+              ${priorityBadge}
+            `;
+            taskItemsEl.appendChild(row);
+          });
+        }
+      }
+
+      // 4. Tomorrow's milestones & holiday check (勘误)
+      const nextDate = getNextDateStr(state.currentDate);
+      if (tomorrowDateEl) tomorrowDateEl.textContent = nextDate;
+      ensureCurrentDayExists(nextDate);
+      const tomorrow = state.dailyData[nextDate];
+
+      if (tomorrowMilestonesEl) {
+        tomorrowMilestonesEl.innerHTML = '';
+        const milestones = tomorrow?.milestones || [];
+        
+        let holidayInfo = null;
+        if (window.CalendarWidget && typeof CalendarWidget.getHolidayInfo === 'function') {
+          holidayInfo = CalendarWidget.getHolidayInfo(nextDate);
+        }
+
+        const isHoliday = holidayInfo && holidayInfo.isHoliday;
+        const isWorkday = holidayInfo && holidayInfo.isWorkday;
+        const holidayName = (holidayInfo && holidayInfo.name) ? holidayInfo.name : '';
+        const hasHolidayCard = isHoliday || isWorkday || (holidayName && holidayInfo.type !== 'none');
+
+        if (milestones.length === 0 && !hasHolidayCard) {
+          tomorrowMilestonesEl.innerHTML = `<div class="py-2.5 text-center text-slate-500 text-xs">明日暂无日程节点</div>`;
+        } else {
+          if (isHoliday) {
+            const hDiv = document.createElement('div');
+            hDiv.className = 'flex items-center space-x-2 p-2 rounded bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 text-xs';
+            hDiv.innerHTML = `<span class="px-1.5 py-0.2 rounded bg-emerald-700 text-white font-bold text-[10px]">法定节假日</span><span class="truncate font-semibold">${holidayName || '法定节假日'} · 休</span>`;
+            tomorrowMilestonesEl.appendChild(hDiv);
+          } else if (isWorkday) {
+            const hDiv = document.createElement('div');
+            hDiv.className = 'flex items-center space-x-2 p-2 rounded bg-amber-950/60 border border-amber-800/60 text-amber-300 text-xs';
+            hDiv.innerHTML = `<span class="px-1.5 py-0.2 rounded bg-amber-700 text-white font-bold text-[10px]">调休上班</span><span class="truncate font-semibold">${holidayName || '调休补班'} · 班</span>`;
+            tomorrowMilestonesEl.appendChild(hDiv);
+          } else if (holidayName && holidayInfo.type !== 'none') {
+            const hDiv = document.createElement('div');
+            hDiv.className = 'flex items-center space-x-2 p-2 rounded bg-sky-950/60 border border-sky-800/60 text-sky-300 text-xs';
+            hDiv.innerHTML = `<span class="px-1.5 py-0.2 rounded bg-sky-700 text-white font-bold text-[10px]">节日</span><span class="truncate font-semibold">${holidayName}</span>`;
+            tomorrowMilestonesEl.appendChild(hDiv);
+          }
+
+          milestones.forEach(m => {
+            const item = document.createElement('div');
+            const isCourse = m.type === 'course';
+            const isVacation = m.type === 'vacation' || (m.text && (m.text.includes('休假') || m.text.includes('请假')));
+            const isOvertime = m.type === 'overtime' || (m.text && m.text.includes('加班'));
+
+            let badgeHtml = '<span class="px-1.5 py-0.2 rounded bg-slate-700 text-slate-200 font-bold text-[10px]">节点</span>';
+            let bgClass = 'bg-slate-900 border border-slate-800 text-slate-300';
+
+            if (isCourse) {
+              badgeHtml = '<span class="px-1.5 py-0.2 rounded bg-indigo-600 text-white font-bold text-[10px]">课程</span>';
+              bgClass = 'bg-indigo-950/40 border border-indigo-800/50 text-indigo-200';
+            } else if (isVacation) {
+              badgeHtml = '<span class="px-1.5 py-0.2 rounded bg-emerald-600 text-white font-bold text-[10px]">休假</span>';
+              bgClass = 'bg-emerald-950/40 border border-emerald-800/50 text-emerald-200';
+            } else if (isOvertime) {
+              badgeHtml = '<span class="px-1.5 py-0.2 rounded bg-rose-600 text-white font-bold text-[10px]">加班</span>';
+              bgClass = 'bg-rose-950/40 border border-rose-800/50 text-rose-200';
+            }
+
+            item.className = `flex items-center space-x-1.5 p-2 rounded text-xs ${bgClass}`;
+            const title = m.courseName || m.text || '';
+            const sub = [m.time, m.classroom].filter(Boolean).join(' · ');
+            item.innerHTML = `
+              ${badgeHtml}
+              <span class="truncate flex-1 font-medium">${title}</span>
+              ${sub ? `<span class="text-[10px] opacity-75 font-mono">(${sub})</span>` : ''}
+            `;
+            tomorrowMilestonesEl.appendChild(item);
+          });
+        }
+      }
+
+      modalOffWork.classList.remove('hidden');
+    };
+
+    const closeModal = () => {
+      modalOffWork.classList.add('hidden');
+    };
+
+    btnOffWork.onclick = openModal;
+    if (btnClose) btnClose.onclick = closeModal;
+    if (btnCancel) btnCancel.onclick = closeModal;
+
+    if (btnToggleReadingAll) {
+      btnToggleReadingAll.onclick = () => {
+        const cbs = document.querySelectorAll('.off-work-reading-check');
+        const anyChecked = Array.from(cbs).some(cb => cb.checked);
+        cbs.forEach(cb => cb.checked = !anyChecked);
+      };
+    }
+
+    if (btnToggleTasksAll) {
+      btnToggleTasksAll.onclick = () => {
+        const cbs = document.querySelectorAll('.off-work-task-check');
+        const anyChecked = Array.from(cbs).some(cb => cb.checked);
+        cbs.forEach(cb => cb.checked = !anyChecked);
+      };
+    }
+
+    if (btnConfirm) {
+      btnConfirm.onclick = () => {
+        const nextDate = getNextDateStr(state.currentDate);
+        ensureCurrentDayExists(nextDate);
+        ensureCurrentDayExists();
+        const today = state.dailyData[state.currentDate];
+        const tomorrow = state.dailyData[nextDate];
+
+        let readingCount = 0;
+        let taskCount = 0;
+
+        // 1. Process checked reading items
+        const checkedReadingCbs = document.querySelectorAll('.off-work-reading-check:checked');
+        const selectedReadingIds = new Set(Array.from(checkedReadingCbs).map(cb => cb.dataset.id));
+        if (selectedReadingIds.size > 0 && Array.isArray(today.readingList)) {
+          if (!tomorrow.readingList) tomorrow.readingList = [];
+          const toMove = today.readingList.filter(item => selectedReadingIds.has(item.id));
+          readingCount = toMove.length;
+          tomorrow.readingList.push(...toMove);
+          today.readingList = today.readingList.filter(item => !selectedReadingIds.has(item.id));
+        }
+
+        // 2. Process checked tasks
+        const checkedTaskCbs = document.querySelectorAll('.off-work-task-check:checked');
+        const selectedTaskIds = new Set(Array.from(checkedTaskCbs).map(cb => cb.dataset.id));
+        if (selectedTaskIds.size > 0 && Array.isArray(today.tasks)) {
+          if (!tomorrow.tasks) tomorrow.tasks = [];
+          const toMove = today.tasks.filter(t => selectedTaskIds.has(t.id));
+          taskCount = toMove.length;
+          tomorrow.tasks.push(...toMove.map(t => ({ ...t, done: false })));
+          today.tasks = today.tasks.filter(t => !selectedTaskIds.has(t.id));
+        }
+
+        saveState();
+        renderTasks();
+        renderReadingList();
+        refreshHeatmap();
+        calendar.render();
+        closeModal();
+
+        const messages = [];
+        if (readingCount > 0) messages.push(`${readingCount}项待阅`);
+        if (taskCount > 0) messages.push(`${taskCount}项待办`);
+        const transferMsg = messages.length > 0 ? `已将勾选的${messages.join('与')}顺延至明天。` : '';
+
+        showToast(`打卡下班成功！${transferMsg}好好享受下班生活吧！`, 'success', 4500);
+      };
+    }
+  }
+
   // --- Pomodoro Initialization ---
   function initPomodoro() {
     const display = document.getElementById('pomo-display');
@@ -3826,7 +5284,7 @@
     const getTodayPomodoroCount = () => {
       const cur = state.dailyData[state.currentDate];
       if (!cur || !cur.tasks) return 0;
-      return cur.tasks.reduce((sum, t) => sum + (t.pomodoros || 0), 0);
+      return cur.tasks.reduce((sum, t) => sum + (t.pomodoros || 0), 0) + (cur.unlinkedPomodoros || 0);
     };
 
     pomodoro = new PomodoroTimer({
@@ -3838,7 +5296,7 @@
           : 'px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded shadow transition active:scale-95';
         
         if (s.linkedTask) {
-          taskTag.textContent = `🎯 ${s.linkedTask.text}`;
+          taskTag.textContent = s.linkedTask.text;
           taskTag.className = 'max-w-[130px] truncate text-[11px] text-emerald-400 font-semibold';
         } else {
           taskTag.textContent = '未绑定任务';
@@ -3848,7 +5306,7 @@
       onComplete: (s) => {
         confetti.fire();
         if (s.mode === 'focus') {
-          showToast(`🍅 专注周期结束！已完成一次专注，稍作休息吧～`, 'success', 6000);
+          showToast(`专注周期结束！已完成一次专注，稍作休息吧～`, 'success', 6000);
           if (s.linkedTask) {
             ensureCurrentDayExists();
             const task = state.dailyData[state.currentDate].tasks.find(t => t.id === s.linkedTask.id);
@@ -3861,7 +5319,7 @@
           refreshHeatmap();
           todayCountBadge.textContent = getTodayPomodoroCount();
         } else {
-          showToast(`☕ 休息结束！开始新一轮专注吧～`, 'info', 6000);
+          showToast(`休息结束！开始新一轮专注吧～`, 'info', 6000);
         }
 
         // Trigger LinaBell Desk Pet Alert (works until user clicks bubble)
@@ -3899,7 +5357,7 @@
         const day = state.dailyData ? state.dailyData[dateStr] : null;
         if (!day) return { tasks: 0, pomodoros: 0 };
         const doneTasks = (day.tasks || []).filter(t => t.done).length;
-        const pomos = (day.tasks || []).reduce((acc, t) => acc + (t.pomodoros || 0), 0);
+        const pomos = (day.tasks || []).reduce((acc, t) => acc + (t.pomodoros || 0), 0) + (day.unlinkedPomodoros || 0);
         return { tasks: doneTasks, pomodoros: pomos };
       },
       onSelectDate: (dateStr) => {
@@ -3944,6 +5402,9 @@
       initHeatmap();
       initCalendar();
       initEvents();
+      initFullscreenFocus();
+      initCourseScheduleModal();
+      initOffWorkModal();
       initAiSecretary();
 
       switchGoalsTab('weekly');

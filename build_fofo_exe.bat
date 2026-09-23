@@ -26,8 +26,13 @@ if exist dist rmdir /s /q dist
   --add-data "sparkle.ico;." ^
   server.py
 if exist dist\FoFo.exe (
-  copy /y dist\FoFo.exe .\FoFo.exe >nul
-  echo Build complete: FoFo.exe in project root.
+  copy /y dist\FoFo.exe .\FoFo.exe >nul 2>&1
+  if errorlevel 1 (
+    echo [ERROR] Cannot overwrite .\FoFo.exe because it is currently running!
+    echo Please close FoFo.exe and try again, or manually copy dist\FoFo.exe.
+  ) else (
+    echo Build complete: FoFo.exe in project root.
+  )
 ) else (
   echo Build failed.
 )
