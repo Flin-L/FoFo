@@ -165,6 +165,7 @@
 
     return {
       currentDate: todayStr,
+      uiStyle: 'classic',
       theme: 'midnight',
       bgOpacity: 82,
       bgBlur: 6,
@@ -210,6 +211,40 @@
     'space-gray': 'radial-gradient(ellipse at 25% 0%, #52525b 0%, #27272a 45%, #141417 80%, #09090b 100%)'
   };
 
+  const IOS_GRADIENTS = {
+    'ios-elegant-white': { name: '典雅白', css: 'linear-gradient(to top, #e6e9f0 0%, #eef1f5 100%)' },
+    'ios-bubble-blue': { name: '泡泡蓝', css: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' },
+    'ios-rose-gold': { name: '玫瑰金', css: 'linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)' }
+  };
+
+  function applyGlassOpacity(val) {
+    const op = (val !== undefined && !isNaN(val)) ? val : (state && state.glassCardOpacity !== undefined ? state.glassCardOpacity : 35);
+    const cardAlpha = (op / 100).toFixed(2);
+    const innerAlpha = Math.min(0.68, (op * 0.75 / 100)).toFixed(2);
+    const itemAlpha = Math.min(0.85, (op * 0.95 / 100)).toFixed(2);
+    const headerAlpha = Math.min(0.85, ((op + 10) / 100)).toFixed(2);
+
+    document.documentElement.style.setProperty('--ios-card-alpha', cardAlpha);
+    document.documentElement.style.setProperty('--ios-inner-alpha', innerAlpha);
+    document.documentElement.style.setProperty('--ios-item-alpha', itemAlpha);
+    document.documentElement.style.setProperty('--ios-header-alpha', headerAlpha);
+
+    if (document.body) {
+      document.body.style.setProperty('--ios-card-alpha', cardAlpha);
+      document.body.style.setProperty('--ios-inner-alpha', innerAlpha);
+      document.body.style.setProperty('--ios-item-alpha', itemAlpha);
+      document.body.style.setProperty('--ios-header-alpha', headerAlpha);
+    }
+
+    const glassSlider = document.getElementById('glass-transparency-slider');
+    const glassLabel = document.getElementById('glass-transparency-label');
+    if (glassSlider) glassSlider.value = op;
+    if (glassLabel) {
+      const modeText = op <= 45 ? '轻透晶莹 (高透光)' : '均衡清晰 (低透光)';
+      glassLabel.textContent = `${modeText} · ${op}%`;
+    }
+  }
+
   function compressImageFile(file, maxWidth, maxHeight, quality, callback) {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -241,14 +276,24 @@
 
   // --- Theme & Avatar Application ---
   function applyTheme() {
-    const curTheme = state.theme || 'midnight';
-    
-    // 1. Remove all old theme-* classes on body
+    const isIos = state.uiStyle === 'ios-glass';
+    // 兼容历史配置：彩糖色/原薄雾灰 映射至新版默认预设 典雅白
+    if (state.theme === 'ios-blue-pink' || state.theme === 'ios-light-gray') {
+      state.theme = 'ios-elegant-white';
+    }
+    const curTheme = state.theme || (isIos ? 'ios-elegant-white' : 'midnight');
+
+    // 1. Toggle body classes
+    if (isIos) {
+      document.body.classList.add('style-ios-glass');
+    } else {
+      document.body.classList.remove('style-ios-glass');
+    }
+
     document.body.className = document.body.className
       .split(' ')
       .filter(c => !c.startsWith('theme-'))
       .join(' ');
-    
     document.body.classList.add(`theme-${curTheme}`);
 
     // 2. Custom Background Image Layer
@@ -257,7 +302,7 @@
     const btnRemoveBg = document.getElementById('btn-remove-bg-image');
     const controlsBox = document.getElementById('bg-controls-box');
 
-    const opacity = state.bgOpacity !== undefined ? state.bgOpacity : 82;
+    const opacity = state.bgOpacity !== undefined ? state.bgOpacity : (isIos ? 25 : 82);
     const blur = state.bgBlur !== undefined ? state.bgBlur : 6;
 
     if (state.customBgImage) {
@@ -268,11 +313,16 @@
       }
       if (bgOverlay) {
         bgOverlay.style.display = 'block';
-        bgOverlay.style.backgroundColor = `rgba(11, 15, 25, ${opacity / 100})`;
+        if (isIos) {
+          bgOverlay.style.backgroundColor = `rgba(255, 255, 255, ${opacity / 100 * 0.16})`;
+        } else {
+          bgOverlay.style.backgroundColor = `rgba(11, 15, 25, ${opacity / 100})`;
+        }
         bgOverlay.style.backdropFilter = `blur(${blur}px)`;
         bgOverlay.style.webkitBackdropFilter = `blur(${blur}px)`;
       }
-      document.body.style.background = '#0b0f19';
+      document.body.style.background = 'transparent';
+      document.body.style.backgroundColor = 'transparent';
       if (btnRemoveBg) btnRemoveBg.classList.remove('hidden');
       if (controlsBox) controlsBox.classList.remove('hidden');
     } else {
@@ -284,16 +334,51 @@
       if (bgOverlay) {
         bgOverlay.style.display = 'none';
       }
-      const gradient = THEME_GRADIENTS[curTheme] || THEME_GRADIENTS['midnight'];
+      const gradient = IOS_GRADIENTS[curTheme]?.css || THEME_GRADIENTS[curTheme] || (isIos ? IOS_GRADIENTS['ios-elegant-white'].css : THEME_GRADIENTS['midnight']);
       document.body.style.background = gradient;
       document.body.style.backgroundAttachment = 'fixed';
-      document.body.style.backgroundColor = '#070a13';
+      document.body.style.backgroundColor = isIos ? '#f8fafc' : '#070a13';
 
       if (btnRemoveBg) btnRemoveBg.classList.add('hidden');
       if (controlsBox) controlsBox.classList.add('hidden');
     }
 
-    // 3. Update Theme Modal elements
+    // 2.2 Glass Transparency Slider Mode
+    const secGlassTrans = document.getElementById('section-glass-transparency');
+    if (secGlassTrans) {
+      if (isIos) {
+        secGlassTrans.classList.remove('hidden');
+        applyGlassOpacity();
+      } else {
+        secGlassTrans.classList.add('hidden');
+      }
+    }
+
+    // 3. Update Segmented Control in Modal
+    const btnClassic = document.getElementById('btn-style-classic');
+    const btnIos = document.getElementById('btn-style-ios');
+    const secClassic = document.getElementById('section-classic-themes');
+    const secIos = document.getElementById('section-ios-themes');
+
+    if (btnClassic && btnIos) {
+      if (isIos) {
+        btnIos.classList.add('style-segmented-active');
+        btnIos.classList.remove('style-segmented-inactive');
+        btnClassic.classList.add('style-segmented-inactive');
+        btnClassic.classList.remove('style-segmented-active');
+        if (secClassic) secClassic.classList.add('hidden');
+        if (secIos) secIos.classList.remove('hidden');
+      } else {
+        btnClassic.classList.add('style-segmented-active');
+        btnClassic.classList.remove('style-segmented-inactive');
+        btnIos.classList.add('style-segmented-inactive');
+        btnIos.classList.remove('style-segmented-active');
+        if (secClassic) secClassic.classList.remove('hidden');
+        if (secIos) secIos.classList.add('hidden');
+      }
+    }
+
+    // 4. Update Theme Modal elements
     const opacitySlider = document.getElementById('bg-opacity-slider');
     const blurSlider = document.getElementById('bg-blur-slider');
     const opacityVal = document.getElementById('bg-opacity-val');
@@ -330,7 +415,7 @@
     const customBgStatus = document.getElementById('custom-bg-status');
     if (customBgStatus) {
       if (!state.customBgImage) {
-        customBgStatus.textContent = '未启用';
+        customBgStatus.textContent = '未启用 (使用纯色/渐变)';
         customBgStatus.className = 'text-[10px] text-slate-500';
       } else if (state.customBgImage.startsWith('data:')) {
         customBgStatus.textContent = '已启用自定义壁纸';
@@ -409,6 +494,9 @@
   // --- Data Persistence Layer ---
   const PERSONALIZATION_KEYS = [
     'theme',
+    'uiStyle',
+    'glassTransparencyMode',
+    'glassCardOpacity',
     'bgOpacity',
     'bgBlur',
     'userAvatar',
@@ -419,6 +507,9 @@
   ];
   const PERSONALIZATION_DEFAULTS = {
     theme: 'midnight',
+    uiStyle: 'classic',
+    glassTransparencyMode: 'clear',
+    glassCardOpacity: 35,
     bgOpacity: 82,
     bgBlur: 6,
     appTitle: 'FoFo 工作台',
@@ -760,7 +851,7 @@
     updateGoalsProgressBadge();
 
     if (weekGoals.length === 0) {
-      list.innerHTML = `<div class="text-slate-500 py-3 text-center">本周暂无重点，点击上方 + 添加</div>`;
+      list.innerHTML = `<div class="text-slate-500 h-full flex items-center justify-center text-center">本周暂无重点，点击上方 + 添加</div>`;
       return;
     }
 
@@ -832,7 +923,7 @@
     updateGoalsProgressBadge();
 
     if (monthGoals.length === 0) {
-      list.innerHTML = `<div class="text-slate-500 py-3 text-center">本月暂无目标，点击上方 + 添加</div>`;
+      list.innerHTML = `<div class="text-slate-500 h-full flex items-center justify-center text-center">本月暂无目标，点击上方 + 添加</div>`;
       return;
     }
 
@@ -939,7 +1030,7 @@
       
       const isDoc = item.type === 'doc';
       const icon = isDoc ? '📄' : '🌐';
-      const typeBadge = isDoc ? '<span class="text-[10px] px-1 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/60">本地文档</span>' : '<span class="text-[10px] px-1 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-800/60">网页</span>';
+      const typeBadge = isDoc ? '<span class="text-[10px] px-1 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-800/60">本地文档</span>' : '<span class="text-[10px] px-1 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-800/60">网页</span>';
 
       card.innerHTML = `
         <div class="flex items-center space-x-2.5 flex-1 min-w-0 mr-2 cursor-pointer btn-open">
@@ -951,13 +1042,13 @@
         </div>
 
         <div class="flex items-center space-x-1.5">
-          ${typeBadge}
           <div class="flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition">
             <button class="btn-defer text-[10px] px-1 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-amber-200" title="推至次日">次日</button>
             <button class="btn-up text-[10px] px-1 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300" title="上移">↑</button>
             <button class="btn-down text-[10px] px-1 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300" title="下移">↓</button>
             <button class="btn-del text-slate-500 hover:text-red-400 text-xs px-1" title="删除">✕</button>
           </div>
+          ${typeBadge}
         </div>
       `;
 
@@ -3000,7 +3091,10 @@
     isCompressingContext = true;
     const statusEl = document.getElementById('ai-chat-compress-status');
     const hintEl = document.getElementById('ai-chat-attach-hint');
-    if (statusEl) statusEl.classList.remove('hidden');
+    if (statusEl) {
+      statusEl.classList.remove('hidden');
+      statusEl.classList.add('flex');
+    }
     if (hintEl) hintEl.classList.add('hidden');
 
     try {
@@ -3036,7 +3130,10 @@
       console.warn('[FoFo AI] 自动压缩上下文静默跳过:', e.message);
     } finally {
       isCompressingContext = false;
-      if (statusEl) statusEl.classList.add('hidden');
+      if (statusEl) {
+        statusEl.classList.add('hidden');
+        statusEl.classList.remove('flex');
+      }
       if (hintEl) hintEl.classList.remove('hidden');
     }
   }
@@ -4129,16 +4226,61 @@
       modalTheme.classList.add('hidden');
     };
 
-    // Theme preset buttons
+    // UI Global Style Switcher (Classic vs iOS Liquid Glass)
+    const btnStyleClassic = document.getElementById('btn-style-classic');
+    const btnStyleIos = document.getElementById('btn-style-ios');
+    if (btnStyleClassic) {
+      btnStyleClassic.onclick = () => {
+        state.uiStyle = 'classic';
+        if (state.theme && state.theme.startsWith('ios-')) {
+          state.theme = 'midnight';
+        }
+        applyTheme();
+        saveState();
+        showToast('已切换至系统经典暗色风格', 'theme', 1800);
+      };
+    }
+    if (btnStyleIos) {
+      btnStyleIos.onclick = () => {
+        state.uiStyle = 'ios-glass';
+        if (!state.theme || !state.theme.startsWith('ios-') || state.theme === 'ios-blue-pink' || state.theme === 'ios-light-gray') {
+          state.theme = 'ios-elegant-white';
+        }
+        applyTheme();
+        saveState();
+        showToast('已切换至 iOS 液态玻璃风格', 'theme', 1800);
+      };
+    }
+
+    // iOS Glass Transparency Slider
+    const glassSlider = document.getElementById('glass-transparency-slider');
+    if (glassSlider) {
+      glassSlider.oninput = (e) => {
+        const val = parseInt(e.target.value);
+        state.glassCardOpacity = val;
+        applyGlassOpacity(val);
+      };
+      glassSlider.onchange = () => {
+        saveState();
+      };
+    }
+
+    // Theme preset buttons (supports both Classic and iOS Liquid Glass Presets)
     document.querySelectorAll('.theme-preset-btn').forEach(btn => {
       btn.onclick = () => {
-        state.theme = btn.dataset.theme;
+        const themeId = btn.dataset.theme;
+        state.theme = themeId;
+        if (themeId && themeId.startsWith('ios-')) {
+          state.uiStyle = 'ios-glass';
+        } else {
+          state.uiStyle = 'classic';
+        }
         state.customBgImage = ''; // Clear custom wallpaper so preset theme takes immediate effect!
         const bgInput = document.getElementById('bg-file-input');
         if (bgInput) bgInput.value = '';
         applyTheme();
         saveState();
-        const themeName = btn.querySelector('span') ? btn.querySelector('span').textContent.trim() : btn.dataset.theme;
+        const themeName = btn.querySelector('span') ? btn.querySelector('span').textContent.trim() : themeId;
         showToast(`已切换配色方案: ${themeName}`, 'theme', 1800);
       };
     });
@@ -5106,10 +5248,10 @@
             const row = document.createElement('label');
             row.className = 'flex items-center justify-between p-2 rounded bg-slate-900/90 border border-slate-800 hover:border-slate-700 cursor-pointer transition select-none';
             const priorityBadge = task.priority === 'P0'
-              ? '<span class="text-[10px] px-1.5 py-0.2 rounded bg-rose-950 text-rose-400 border border-rose-800/60 font-mono font-bold flex-shrink-0">P0 紧急</span>'
+              ? '<span class="text-[10px] px-1.5 py-0.2 rounded bg-rose-950 text-rose-400 border border-rose-800/60 font-mono font-bold flex-shrink-0">P0</span>'
               : task.priority === 'P1'
-                ? '<span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-950 text-amber-400 border border-amber-800/60 font-mono font-bold flex-shrink-0">P1 重要</span>'
-                : '<span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono flex-shrink-0">P2 普通</span>';
+                ? '<span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-950 text-amber-400 border border-amber-800/60 font-mono font-bold flex-shrink-0">P1</span>'
+                : '<span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono flex-shrink-0">P2</span>';
 
             row.innerHTML = `
               <div class="flex items-center space-x-2 min-w-0 flex-1 mr-2">

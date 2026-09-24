@@ -448,7 +448,13 @@
         const hasVacationMilestone = milestones.some(m => m.type === 'vacation' || (m.text && (m.text.includes('休假') || m.text.includes('请假') || m.text.includes('年假'))));
         const hasOvertimeMilestone = milestones.some(m => m.type === 'overtime' || (m.text && m.text.includes('加班')));
 
-        let classes = 'relative h-10 py-0.5 px-0.5 rounded cursor-pointer transition flex flex-col items-center justify-between select-none ';
+        let classes = 'calendar-day-cell relative h-10 py-0.5 px-0.5 rounded cursor-pointer transition flex flex-col items-center justify-between select-none ';
+        if (isSelected) classes += 'is-selected ';
+        if (isToday) classes += 'is-today ';
+        if (hasVacationMilestone || holiday.isHoliday) classes += 'is-holiday ';
+        if (hasOvertimeMilestone) classes += 'is-overtime ';
+        if (holiday.isWorkday) classes += 'is-workday ';
+        if (isWeekend) classes += 'is-weekend ';
         
         if (isSelected) {
           classes += 'bg-emerald-600 text-white font-bold shadow-lg ring-2 ring-emerald-400/50 z-20 ';
@@ -488,32 +494,18 @@
         numSpan.textContent = d;
         topRow.appendChild(numSpan);
 
-        if (hasVacationMilestone) {
+        if (hasVacationMilestone || holiday.isHoliday) {
           const restBadge = document.createElement('span');
           restBadge.className = isSelected
-            ? 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-white text-emerald-700 font-black scale-90 origin-top-right'
-            : 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-emerald-600 text-white font-black scale-90 origin-top-right shadow-xs';
+            ? 'calendar-corner-badge text-[9px] leading-none px-0.5 font-bold scale-90 origin-top-right text-slate-800'
+            : 'calendar-corner-badge text-[9px] leading-none px-0.5 font-bold scale-90 origin-top-right text-slate-400';
           restBadge.textContent = '休';
           topRow.appendChild(restBadge);
-        } else if (hasOvertimeMilestone) {
-          const otBadge = document.createElement('span');
-          otBadge.className = isSelected
-            ? 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-white text-rose-600 font-black scale-90 origin-top-right'
-            : 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-rose-600 text-white font-black scale-90 origin-top-right shadow-xs';
-          otBadge.textContent = '班';
-          topRow.appendChild(otBadge);
-        } else if (holiday.isHoliday) {
-          const restBadge = document.createElement('span');
-          restBadge.className = isSelected
-            ? 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-white text-emerald-600 font-black scale-90 origin-top-right'
-            : 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-emerald-600 text-white font-black scale-90 origin-top-right shadow-xs';
-          restBadge.textContent = '休';
-          topRow.appendChild(restBadge);
-        } else if (holiday.isWorkday) {
+        } else if (hasOvertimeMilestone || holiday.isWorkday) {
           const workBadge = document.createElement('span');
           workBadge.className = isSelected
-            ? 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-slate-950 text-amber-300 font-black scale-90 origin-top-right'
-            : 'text-[8px] leading-none px-0.5 py-0.2 rounded-xs bg-amber-400 text-slate-950 font-black scale-90 origin-top-right';
+            ? 'calendar-corner-badge text-[9px] leading-none px-0.5 font-bold scale-90 origin-top-right text-slate-800'
+            : 'calendar-corner-badge text-[9px] leading-none px-0.5 font-bold scale-90 origin-top-right text-slate-400';
           workBadge.textContent = '班';
           topRow.appendChild(workBadge);
         }
@@ -536,21 +528,21 @@
         }
 
         const labelSpan = document.createElement('span');
-        let labelColor = 'truncate text-slate-500 text-[8px] scale-90';
+        let labelColor = 'truncate text-slate-500 text-[8px] scale-90 font-normal';
         if (isSelected) {
-          labelColor = 'truncate text-white font-medium text-[8px] scale-95';
+          labelColor = 'truncate text-white font-normal text-[8px] scale-95';
         } else if (hasVacationMilestone || holiday.isHoliday) {
           // 法定节假日与休假，全部使用翠绿色展示，避免混淆
-          labelColor = 'truncate text-emerald-400 font-bold text-[8px] scale-95';
+          labelColor = 'truncate text-emerald-400 font-normal text-[8px] scale-95';
         } else if (hasOvertimeMilestone) {
           // 加班使用醒目红色展示
-          labelColor = 'truncate text-rose-400 font-bold text-[8px] scale-95';
+          labelColor = 'truncate text-rose-400 font-normal text-[8px] scale-95';
         } else if (holiday.isWorkday) {
           // 调休上班保持黄色
-          labelColor = 'truncate text-amber-300 font-semibold text-[8px] scale-95';
+          labelColor = 'truncate text-amber-300 font-normal text-[8px] scale-95';
         } else if (isFestivalText) {
           // 常规没放假的节日（如教师节、七夕、中元节等），使用纯净白色展示，不与补班的黄色混淆
-          labelColor = 'truncate text-slate-100 font-medium text-[8px] scale-95';
+          labelColor = 'truncate text-slate-100 font-normal text-[8px] scale-95';
         }
 
         labelSpan.className = labelColor;

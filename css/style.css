@@ -203,16 +203,17 @@
 
 .fofo-ai-pet-label {
   position: absolute;
-  right: 0px;
-  bottom: 2px;
+  right: -2px;
+  bottom: 1px;
   z-index: 4;
-  padding: 1px 3.5px;
+  padding: 1.5px 4px;
   border-radius: 4px;
   color: #fce7f3;
   background: rgba(124, 45, 79, 0.9);
   border: 1px solid rgba(251, 207, 232, 0.4);
   font: 700 8px/1 sans-serif;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
   pointer-events: none;
 }
 
@@ -927,5 +928,1447 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background-color: rgba(99, 102, 241, 0.5);
   transform: scale(1.15);
 }
+
+/* ==========================================================================
+   iOS 26 Liquid Glass Material & Theme Engine (.style-ios-glass)
+   ========================================================================== */
+
+/* 1. Global Workbench Canvas & Typography in iOS Glass Mode */
+body.style-ios-glass {
+  color: #1e293b;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 1.1 Glass Transparency Engine (High Light Transmission + Safety Fallback) */
+body.style-ios-glass {
+  --ios-card-alpha: 0.46;
+  --ios-inner-alpha: 0.28;
+  --ios-item-alpha: 0.42;
+  --ios-header-alpha: 0.52;
+}
+
+body.style-ios-glass.glass-solid {
+  --ios-card-alpha: 0.72;
+  --ios-inner-alpha: 0.65;
+  --ios-item-alpha: 0.75;
+  --ios-header-alpha: 0.68;
+}
+
+/* 2. Liquid Glass Cards (Squircle 22px, Specular Rim Highlight, Deep Optical Blur) */
+body.style-ios-glass .fofo-card {
+  background: rgba(255, 255, 255, var(--ios-card-alpha, 0.46)) !important;
+  backdrop-filter: blur(24px) saturate(190%) contrast(103%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) contrast(103%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  border-radius: 1.35rem !important; /* ~22px extra rounded squircle */
+  box-shadow: 
+    0 10px 32px 0 rgba(0, 0, 0, 0.06),
+    0 2px 6px 0 rgba(0, 0, 0, 0.02),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px 0 rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.style-ios-glass .fofo-card:hover {
+  border-color: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 
+    0 14px 40px 0 rgba(0, 0, 0, 0.08),
+    0 3px 10px 0 rgba(0, 0, 0, 0.03),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 2px 0 rgba(0, 0, 0, 0.03) !important;
+}
+
+/* 3. Top Navigation Bar */
+body.style-ios-glass header {
+  background: rgba(255, 255, 255, var(--ios-header-alpha, 0.52)) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.75) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 3.1 Left-Top Hero Banner Card in iOS Glass Mode (Item 1: Deeper glass + subtle shadow) */
+body.style-ios-glass .hero-banner-showcase {
+  background: rgba(220, 228, 240, 0.78) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border-radius: 1.35rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 
+    0 4px 16px 0 rgba(0, 0, 0, 0.08),
+    0 1px 4px 0 rgba(0, 0, 0, 0.03),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Item 1: Default Avatar Placeholder Gradient */
+body.style-ios-glass #default-avatar-placeholder {
+  background: linear-gradient(to top, #a8edea 0%, #fed6e3 100%) !important;
+  color: #1e293b !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
+}
+
+body.style-ios-glass .hero-banner-mask {
+  background: transparent !important;
+}
+
+body.style-ios-glass #hero-banner-card .border-white\/15 {
+  border-top-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+body.style-ios-glass #hero-slogan-text {
+  color: #1e293b !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+body.style-ios-glass #app-title-text {
+  color: #0f172a !important;
+}
+
+body.style-ios-glass #header-date-sub {
+  color: #334155 !important;
+}
+
+body.style-ios-glass #hero-banner-card .bg-slate-950\/80 {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #0284c7 !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Hero Banner Version Badge */
+#app-version-badge {
+  background: rgba(15, 23, 42, 0.65) !important;
+  border: 1px solid rgba(148, 163, 184, 0.3) !important;
+  color: #94a3b8 !important;
+  font-weight: 400 !important;
+}
+
+body.style-ios-glass #app-version-badge {
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+  font-weight: 400 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+
+/* 4. High-Contrast Legible Slate Typography */
+body.style-ios-glass h1,
+body.style-ios-glass h2,
+body.style-ios-glass h3,
+body.style-ios-glass h4,
+body.style-ios-glass .text-slate-100,
+body.style-ios-glass .text-slate-200 {
+  color: #0f172a !important;
+}
+
+body.style-ios-glass .text-slate-300,
+body.style-ios-glass .text-slate-400 {
+  color: #334155 !important;
+}
+
+body.style-ios-glass .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* 5. Sub-containers, Inputs and Interactive Plates inside Cards */
+body.style-ios-glass .bg-slate-900,
+body.style-ios-glass .bg-slate-950,
+body.style-ios-glass .bg-slate-800 {
+  background-color: rgba(255, 255, 255, var(--ios-inner-alpha, 0.28)) !important;
+  border-color: rgba(226, 232, 240, 0.8) !important;
+  color: #0f172a !important;
+}
+
+body.style-ios-glass .border-slate-800,
+body.style-ios-glass .border-slate-700,
+body.style-ios-glass .border-slate-600 {
+  border-color: rgba(226, 232, 240, 0.85) !important;
+}
+
+/* Form Inputs, Selects and Textareas */
+body.style-ios-glass input[type="text"],
+body.style-ios-glass input[type="search"],
+body.style-ios-glass input[type="number"],
+body.style-ios-glass input[type="password"],
+body.style-ios-glass select,
+body.style-ios-glass textarea {
+  background-color: rgba(255, 255, 255, 0.65) !important;
+  border: 1px solid rgba(203, 213, 225, 0.9) !important;
+  color: #0f172a !important;
+  border-radius: 0.75rem !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.2s ease !important;
+}
+
+body.style-ios-glass input:focus,
+body.style-ios-glass select:focus,
+body.style-ios-glass textarea:focus {
+  border-color: #0284c7 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18) !important;
+  outline: none !important;
+}
+
+body.style-ios-glass input::placeholder,
+body.style-ios-glass textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* 6. List Items & Interactive Rows (Tasks, Goals, Reading, Bulletins) */
+body.style-ios-glass #daily-task-list > div,
+body.style-ios-glass #weekly-goals-list > div,
+body.style-ios-glass #monthly-goals-list > div,
+body.style-ios-glass .reading-card,
+body.style-ios-glass .bulletin-card {
+  background: rgba(255, 255, 255, var(--ios-item-alpha, 0.42)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  border-radius: 0.95rem !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.18s ease !important;
+}
+
+body.style-ios-glass #daily-task-list > div:hover,
+body.style-ios-glass #weekly-goals-list > div:hover,
+body.style-ios-glass #monthly-goals-list > div:hover,
+body.style-ios-glass .reading-card:hover {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-color: rgba(14, 165, 233, 0.45) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;
+}
+
+body.style-ios-glass .bulletin-card {
+  border-left: 3.5px solid #94a3b8 !important;
+}
+
+body.style-ios-glass .bulletin-card p,
+body.style-ios-glass .bulletin-card .text-amber-200\/90 {
+  color: #334155 !important;
+}
+
+body.style-ios-glass .bulletin-card span,
+body.style-ios-glass .bulletin-card .text-amber-500\/70 {
+  color: #94a3b8 !important;
+}
+
+/* 7. Low-Saturation Fresh Accents & Badges */
+body.style-ios-glass .badge-p0 {
+  background-color: rgba(244, 63, 94, 0.12) !important;
+  color: #e11d48 !important;
+  border-color: rgba(244, 63, 94, 0.28) !important;
+  border-radius: 9999px !important;
+}
+body.style-ios-glass .badge-p1 {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+  color: #d97706 !important;
+  border-color: rgba(245, 158, 11, 0.28) !important;
+  border-radius: 9999px !important;
+}
+body.style-ios-glass .badge-p2 {
+  background-color: rgba(14, 165, 233, 0.12) !important;
+  color: #0284c7 !important;
+  border-color: rgba(14, 165, 233, 0.28) !important;
+  border-radius: 9999px !important;
+}
+
+body.style-ios-glass .milestone-tag-vacation {
+  background-color: rgba(16, 185, 129, 0.14) !important;
+  border-color: rgba(16, 185, 129, 0.32) !important;
+  color: #059669 !important;
+  border-radius: 0.5rem !important;
+}
+body.style-ios-glass .milestone-tag-overtime {
+  background-color: rgba(239, 68, 68, 0.14) !important;
+  border-color: rgba(239, 68, 68, 0.32) !important;
+  color: #dc2626 !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Checkboxes */
+body.style-ios-glass .task-checkbox {
+  border: 1.5px solid #94a3b8 !important;
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+body.style-ios-glass .task-checkbox:checked {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+}
+body.style-ios-glass .task-completed {
+  color: #94a3b8 !important;
+}
+
+/* 8. Top Navigation Dropdown & Modals */
+body.style-ios-glass #header-actions-menu {
+  background: rgba(255, 255, 255, 0.90) !important;
+  backdrop-filter: blur(32px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12) !important;
+}
+body.style-ios-glass #header-actions-menu button {
+  color: #1e293b !important;
+  border-radius: 0.5rem !important;
+}
+body.style-ios-glass #header-actions-menu button:hover {
+  background: rgba(241, 245, 249, 0.9) !important;
+}
+
+/* Modals */
+body.style-ios-glass .fixed > .fofo-card {
+  border-radius: 1.5rem !important;
+  background: rgba(255, 255, 255, 0.90) !important;
+  backdrop-filter: blur(36px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* ==========================================================================
+   Detailed iOS Liquid Glass Refinements (Items 2 through 9)
+   ========================================================================== */
+
+/* Item 2: Top Bar Pomodoro Modes Container (Liquid Glass, Deeper than the card) */
+body.style-ios-glass #pomo-modes-container {
+  background: rgba(215, 225, 238, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  border-radius: 0.65rem !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+
+body.style-ios-glass #pomo-modes-container button {
+  color: #475569 !important;
+  border-radius: 0.45rem !important;
+  transition: all 0.15s ease !important;
+}
+
+body.style-ios-glass #pomo-modes-container button:hover {
+  color: #0f172a !important;
+}
+
+/* Item 2, 3 & 7: Add & Sync Buttons - Mint Turquoise Gradient */
+body.style-ios-glass #btn-add-weekly-goal,
+body.style-ios-glass #btn-add-monthly-goal,
+body.style-ios-glass #btn-add-task,
+body.style-ios-glass #btn-add-scratchpad,
+body.style-ios-glass #btn-add-bulletin,
+body.style-ios-glass #btn-course-save-sync,
+#btn-course-save-sync {
+  background: linear-gradient(60deg, #96deda 0%, #50c9c3 100%) !important;
+  color: #0f172a !important;
+  border: none !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(80, 201, 195, 0.35) !important;
+  transition: all 0.2s ease !important;
+}
+body.style-ios-glass #btn-add-weekly-goal:hover,
+body.style-ios-glass #btn-add-monthly-goal:hover,
+body.style-ios-glass #btn-add-task:hover,
+body.style-ios-glass #btn-add-scratchpad:hover,
+body.style-ios-glass #btn-add-bulletin:hover,
+body.style-ios-glass #btn-course-save-sync:hover,
+#btn-course-save-sync:hover {
+  filter: brightness(1.06) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Item 3: Pomodoro Toggle Button - Subtle Understated Liquid Glass */
+body.style-ios-glass #pomo-btn-toggle.bg-emerald-600,
+body.style-ios-glass #pomo-btn-toggle:not(.bg-amber-600) {
+  background: rgba(255, 255, 255, 0.68) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.88) !important;
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.95) !important;
+}
+body.style-ios-glass #pomo-btn-toggle.bg-emerald-600:hover,
+body.style-ios-glass #pomo-btn-toggle:not(.bg-amber-600):hover {
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #0f172a !important;
+}
+body.style-ios-glass #pomo-btn-toggle.bg-amber-600 {
+  background: rgba(254, 243, 199, 0.75) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  color: #92400e !important;
+  font-weight: 600 !important;
+}
+
+/* Item 3: Heatmap Outer Container (Lighter than small day rectangles, deeper than top nav header) */
+body.style-ios-glass #heatmap-container {
+  background: rgba(240, 245, 252, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+}
+
+body.style-ios-glass .heatmap-cell.level-0 {
+  background-color: rgba(226, 232, 240, 0.85) !important;
+}
+body.style-ios-glass .heatmap-cell.level-1 { background-color: #a7f3d0 !important; }
+body.style-ios-glass .heatmap-cell.level-2 { background-color: #6ee7b7 !important; }
+body.style-ios-glass .heatmap-cell.level-3 { background-color: #34d399 !important; }
+body.style-ios-glass .heatmap-cell.level-4 { background-color: #10b981 !important; }
+
+/* Item 4.1: Bottom Selected Day Milestones Box & Items */
+body.style-ios-glass #selected-day-milestone-box {
+  background: rgba(220, 228, 240, 0.78) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  border-radius: 0.85rem !important;
+  box-shadow: 
+    0 4px 16px 0 rgba(0, 0, 0, 0.06),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95) !important;
+}
+
+body.style-ios-glass #selected-day-milestone-box .text-amber-400,
+body.style-ios-glass #selected-day-milestone-box #milestone-count-text {
+  color: #64748b !important;
+}
+
+body.style-ios-glass #selected-day-milestones-list > div {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.88) !important;
+  color: #0f172a !important;
+  border-radius: 0.6rem !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02) !important;
+}
+
+body.style-ios-glass #selected-day-milestones-list .bg-emerald-950\/50,
+body.style-ios-glass #selected-day-milestones-list .bg-emerald-950\/60 {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  color: #065f46 !important;
+  font-weight: 600 !important;
+}
+
+body.style-ios-glass #selected-day-milestones-list .bg-rose-950\/50,
+body.style-ios-glass #selected-day-milestones-list .bg-rose-950\/60 {
+  background: rgba(244, 63, 94, 0.18) !important;
+  border-color: rgba(244, 63, 94, 0.45) !important;
+  color: #9f1239 !important;
+  font-weight: 600 !important;
+}
+
+body.style-ios-glass #selected-day-milestones-list .bg-amber-950\/60 {
+  background: rgba(245, 158, 11, 0.18) !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+  color: #92400e !important;
+  font-weight: 600 !important;
+}
+
+/* Item 4.2 & Item 8: Calendar Cells - Today Cell and High-Contrast Holiday/Overtime/Workday/Weekend */
+body.style-ios-glass #calendar-widget-container .calendar-day-cell {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  color: #1e293b !important;
+  border-radius: 0.65rem !important;
+  transition: all 0.18s ease !important;
+}
+
+body.style-ios-glass #calendar-widget-container .calendar-day-cell:hover {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* Today's cell in iOS Mode (Same liquid glass as Hero Card Item 1) */
+body.style-ios-glass #calendar-widget-container .calendar-day-cell.is-today:not(.is-selected),
+body.style-ios-glass .calendar-cell.today {
+  background: rgba(220, 228, 240, 0.78) !important;
+  border: 1.5px solid rgba(14, 165, 233, 0.6) !important;
+  color: #0284c7 !important;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.05),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Item 8: High-Contrast Vacation (休假 - Soft Mint Green) */
+body.style-ios-glass #calendar-widget-container .calendar-day-cell.is-holiday:not(.is-selected) {
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(16, 185, 129, 0.25) !important;
+  color: #047857 !important;
+}
+body.style-ios-glass #calendar-widget-container .calendar-day-cell.is-holiday:not(.is-selected) span:not(.calendar-corner-badge) {
+  color: #0f172a !important;
+  font-weight: 400 !important;
+}
+
+/* Item 8: High-Contrast Overtime (加班 - Soft Rose Red) */
+body.style-ios-glass #calendar-widget-container .calendar-day-cell.is-overtime:not(.is-selected) {
+  background: rgba(244, 63, 94, 0.08) !important;
+  border-color: rgba(244, 63, 94, 0.25) !important;
+  color: #be123c !important;
+}
+body.style-ios-glass #calendar-widget-container .calendar-day-cell.is-overtime:not(.is-selected) span:not(.calendar-corner-badge) {
+  color: #0f172a !important;
+  font-weight: 400 !important;
+}
+
+/* Item 8: High-Contrast Workday (调休补班 - Soft Amber/Bronze) */
+body.style-ios-glass #calendar-widget-container .calendar-day-cell.is-workday:not(.is-selected) {
+  background: rgba(245, 158, 11, 0.09) !important;
+  border-color: rgba(245, 158, 11, 0.25) !important;
+  color: #92400e !important;
+}
+body.style-ios-glass #calendar-widget-container .calendar-day-cell.is-workday:not(.is-selected) span:not(.calendar-corner-badge) {
+  color: #0f172a !important;
+  font-weight: 400 !important;
+}
+
+/* Calendar Corner Badges: No colored card background, unified subtle gray text */
+body.style-ios-glass #calendar-widget-container .calendar-corner-badge,
+#calendar-widget-container .calendar-corner-badge {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  color: #64748b !important;
+  font-weight: 600 !important;
+}
+body.style-ios-glass #calendar-widget-container .calendar-day-cell.is-selected .calendar-corner-badge {
+  color: #0f172a !important;
+}
+
+/* Softened Weekends */
+body.style-ios-glass #calendar-widget-container .calendar-day-cell.is-weekend:not(.is-selected):not(.is-holiday):not(.is-overtime):not(.is-workday) {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  color: #64748b !important;
+}
+
+/* Item 4.3: + 标记节点 Modal Tabs (普通事项、休息日、加班日) */
+body.style-ios-glass .milestone-type-btn {
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  color: #475569 !important;
+  border-radius: 0.6rem !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.2s ease !important;
+}
+
+body.style-ios-glass .milestone-type-btn:hover {
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #0f172a !important;
+}
+
+body.style-ios-glass .milestone-type-btn#milestone-type-event.active {
+  background: rgba(245, 158, 11, 0.18) !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+  color: #b45309 !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15) !important;
+}
+
+body.style-ios-glass .milestone-type-btn#milestone-type-vacation.active {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  color: #047857 !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15) !important;
+}
+
+body.style-ios-glass .milestone-type-btn#milestone-type-overtime.active {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: rgba(239, 68, 68, 0.45) !important;
+  color: #b91c1c !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Item 4: Reading Heading & Add Button (Non-gradient, Standard Text) */
+body.style-ios-glass #reading-title-text {
+  color: #0f172a !important;
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+}
+body.style-ios-glass #btn-open-add-reading {
+  color: #64748b !important;
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+  font-weight: 500 !important;
+}
+body.style-ios-glass #btn-open-add-reading:hover {
+  color: #0f172a !important;
+}
+
+/* Item 5: Cyan Gradient only for other specific text (not reading title or button) */
+body.style-ios-glass .text-cyan-400:not(#reading-title-text):not(#btn-open-add-reading):not(#btn-toggle-reading-all):not(#btn-toggle-tasks-all),
+body.style-ios-glass .text-cyan-300:not(#reading-title-text):not(#btn-open-add-reading):not(#btn-toggle-reading-all):not(#btn-toggle-tasks-all) {
+  background: linear-gradient(to top, #30cfd0 0%, #330867 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  display: inline-block;
+}
+
+body.style-ios-glass .text-cyan-400 > span:first-child,
+body.style-ios-glass .text-cyan-300 > span:first-child {
+  -webkit-text-fill-color: initial !important;
+}
+
+body.style-ios-glass .border-l-cyan-500 {
+  border-left-color: #30cfd0 !important;
+}
+
+/* Item 6: Reading Item Type Badges - Consistent Light Blue Glass + Deep Blue Text */
+body.style-ios-glass .reading-card .bg-cyan-950,
+body.style-ios-glass .reading-card .bg-blue-950,
+body.style-ios-glass #reading-items-container .bg-cyan-950,
+body.style-ios-glass #reading-items-container .bg-blue-950 {
+  background: rgba(215, 226, 240, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  color: #1d4ed8 !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+  background-clip: border-box !important;
+  -webkit-background-clip: border-box !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  border-radius: 0.375rem !important;
+  font-weight: 600 !important;
+}
+
+body.style-ios-glass #reading-count-badge {
+  background-color: rgba(215, 226, 240, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  color: #0369a1 !important;
+  -webkit-text-fill-color: #0369a1 !important;
+}
+
+/* Item 7: Reading Item Buttons ("次日、↑、↓、x") - Deeper & Higher Contrast */
+body.style-ios-glass .reading-card .btn-defer {
+  background-color: rgba(245, 158, 11, 0.22) !important;
+  border: 1px solid rgba(245, 158, 11, 0.45) !important;
+  color: #92400e !important;
+  font-weight: 600 !important;
+}
+
+body.style-ios-glass .reading-card .btn-defer:hover {
+  background-color: rgba(245, 158, 11, 0.35) !important;
+  color: #78350f !important;
+}
+
+body.style-ios-glass .reading-card .btn-up,
+body.style-ios-glass .reading-card .btn-down {
+  background-color: rgba(210, 222, 238, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+body.style-ios-glass .reading-card .btn-up:hover,
+body.style-ios-glass .reading-card .btn-down:hover {
+  background-color: #ffffff !important;
+}
+
+body.style-ios-glass .reading-card .btn-del {
+  color: #dc2626 !important;
+  font-weight: 700 !important;
+  opacity: 0.8 !important;
+}
+
+body.style-ios-glass .reading-card .btn-del:hover {
+  color: #b91c1c !important;
+  opacity: 1 !important;
+}
+
+/* Item 7: Fullscreen Focus Button - Subtle Understated Liquid Glass */
+body.style-ios-glass #btn-fullscreen-focus {
+  background: rgba(255, 255, 255, 0.68) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.88) !important;
+  color: #1e293b !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.95) !important;
+  font-weight: 600 !important;
+}
+body.style-ios-glass #btn-fullscreen-focus:hover {
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #0f172a !important;
+}
+
+/* Item 8: Schedule Action Buttons */
+body.style-ios-glass #btn-set-milestone {
+  color: #64748b !important;
+  font-weight: 500 !important;
+}
+body.style-ios-glass #btn-set-milestone:hover {
+  color: #0f172a !important;
+}
+
+body.style-ios-glass #btn-course-schedule {
+  color: #4338ca !important;
+  font-weight: 600 !important;
+}
+body.style-ios-glass #btn-course-schedule:hover {
+  color: #312e81 !important;
+}
+
+/* Item 8: Daily Task List: Transparent Liquid Glass "推至次日" (Subtle Gray) & Visible "✕" */
+body.style-ios-glass #daily-task-list .btn-defer {
+  background: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  color: #64748b !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+body.style-ios-glass #daily-task-list .btn-defer:hover {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+}
+
+body.style-ios-glass #daily-task-list .btn-focus {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  color: #047857 !important;
+}
+
+body.style-ios-glass #daily-task-list .btn-focus:hover {
+  background: rgba(209, 250, 229, 0.9) !important;
+}
+
+body.style-ios-glass #daily-task-list .btn-del {
+  opacity: 0.55 !important;
+  color: #94a3b8 !important;
+  font-weight: bold !important;
+}
+
+body.style-ios-glass #daily-task-list .btn-del:hover {
+  opacity: 1 !important;
+  color: #ef4444 !important;
+}
+
+/* Item 6: Active State Silvery Blue Glass (rgb(195, 207, 226)) for All Active Buttons */
+body.style-ios-glass #tab-btn-weekly.bg-emerald-600,
+body.style-ios-glass #tab-btn-monthly.bg-emerald-600,
+body.style-ios-glass #tab-btn-notes.bg-emerald-600,
+body.style-ios-glass #tab-btn-scratchpad.bg-emerald-600,
+body.style-ios-glass #pomo-modes-container button.bg-emerald-600,
+body.style-ios-glass #pomo-modes-container button.bg-cyan-600,
+body.style-ios-glass #pomo-modes-container button.bg-indigo-600,
+body.style-ios-glass #task-filter-all[class*="bg-emerald-600"],
+body.style-ios-glass #task-filter-active[class*="bg-emerald-600"],
+body.style-ios-glass #task-filter-done[class*="bg-emerald-600"],
+body.style-ios-glass #calendar-widget-container .calendar-day-cell.is-selected,
+body.style-ios-glass #calendar-widget-container div.bg-emerald-600.text-white {
+  background: rgba(195, 207, 226, 0.90) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.95) !important;
+}
+
+body.style-ios-glass #calendar-widget-container .calendar-day-cell.is-selected span {
+  color: #0f172a !important;
+}
+
+/* Inactive tabs contrast and hover in iOS mode */
+body.style-ios-glass #tab-btn-weekly:not(.bg-emerald-600),
+body.style-ios-glass #tab-btn-monthly:not(.bg-emerald-600),
+body.style-ios-glass #tab-btn-notes:not(.bg-emerald-600),
+body.style-ios-glass #tab-btn-scratchpad:not(.bg-emerald-600) {
+  color: #64748b !important;
+  background: transparent !important;
+}
+
+body.style-ios-glass #tab-btn-weekly:not(.bg-emerald-600):hover,
+body.style-ios-glass #tab-btn-monthly:not(.bg-emerald-600):hover,
+body.style-ios-glass #tab-btn-notes:not(.bg-emerald-600):hover,
+body.style-ios-glass #tab-btn-scratchpad:not(.bg-emerald-600):hover {
+  color: #0f172a !important;
+}
+
+/* Item 9: Off-Work Modal Light Glass Columns & Gray Toggles */
+body.style-ios-glass #off-work-reading-box,
+body.style-ios-glass #off-work-task-box,
+body.style-ios-glass #off-work-tomorrow-box {
+  background: rgba(240, 245, 252, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 0.85rem !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03), inset 0 1px 1px rgba(255, 255, 255, 0.95) !important;
+}
+
+body.style-ios-glass #off-work-reading-items > *,
+body.style-ios-glass #off-work-task-items > *,
+body.style-ios-glass #off-work-tomorrow-milestones > * {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+  border-radius: 0.65rem !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+}
+
+body.style-ios-glass #off-work-reading-items span,
+body.style-ios-glass #off-work-task-items span {
+  color: #0f172a !important;
+}
+
+body.style-ios-glass #off-work-greeting {
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+body.style-ios-glass #off-work-task-items .bg-rose-950 {
+  background: rgba(244, 63, 94, 0.14) !important;
+  border: 1px solid rgba(244, 63, 94, 0.35) !important;
+  color: #e11d48 !important;
+  -webkit-text-fill-color: #e11d48 !important;
+}
+body.style-ios-glass #off-work-task-items .bg-amber-950 {
+  background: rgba(245, 158, 11, 0.14) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  color: #d97706 !important;
+  -webkit-text-fill-color: #d97706 !important;
+}
+body.style-ios-glass #off-work-task-items .bg-slate-800 {
+  background: rgba(148, 163, 184, 0.16) !important;
+  border: 1px solid rgba(148, 163, 184, 0.35) !important;
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+}
+
+body.style-ios-glass #btn-toggle-reading-all,
+body.style-ios-glass #btn-toggle-tasks-all {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: initial !important;
+  color: #64748b !important;
+  font-weight: 500 !important;
+}
+body.style-ios-glass #btn-toggle-reading-all:hover,
+body.style-ios-glass #btn-toggle-tasks-all:hover {
+  color: #0f172a !important;
+}
+
+/* 10. Buttons & Controls in iOS Mode */
+body.style-ios-glass #btn-header-actions {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(203, 213, 225, 0.85) !important;
+  color: #1e293b !important;
+  border-radius: 0.65rem !important;
+}
+body.style-ios-glass #btn-header-actions:hover {
+  background: #ffffff !important;
+}
+
+/* Item 4: Off-work button gradient */
+#btn-off-work {
+  background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%) !important;
+  color: #4a1525 !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 2px 6px rgba(255, 154, 158, 0.35) !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+}
+#btn-off-work:hover {
+  filter: brightness(1.05) !important;
+  transform: translateY(-1px) !important;
+}
+
+body.style-ios-glass #btn-off-work {
+  background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%) !important;
+  color: #4a1525 !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  border-radius: 0.65rem !important;
+  box-shadow: 0 2px 8px rgba(255, 154, 158, 0.35) !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+}
+body.style-ios-glass #btn-off-work:hover {
+  filter: brightness(1.06) !important;
+  transform: translateY(-1px) !important;
+}
+
+body.style-ios-glass #btn-jump-today {
+  background-color: rgba(255, 255, 255, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  color: #64748b !important;
+  border-radius: 0.5rem !important;
+}
+body.style-ios-glass #btn-jump-today:hover {
+  background-color: rgba(255, 255, 255, 0.65) !important;
+  color: #0f172a !important;
+}
+
+/* Date Switcher Arrows: Subtle Pale Glass matching unselected tabs */
+body.style-ios-glass #btn-prev-day,
+body.style-ios-glass #btn-next-day {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  color: #64748b !important;
+  border-radius: 0.5rem !important;
+  transition: all 0.15s ease !important;
+}
+
+body.style-ios-glass #btn-prev-day:hover,
+body.style-ios-glass #btn-next-day:hover {
+  background: rgba(255, 255, 255, 0.65) !important;
+  color: #0f172a !important;
+}
+
+body.style-ios-glass #active-day-badge {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+  color: #64748b !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Milestone Prompt Modal in iOS Liquid Glass Mode */
+body.style-ios-glass #modal-milestone-prompt #modal-milestone-list > div {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+}
+body.style-ios-glass #modal-milestone-prompt #modal-milestone-list > div span {
+  color: #0f172a !important;
+}
+body.style-ios-glass #modal-milestone-prompt #modal-milestone-list .bg-emerald-600 {
+  background: rgba(16, 185, 129, 0.16) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+body.style-ios-glass #modal-milestone-prompt #modal-milestone-list .bg-rose-600 {
+  background: rgba(244, 63, 94, 0.16) !important;
+  color: #be123c !important;
+  border: 1px solid rgba(244, 63, 94, 0.3) !important;
+}
+body.style-ios-glass #modal-milestone-prompt #modal-milestone-list .bg-indigo-600 {
+  background: rgba(99, 102, 241, 0.16) !important;
+  color: #4338ca !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+}
+body.style-ios-glass #modal-milestone-prompt #modal-milestone-list .text-amber-400 {
+  background: rgba(245, 158, 11, 0.16) !important;
+  color: #92400e !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  padding: 0.05rem 0.375rem !important;
+  border-radius: 0.25rem !important;
+}
+
+/* Date Pickers */
+body.style-ios-glass input[type="date"] {
+  color-scheme: light !important;
+}
+body.style-ios-glass input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none !important;
+  opacity: 0.75 !important;
+  background-color: rgba(2, 132, 199, 0.12) !important;
+}
+
+/* Course Schedule Modal in iOS Liquid Glass Mode */
+body.style-ios-glass #modal-course-schedule .fofo-card {
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(36px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+}
+body.style-ios-glass #modal-course-schedule h3 {
+  color: #0f172a !important;
+}
+body.style-ios-glass #modal-course-schedule p,
+body.style-ios-glass #modal-course-schedule .text-slate-400,
+body.style-ios-glass #modal-course-schedule .text-slate-500 {
+  color: #64748b !important;
+}
+body.style-ios-glass #modal-course-schedule .bg-slate-950\/60 {
+  background: rgba(240, 245, 252, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 0.85rem !important;
+  color: #334155 !important;
+}
+body.style-ios-glass #modal-course-schedule .bg-slate-950\/60 label {
+  color: #1e293b !important;
+}
+body.style-ios-glass #modal-course-schedule .course-row {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  border-radius: 0.75rem !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
+}
+body.style-ios-glass #modal-course-schedule .course-row:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+body.style-ios-glass #modal-course-schedule select,
+body.style-ios-glass #modal-course-schedule input[type="text"] {
+  background: rgba(245, 248, 253, 0.92) !important;
+  border: 1px solid rgba(203, 213, 225, 0.85) !important;
+  color: #0f172a !important;
+}
+body.style-ios-glass #modal-course-schedule .course-row-date-wrap {
+  background: rgba(245, 248, 253, 0.92) !important;
+  border: 1px solid rgba(203, 213, 225, 0.85) !important;
+}
+body.style-ios-glass #modal-course-schedule .course-row-date-wrap span {
+  color: #4338ca !important;
+}
+body.style-ios-glass #modal-course-schedule .course-row-end-date {
+  color: #0f172a !important;
+  color-scheme: light !important;
+}
+body.style-ios-glass #modal-course-schedule .btn-del-course-row {
+  color: #94a3b8 !important;
+}
+body.style-ios-glass #modal-course-schedule .btn-del-course-row:hover {
+  color: #e11d48 !important;
+}
+
+/* Theme Modal Segmented Controls & Inactive State */
+body.style-ios-glass #ui-style-segmented,
+body.style-ios-glass #glass-slider-box {
+  background: rgba(220, 228, 240, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+}
+
+body.style-ios-glass .style-segmented-inactive {
+  background-color: transparent !important;
+  color: #64748b !important;
+  border-color: transparent !important;
+}
+
+body.style-ios-glass .style-segmented-inactive:hover {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+  color: #0f172a !important;
+}
+
+body.style-ios-glass .style-segmented-active {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.style-segmented-active {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.style-segmented-inactive {
+  background-color: transparent !important;
+  color: #64748b !important;
+  border-color: transparent !important;
+}
+
+/* ==========================================================================
+   iOS Liquid Glass: Fullscreen Focus, Toast Notifications & AI Skin Modal
+   ========================================================================== */
+
+/* Item 1: Fullscreen Focus Setup Modal Light Glass */
+body.style-ios-glass #modal-fs-focus-setup .fofo-card {
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(36px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+}
+body.style-ios-glass #modal-fs-focus-setup h3,
+body.style-ios-glass #modal-fs-focus-setup label {
+  color: #0f172a !important;
+}
+body.style-ios-glass #modal-fs-focus-setup p,
+body.style-ios-glass #modal-fs-focus-setup .text-slate-400 {
+  color: #64748b !important;
+}
+body.style-ios-glass #modal-fs-focus-setup p.bg-slate-950\/40,
+body.style-ios-glass #modal-fs-focus-setup .bg-slate-950\/40 {
+  background: rgba(240, 245, 252, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 0.65rem !important;
+  color: #475569 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+}
+body.style-ios-glass #modal-fs-focus-setup .btn-fs-preset-time:not(.is-active) {
+  background: rgba(255, 255, 255, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  color: #475569 !important;
+}
+body.style-ios-glass #modal-fs-focus-setup .btn-fs-preset-time.is-active {
+  background: rgba(195, 207, 226, 0.90) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  font-weight: 700 !important;
+}
+body.style-ios-glass #modal-fs-focus-setup input[type="text"],
+body.style-ios-glass #modal-fs-focus-setup input[type="number"] {
+  background: rgba(245, 248, 253, 0.92) !important;
+  border: 1px solid rgba(203, 213, 225, 0.85) !important;
+  color: #0f172a !important;
+}
+
+/* Item 2: Fullscreen Focus Countdown Gradient */
+body.style-ios-glass #fs-focus-countdown-display {
+  background: linear-gradient(to top, #a18cd1 0%, #fbc2eb 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  filter: drop-shadow(0 0 35px rgba(251, 194, 235, 0.4)) !important;
+}
+
+/* Item 1: Fullscreen Focus Exit Button Light Glass with Deeper Slate Text */
+body.style-ios-glass #btn-fs-focus-exit {
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  color: #334155 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.9) !important;
+  border-radius: 0.75rem !important;
+}
+body.style-ios-glass #btn-fs-focus-exit span {
+  color: #334155 !important;
+}
+body.style-ios-glass #btn-fs-focus-exit:hover {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border-color: rgba(255, 255, 255, 1) !important;
+  color: #0f172a !important;
+}
+body.style-ios-glass #btn-fs-focus-exit:hover span {
+  color: #0f172a !important;
+}
+
+/* Item 2: AI Context Compression Status Indicator */
+#ai-chat-compress-status.hidden {
+  display: none !important;
+}
+
+/* Item 4: Top-Right Toast Notifications Light Glass */
+body.style-ios-glass .toast-item {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  border-radius: 0.85rem !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12), inset 0 1px 1.5px rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+}
+body.style-ios-glass .toast-item span.font-medium,
+body.style-ios-glass .toast-item .text-slate-100 {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+body.style-ios-glass .toast-item button {
+  color: #94a3b8 !important;
+}
+body.style-ios-glass .toast-item button:hover {
+  color: #0f172a !important;
+}
+
+/* Item 5: AI Sidebar Skin Modal Light Glass */
+body.style-ios-glass #modal-ai-skin .fofo-card {
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(36px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+}
+body.style-ios-glass #modal-ai-skin h3,
+body.style-ios-glass #modal-ai-skin label {
+  color: #0f172a !important;
+}
+body.style-ios-glass #modal-ai-skin p,
+body.style-ios-glass #modal-ai-skin .text-slate-400,
+body.style-ios-glass #modal-ai-skin .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Preset Cards (Classic & WeChat) */
+body.style-ios-glass #modal-ai-skin .skin-radio-label {
+  background: rgba(240, 245, 252, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.2s ease !important;
+}
+body.style-ios-glass #modal-ai-skin .skin-radio-label:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+body.style-ios-glass #modal-ai-skin .skin-radio-label span.text-slate-200 {
+  color: #0f172a !important;
+}
+body.style-ios-glass #modal-ai-skin .skin-radio-label span.text-emerald-400 {
+  color: #047857 !important;
+}
+
+/* Avatar Section Box */
+body.style-ios-glass #modal-ai-skin #ai-avatar-section {
+  background: rgba(240, 245, 252, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Hint Box */
+body.style-ios-glass #modal-ai-skin .bg-slate-950\/40 {
+  background: rgba(240, 245, 252, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 0.65rem !important;
+  color: #475569 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Reset Button */
+body.style-ios-glass #btn-reset-ai-avatar {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(203, 213, 225, 0.8) !important;
+  color: #475569 !important;
+}
+body.style-ios-glass #btn-reset-ai-avatar:hover {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Upload Avatar & Save / Action Buttons - Mint Turquoise Gradient */
+#btn-upload-ai-avatar,
+#btn-save-ai-skin,
+#btn-ai-save-config,
+#btn-save-weekly-summary,
+#btn-backup-json,
+#btn-restore-json-label,
+body.style-ios-glass #btn-upload-ai-avatar,
+body.style-ios-glass #btn-save-ai-skin,
+body.style-ios-glass #btn-ai-save-config,
+body.style-ios-glass #btn-save-weekly-summary,
+body.style-ios-glass #btn-backup-json,
+body.style-ios-glass #btn-restore-json-label {
+  background: linear-gradient(60deg, #96deda 0%, #50c9c3 100%) !important;
+  color: #0f172a !important;
+  border: none !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 6px rgba(80, 201, 195, 0.35) !important;
+  transition: all 0.2s ease !important;
+}
+#btn-upload-ai-avatar:hover,
+#btn-save-ai-skin:hover,
+#btn-ai-save-config:hover,
+#btn-save-weekly-summary:hover,
+#btn-backup-json:hover,
+#btn-restore-json-label:hover,
+body.style-ios-glass #btn-upload-ai-avatar:hover,
+body.style-ios-glass #btn-save-ai-skin:hover,
+body.style-ios-glass #btn-ai-save-config:hover,
+body.style-ios-glass #btn-save-weekly-summary:hover,
+body.style-ios-glass #btn-backup-json:hover,
+body.style-ios-glass #btn-restore-json-label:hover {
+  filter: brightness(1.06) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* FoFo AI Config Modal in iOS Liquid Glass Mode */
+body.style-ios-glass #modal-ai-assistant .fofo-card {
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(36px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+}
+body.style-ios-glass #modal-ai-assistant h3,
+body.style-ios-glass #modal-ai-assistant label,
+body.style-ios-glass #modal-ai-assistant .text-slate-200,
+body.style-ios-glass #modal-ai-assistant .text-slate-300 {
+  color: #0f172a !important;
+}
+body.style-ios-glass #modal-ai-assistant p,
+body.style-ios-glass #modal-ai-assistant .text-slate-400,
+body.style-ios-glass #modal-ai-assistant .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Inner config panel */
+body.style-ios-glass #modal-ai-assistant #ai-config-panel {
+  background: rgba(240, 245, 252, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 0.85rem !important;
+  color: #334155 !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Gemini Free Tier Banner */
+body.style-ios-glass #gemini-free-banner {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #065f46 !important;
+  border-radius: 0.65rem !important;
+}
+body.style-ios-glass #gemini-free-banner p {
+  color: #047857 !important;
+}
+body.style-ios-glass #gemini-free-banner a {
+  color: #0284c7 !important;
+  font-weight: 600 !important;
+}
+
+/* Selects and Inputs */
+body.style-ios-glass #modal-ai-assistant select,
+body.style-ios-glass #modal-ai-assistant input[type="text"],
+body.style-ios-glass #modal-ai-assistant input[type="password"] {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(203, 213, 225, 0.85) !important;
+  color: #0f172a !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Secondary Buttons */
+body.style-ios-glass #btn-ai-test-config {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(203, 213, 225, 0.8) !important;
+  color: #334155 !important;
+  border-radius: 0.45rem !important;
+}
+body.style-ios-glass #btn-ai-test-config:hover {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+body.style-ios-glass #btn-ai-clear-config {
+  color: #64748b !important;
+}
+body.style-ios-glass #btn-ai-clear-config:hover {
+  color: #e11d48 !important;
+}
+
+body.style-ios-glass #btn-toggle-key-visibility,
+body.style-ios-glass #btn-ai-detect-models {
+  color: #0284c7 !important;
+}
+
+/* Modals Light Frosted Glass in iOS Liquid Glass Mode */
+body.style-ios-glass #modal-weekly-review .fofo-card,
+body.style-ios-glass #modal-data-settings .fofo-card,
+body.style-ios-glass #modal-theme-settings .fofo-card {
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(36px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+}
+
+body.style-ios-glass #modal-weekly-review h3,
+body.style-ios-glass #modal-data-settings h3,
+body.style-ios-glass #modal-theme-settings h3,
+body.style-ios-glass #modal-weekly-review label,
+body.style-ios-glass #modal-data-settings label,
+body.style-ios-glass #modal-theme-settings label,
+body.style-ios-glass #modal-weekly-review .text-slate-100,
+body.style-ios-glass #modal-data-settings .text-slate-100,
+body.style-ios-glass #modal-theme-settings .text-slate-100,
+body.style-ios-glass #modal-weekly-review .text-slate-200,
+body.style-ios-glass #modal-data-settings .text-slate-200,
+body.style-ios-glass #modal-theme-settings .text-slate-200,
+body.style-ios-glass #modal-weekly-review .text-slate-300,
+body.style-ios-glass #modal-data-settings .text-slate-300,
+body.style-ios-glass #modal-theme-settings .text-slate-300 {
+  color: #0f172a !important;
+}
+
+body.style-ios-glass #modal-weekly-review .text-slate-400,
+body.style-ios-glass #modal-data-settings .text-slate-400,
+body.style-ios-glass #modal-theme-settings .text-slate-400,
+body.style-ios-glass #modal-weekly-review .text-slate-500,
+body.style-ios-glass #modal-data-settings .text-slate-500,
+body.style-ios-glass #modal-theme-settings .text-slate-500 {
+  color: #64748b !important;
+}
+
+body.style-ios-glass #modal-weekly-close,
+body.style-ios-glass #modal-data-close,
+body.style-ios-glass #modal-theme-close {
+  color: #94a3b8 !important;
+}
+body.style-ios-glass #modal-weekly-close:hover,
+body.style-ios-glass #modal-data-close:hover,
+body.style-ios-glass #modal-theme-close:hover {
+  color: #0f172a !important;
+}
+
+body.style-ios-glass #modal-weekly-review .border-slate-800,
+body.style-ios-glass #modal-data-settings .border-slate-800,
+body.style-ios-glass #modal-theme-settings .border-slate-800 {
+  border-color: rgba(226, 232, 240, 0.8) !important;
+}
+
+/* 1. Weekly Review Modal Light Glass Cards & Textarea */
+body.style-ios-glass #modal-weekly-review .bg-slate-800\/60 {
+  background: rgba(240, 245, 252, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+}
+body.style-ios-glass #modal-weekly-review #weekly-summary-input {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(203, 213, 225, 0.85) !important;
+  color: #0f172a !important;
+  border-radius: 0.5rem !important;
+}
+body.style-ios-glass #modal-weekly-review #weekly-summary-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* 2. Data Settings Modal Light Glass Cards */
+body.style-ios-glass #modal-data-settings .bg-slate-800\/60 {
+  background: rgba(240, 245, 252, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+}
+
+/* 3. System Selected Wallpapers Light Glass Cards */
+body.style-ios-glass .system-wallpaper-btn {
+  background: rgba(240, 245, 252, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+body.style-ios-glass .system-wallpaper-btn:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(80, 201, 195, 0.8) !important;
+  box-shadow: 0 4px 14px rgba(80, 201, 195, 0.18) !important;
+}
+body.style-ios-glass .system-wallpaper-btn span.text-slate-300 {
+  color: #1e293b !important;
+}
+body.style-ios-glass .system-wallpaper-btn span.text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Custom Background & Avatar Buttons in Theme Settings Modal */
+body.style-ios-glass #btn-choose-bg-image,
+body.style-ios-glass #btn-upload-avatar-modal {
+  background: rgba(240, 245, 252, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  color: #1e293b !important;
+}
+body.style-ios-glass #btn-choose-bg-image:hover,
+body.style-ios-glass #btn-upload-avatar-modal:hover {
+  background: #ffffff !important;
+}
+
+
 
 

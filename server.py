@@ -17,7 +17,11 @@ if sys.stderr is None:
 
 PORT = 3210
 BASE_DIR = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else os.path.dirname(os.path.abspath(__file__))
-RESOURCE_DIR = getattr(sys, "_MEIPASS", BASE_DIR)
+# Prioritize local assets if running in a workspace containing index.html, else fallback to bundled MEIPASS
+if os.path.exists(os.path.join(BASE_DIR, "index.html")):
+    RESOURCE_DIR = BASE_DIR
+else:
+    RESOURCE_DIR = getattr(sys, "_MEIPASS", BASE_DIR)
 DATA_DIR = os.path.join(BASE_DIR, "data")
 EXPORT_DIR = os.path.join(BASE_DIR, "exports")
 DOCS_DIR = os.path.join(BASE_DIR, "documents")

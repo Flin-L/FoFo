@@ -1,14 +1,14 @@
 # 🚀 FoFo 个人工作台 (FoFo Personal WorkStation)
 
 <p align="left">
-  <img src="https://img.shields.io/badge/version-2.2.0-emerald?style=flat-square" alt="Version 2.2.0" />
+  <img src="https://img.shields.io/badge/version-2.3.0-emerald?style=flat-square" alt="Version 2.3.0" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=flat-square" alt="Cross Platform" />
   <img src="https://img.shields.io/badge/license-MIT-purple?style=flat-square" alt="License MIT" />
   <img src="https://img.shields.io/badge/storage-100%25%20Local-success?style=flat-square" alt="100% Local" />
 </p>
 
 <p align="center">
-  <img src="readmeimg/v2.0.0/工作台预览.png" alt="FoFo 个人工作台全景预览" width="100%" style="border-radius: 8px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
+  <img src="sparkle.png" alt="FoFo 个人工作台" width="96" height="96" />
 </p>
 
 > **专为重度依赖 Markdown 记录工作流、追求极简高效与时间感知的知识工作者打造的轻量本地化个人生产力中枢。**  
@@ -29,21 +29,46 @@
 
 ---
 
+### [v2.3.0] - 2026-09-24
+
+#### 💡 老用户平滑升级与数据迁移指引 (v2.2.0 / 旧版升至 v2.3.0)
+- **桌面便携版快捷升级**：
+  1. 退出当前正在运行的旧版程序；
+  2. 下载 Release 中最新发布的 `FoFo.exe`，直接替换/覆盖旧版 `FoFo.exe`；
+  3. 重新打开 `FoFo.exe` 即可。`data/workspace.json` 及所有已有日程、待阅、待办、课程表、复盘及 AI 对话记录完全保存在本地 `data/` 目录中，升级零门槛、数据无损平滑继承！
+- **源码/Python 运行环境升级**：
+  - 拉取最新仓库代码，保留项目根目录下的 `data/`（核心工作台数据）、`documents/`（历史待阅数据）与 `.FoFoAI/`（本地 AI 对话会话）目录即可无缝继续使用。
+- **数据双重保险（导入与导出）**：
+  - 升级前后均可在工作台右上角「☰ 功能 ▾ -> 数据备份与管理」中一键点击 **[备份数据 (JSON)]** 导出全部数据文件备份；如需在其他电脑使用或重装系统，直接点击 **[导入备份]** 即可秒级完整还原。
+
+#### 🌟 核心更新详情
+
+**🎨 视觉风格与全局 UI 升级**：
+- **新增 iOS 液态玻璃全新主题**：支持在「功能 - 配色主题」中一键切换“系统经典暗色”与“iOS 液态玻璃”全局视觉风格，带来轻透灵动的通透质感。
+- **支持液态玻璃透光度平滑微调**：提供 15%~80% 透光度调节滑块，自适应不同背景与复杂风景壁纸，确保文字清晰易读。
+- **精炼雅致渐变背景预设**：精选并提供 **典雅白（默认）**、**泡泡蓝**、**玫瑰金** 三款高阶清透背景，搭配 macOS 官方 4K 精选壁纸与自定义图片上传。
+- **统一按键渐变视觉语言**：新增待办/待阅、开始专注、保存复盘、数据备份与导入、保存配置等核心操作按键统一升级为雅致薄荷蓝绿渐变（`linear-gradient(60deg, #96deda 0%, #50c9c3 100%)`）；下班打卡按键升级为晚霞渐变。
+
+**🖥️ 模块与弹窗轻透质感优化**：
+- **全屏专注沉浸模式**：倒计时升级为柔和丁香紫粉渐变，退出专注按钮换用通透白冰晶玻璃并优化文字对比度（深板岩灰高反差）。
+- **全局弹窗浅色玻璃重塑**：
+  - **下班打卡与交接**、**课程表排课** 弹窗统一重构为高阶白玻璃质感，事项条目清晰易读，待办支持紧凑优先级标签（P0/P1/P2）；
+  - **FoFo AI 配置** 面板重塑为浅色玻璃，内置 Gemini 免费额度引导及便捷配置交互；
+  - **本周工作复盘**、**数据备份与管理**、**配色主题精选壁纸** 等消息卡片与输入控件全面完成浅色玻璃适配。
+- **日历与日程节点**：优化休假/补班/加班角标展示，文字去粗更清晰；调整当日节点显示，视觉更干净素雅。
+- **个性卡片与桌宠**：默认头像采用双色渐变微质感设计，AI 桌宠形象右下角徽标优化为“AI助理”。
+
+**⚡ 交互体验与性能优化**：
+- **版面布局微调**：移除各板块多余 Emoji 装饰，优化今日待阅操作按钮排布，保持界面极简干净。
+- **AI 助理会话优化**：修复侧边栏上下文压缩状态提示的偶发展示异常，提升长会话交互体验。
+
+---
+
 ### [v2.2.0] - 2026-09-23
 
 #### 💡 老用户平滑升级指引 (v2.1.0 / 旧版升至 v2.2.0)
 - **桌面版快捷升级**：退出当前程序，下载 v2.2.0 的 `FoFo.exe` 直接覆盖旧版 `FoFo.exe` 即可。`data/workspace.json` 及所有已有日程、待阅、待办、AI 对话记录完全不受影响、无损继承。
 - **数据兼容说明**：v2.2.0 新增的课程独立排课、下班事务交接等均提供增量默认兼容，历史数据载入自动补齐，无任何迁移门槛。
-
-#### 📸 v2.2.0 视觉新特性展示
-
-| ⛶ 全屏沉浸专注模式 | ⏱️ 专注倒计时与任务标语 |
-| :---: | :---: |
-| <img src="readmeimg/v2.2.0/fullscreen-focus-setup.png" width="380" /> | <img src="readmeimg/v2.2.0/fullscreen-focus-view.png" width="380" /> |
-
-| 📖 课程表独立排课配置 | 🗓️ 日程循环课程表提醒 |
-| :---: | :---: |
-| <img src="readmeimg/v2.2.0/course-schedule-modal.png" width="380" /> | <img src="readmeimg/v2.2.0/calendar-course-milestone.png" width="380" /> |
 
 #### 🌟 核心更新详情
 
@@ -82,16 +107,6 @@
 #### 💡 老用户升级指引 (v2.0.2 / 旧版升至 v2.1.0)
 - **桌面版快捷升级**：退出当前程序，下载 v2.1.0 的 `FoFo.exe` 直接覆盖旧版 `FoFo.exe` 即可。`data/workspace.json` 及所有已有日程、待阅、待办、AI 对话记录完全不受影响、无损继承。
 - **数据兼容说明**：v2.1.0 新增的待办优先级、皮肤配置等均提供增量默认兜底，老版本数据载入自动补齐，无任何迁移门槛。
-
-#### 📸 V2.1.0 视觉新特性展示
-
-| 🎨 AI 侧边栏皮肤设置 (微信风格) | 📎 手动勾选添加工作台附件 | ⏰ 番茄钟到期桌宠动态提示 |
-| :---: | :---: | :---: |
-| <img src="readmeimg/v2.1.0/AI侧边栏皮肤设置.png" width="300" /> | <img src="readmeimg/v2.1.0/AI对话功能支持手动添加工作台状态附件.png" width="280" /> | <img src="readmeimg/v2.1.0/番茄钟定时结束桌宠提示.png" width="260" /> |
-
-| 📖 今日待阅同步新建工作待办 | ⏩ 今日待办一键延期至次日 |
-| :---: | :---: |
-| <img src="readmeimg/v2.1.0/今日待阅支持同步新建工作待办.png" width="400" /> | <img src="readmeimg/v2.1.0/今日待办支持一键延期次日.png" width="400" /> |
 
 #### 🌟 核心更新详情
 
@@ -152,16 +167,6 @@
 ### [v2.0.0] - 2026-09-20
 
 🎉 **FoFo V2.0.0 重大版本里程碑发布！** 引入 AI 智能工作流与独立桌面可执行程序，全面进化为本地优先的智能生产力中枢。
-
-#### 📸 V2.0.0 视觉新特性展示
-
-| 🤖 AI 会话抽屉 | 🐱 玲娜贝儿 AI 桌面伴侣 | ⚙️ 双通道 AI 模型配置 |
-| :---: | :---: | :---: |
-| <img src="readmeimg/v2.0.0/AI会话抽屉.png" width="300" /> | <img src="readmeimg/v2.0.0/AI助理.png" width="220" /> | <img src="readmeimg/v2.0.0/AI配置.png" width="250" /> |
-
-| 🎨 系统官方精选壁纸与 5 色 iOS 经典方案 | 🚀 根目录单文件绿色桌面版 (`FoFo.exe`) |
-| :---: | :---: |
-| <img src="readmeimg/v2.0.0/配色主题与个性化背景.png" width="400" /> | <img src="readmeimg/v2.0.0/可执行程序FoFo.png" width="400" /> |
 
 #### 🌟 核心新特性
 
@@ -301,7 +306,7 @@ FoFo/
 │
 ├── assets/               # 静态资源与桌宠模型图
 ├── osimg/                # 系统内置官方高清壁纸 (macOS Ventura, Mojave, Sonoma)
-├── readmeimg/            # README 功能展示图与特性视觉图
+├── readmeimg/            # 产品界面展示图 (本地保留)
 ├── css/
 │   └── style.css         # 毛玻璃、iOS 5色渐变、热力图、Toast 浮窗样式
 ├── js/

@@ -24,6 +24,9 @@ FoFo.exe
 Thumbs.db
 desktop.ini
 
+# Product screenshots & media (Keep local only)
+readmeimg/
+
 # IDE & Editor
 .vscode/
 .idea/
