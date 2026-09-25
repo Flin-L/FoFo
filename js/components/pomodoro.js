@@ -6,7 +6,7 @@ class PomodoroTimer {
     this.onModeChange = options.onModeChange || (() => {});
     
     this.modes = {
-      focus: { name: '专注', duration: 25 * 60, tag: '🍅' },
+      focus: { name: '专注', duration: 25 * 60, tag: '🎓' },
       shortBreak: { name: '短休', duration: 5 * 60, tag: '☕' },
       longBreak: { name: '长休', duration: 15 * 60, tag: '🌴' }
     };

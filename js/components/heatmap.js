@@ -72,7 +72,7 @@ class ActivityHeatmap {
         const t = cell.dataset.tasks;
         const p = cell.dataset.pomodoros;
         const d = cell.dataset.date;
-        this.tooltip.innerHTML = `<strong>${d}</strong><br/>完成待办: ${t} 个 · 专注番茄: ${p} 🍅`;
+        this.tooltip.innerHTML = `<strong>${d}</strong><br/>完成待办: ${t} 个 · 专注次数: ${p} 🎓`;
         this.tooltip.style.display = 'block';
         this.positionTooltip(e);
       });

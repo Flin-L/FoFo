@@ -59,7 +59,7 @@ class MarkdownExporter {
 
     md.push(`## 📊 三、专注与产出统计 (Productivity Metrics)`);
     md.push(`- **累计完成任务数**：${totalTasksCompleted} 个`);
-    md.push(`- **累计专注番茄钟**：${totalPomodoros} 🍅 (~ ${(totalPomodoros * 25 / 60).toFixed(1)} 小时)`);
+    md.push(`- **累计专注番茄钟**：${totalPomodoros} 🎓 (~ ${(totalPomodoros * 25 / 60).toFixed(1)} 小时)`);
     md.push(`- **累计健康饮水量**：${(totalWaterMl / 1000).toFixed(1)} L`);
     md.push(`- **活跃工作天数**：${dailyKeys.length} 天\n`);
 
@@ -97,7 +97,7 @@ class MarkdownExporter {
           md.push(`\n**任务清单**：`);
           day.tasks.forEach(t => {
             const check = t.done ? '[x]' : '[ ]';
-            const pomo = t.pomodoros ? ` 🍅x${t.pomodoros}` : '';
+            const pomo = t.pomodoros ? ` 🎓x${t.pomodoros}` : '';
             const prio = t.priority ? ` \`[${t.priority}]\`` : '';
             md.push(`- ${check}${prio} ${t.text}${pomo}`);
           });

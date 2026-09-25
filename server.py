@@ -5,9 +5,110 @@ import json
 import webbrowser
 import threading
 import sys
+import re
+import time
 import urllib.error
 import urllib.request
 from urllib.parse import parse_qs, urlparse, unquote
+
+APP_VERSION = "2.3.1"
+_UPDATE_CACHE = {
+    "timestamp": 0,
+    "data": None
+}
+
+def parse_semver_tuple(v):
+    if not v:
+        return (0, 0, 0)
+    cleaned = str(v).strip().lstrip("vV")
+    parts = []
+    for seg in cleaned.split("."):
+        m = re.match(r"^\d+", seg)
+        parts.append(int(m.group()) if m else 0)
+    while len(parts) < 3:
+        parts.append(0)
+    return tuple(parts[:3])
+
+def fetch_latest_release(force=False):
+    global _UPDATE_CACHE
+    now = time.time()
+    if not force and _UPDATE_CACHE["data"] and (now - _UPDATE_CACHE["timestamp"] < 3600):
+        return _UPDATE_CACHE["data"]
+
+    headers = {
+        "User-Agent": f"FoFo-App/{APP_VERSION}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+    release_data = None
+    # 1. Primary: Query GitHub API
+    try:
+        req = urllib.request.Request("https://api.github.com/repos/Flin-L/FoFo/releases/latest", headers=headers)
+        with urllib.request.urlopen(req, timeout=4) as resp:
+            if resp.status == 200:
+                release_data = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        pass
+
+    # 2. Fallback: Query jsdelivr CDN for raw version.json
+    if not release_data:
+        try:
+            cdn_url = "https://fastly.jsdelivr.net/gh/Flin-L/FoFo@main/version.json"
+            req2 = urllib.request.Request(cdn_url, headers=headers)
+            with urllib.request.urlopen(req2, timeout=4) as resp2:
+                if resp2.status == 200:
+                    vjson = json.loads(resp2.read().decode("utf-8"))
+                    release_data = {
+                        "tag_name": vjson.get("latestVersion", ""),
+                        "name": vjson.get("title", ""),
+                        "body": vjson.get("releaseNotes", ""),
+                        "html_url": vjson.get("releaseUrl", "https://github.com/Flin-L/FoFo/releases/latest"),
+                        "published_at": vjson.get("releaseDate", ""),
+                        "assets": [
+                            {"name": "FoFo.exe", "browser_download_url": vjson.get("downloadUrl", "")}
+                        ]
+                    }
+        except Exception:
+            pass
+
+    if not release_data:
+        res = {
+            "status": "error",
+            "checked": False,
+            "hasUpdate": False,
+            "currentVersion": APP_VERSION,
+            "latestVersion": APP_VERSION,
+            "message": "暂未能连接至更新服务，请检查网络后重试"
+        }
+        return res
+
+    tag = release_data.get("tag_name", "").strip()
+    remote_ver = tag.lstrip("vV")
+    has_update = parse_semver_tuple(remote_ver) > parse_semver_tuple(APP_VERSION)
+
+    download_url = release_data.get("html_url", "https://github.com/Flin-L/FoFo/releases/latest")
+    for asset in release_data.get("assets", []):
+        if asset.get("name", "").lower().endswith(".exe"):
+            download_url = asset.get("browser_download_url", download_url)
+            break
+
+    res = {
+        "status": "ok",
+        "checked": True,
+        "hasUpdate": has_update,
+        "currentVersion": APP_VERSION,
+        "latestVersion": remote_ver if remote_ver else APP_VERSION,
+        "tag": tag if tag.startswith("v") else (f"v{tag}" if tag else f"v{APP_VERSION}"),
+        "title": release_data.get("name") or f"FoFo {tag}",
+        "notes": release_data.get("body", ""),
+        "releaseUrl": release_data.get("html_url", "https://github.com/Flin-L/FoFo/releases/latest"),
+        "downloadUrl": download_url,
+        "publishedAt": release_data.get("published_at", "")
+    }
+
+    _UPDATE_CACHE["timestamp"] = now
+    _UPDATE_CACHE["data"] = res
+    return res
 
 # PyInstaller noconsole support: redirect stdout and stderr to avoid NoneType.write crashes
 if sys.stdout is None:
@@ -79,9 +180,16 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
             self.send_json_response({
                 "status": "ok",
                 "app": "FoFo",
-                "version": "2.2.0",
+                "version": APP_VERSION,
                 "dir": os.path.abspath(BASE_DIR)
             })
+            return
+
+        if parsed.path == "/api/check_update":
+            query_params = parse_qs(parsed.query)
+            force = query_params.get("force", ["0"])[0] in ("1", "true", "True")
+            update_info = fetch_latest_release(force=force)
+            self.send_json_response(update_info)
             return
 
         if parsed.path == "/api/ai/sessions":

@@ -1018,18 +1018,107 @@ body.style-ios-glass #hero-banner-card .border-white\/15 {
   border-top-color: rgba(148, 163, 184, 0.35) !important;
 }
 
-body.style-ios-glass #hero-slogan-text {
-  color: #1e293b !important;
+/* Avatar Container in iOS Liquid Glass: Remove Green Ring, Keep Soft Shadow */
+body.style-ios-glass .user-avatar-container {
+  border: none !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16) !important;
+}
+body.style-ios-glass .user-avatar-container:hover {
+  border: none !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22) !important;
+  transform: scale(1.05);
+}
+
+/* Hero Mood Slogan Text Color Tiers (Dark text for light bg / Light text for dark bg) */
+#hero-slogan-text.slogan-dark-text,
+#modal-banner-preview-text.slogan-dark-text,
+body.style-ios-glass #hero-slogan-text.slogan-dark-text,
+body.style-ios-glass #modal-banner-preview-text.slogan-dark-text {
+  color: #0f172a !important;
   text-shadow: none !important;
   filter: none !important;
 }
 
-body.style-ios-glass #app-title-text {
+#hero-slogan-text.slogan-light-text,
+#modal-banner-preview-text.slogan-light-text,
+body.style-ios-glass #hero-slogan-text.slogan-light-text,
+body.style-ios-glass #modal-banner-preview-text.slogan-light-text {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75)) !important;
+}
+
+/* App Title Custom Gradients & Solid Colors */
+.app-title-gradient,
+#app-title-text.app-title-gradient,
+#modal-banner-preview-title.app-title-gradient,
+body.style-ios-glass #app-title-text.app-title-gradient,
+body.style-ios-glass #modal-banner-preview-title.app-title-gradient {
+  background-image: var(--app-title-gradient) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: none !important;
+  filter: none !important;
+  display: inline-block;
+}
+
+.app-title-solid,
+#app-title-text.app-title-solid,
+#modal-banner-preview-title.app-title-solid,
+body.style-ios-glass #app-title-text.app-title-solid,
+body.style-ios-glass #modal-banner-preview-title.app-title-solid {
+  background: none !important;
+  background-clip: border-box !important;
+  -webkit-background-clip: border-box !important;
+  color: var(--app-title-solid) !important;
+  -webkit-text-fill-color: var(--app-title-solid) !important;
+  text-shadow: none !important;
+  filter: none !important;
+  display: inline-block;
+}
+
+body.style-ios-glass #app-title-text:not(.app-title-gradient):not(.app-title-solid) {
   color: #0f172a !important;
 }
 
-body.style-ios-glass #header-date-sub {
-  color: #334155 !important;
+/* Header Date Sub Text Color Tiers (Dark / Gray / Light) */
+#header-date-sub.hero-date-dark,
+#modal-banner-settings #modal-banner-preview-date.hero-date-dark,
+#modal-banner-preview-date.hero-date-dark,
+body.style-ios-glass #header-date-sub.hero-date-dark,
+body.style-ios-glass #modal-banner-settings #modal-banner-preview-date.hero-date-dark,
+body.style-ios-glass #modal-banner-preview-date.hero-date-dark {
+  color: #0f172a !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+#header-date-sub.hero-date-gray,
+#modal-banner-settings #modal-banner-preview-date.hero-date-gray,
+#modal-banner-preview-date.hero-date-gray,
+body.style-ios-glass #header-date-sub.hero-date-gray,
+body.style-ios-glass #modal-banner-settings #modal-banner-preview-date.hero-date-gray,
+body.style-ios-glass #modal-banner-preview-date.hero-date-gray {
+  color: #94a3b8 !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+#header-date-sub.hero-date-light,
+#modal-banner-settings #modal-banner-preview-date.hero-date-light,
+#modal-banner-preview-date.hero-date-light,
+body.style-ios-glass #header-date-sub.hero-date-light,
+body.style-ios-glass #modal-banner-settings #modal-banner-preview-date.hero-date-light,
+body.style-ios-glass #modal-banner-preview-date.hero-date-light {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75)) !important;
+}
+
+body.style-ios-glass #header-date-sub:not(.hero-date-dark):not(.hero-date-gray):not(.hero-date-light) {
+  color: #64748b !important;
 }
 
 body.style-ios-glass #hero-banner-card .bg-slate-950\/80 {
@@ -1039,23 +1128,32 @@ body.style-ios-glass #hero-banner-card .bg-slate-950\/80 {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
 }
 
-/* Hero Banner Version Badge */
+/* Header Actions Version Badge */
 #app-version-badge {
-  background: rgba(15, 23, 42, 0.65) !important;
+  background: rgba(15, 23, 42, 0.7) !important;
   border: 1px solid rgba(148, 163, 184, 0.3) !important;
   color: #94a3b8 !important;
-  font-weight: 400 !important;
+  font-weight: 500 !important;
+  font-size: 10px !important;
+  letter-spacing: 0.02em !important;
+  border-radius: 9999px !important;
+  padding: 1.5px 7px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
 }
 
 body.style-ios-glass #app-version-badge {
-  background: rgba(255, 255, 255, 0.45) !important;
+  background: rgba(255, 255, 255, 0.55) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
   color: #64748b !important;
   -webkit-text-fill-color: #64748b !important;
-  font-weight: 400 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  font-weight: 500 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
 }
 
 /* 4. High-Contrast Legible Slate Typography */
@@ -2150,12 +2248,14 @@ body.style-ios-glass #btn-reset-ai-avatar:hover {
 #btn-save-weekly-summary,
 #btn-backup-json,
 #btn-restore-json-label,
+#btn-save-banner,
 body.style-ios-glass #btn-upload-ai-avatar,
 body.style-ios-glass #btn-save-ai-skin,
 body.style-ios-glass #btn-ai-save-config,
 body.style-ios-glass #btn-save-weekly-summary,
 body.style-ios-glass #btn-backup-json,
-body.style-ios-glass #btn-restore-json-label {
+body.style-ios-glass #btn-restore-json-label,
+body.style-ios-glass #btn-save-banner {
   background: linear-gradient(60deg, #96deda 0%, #50c9c3 100%) !important;
   color: #0f172a !important;
   border: none !important;
@@ -2169,12 +2269,14 @@ body.style-ios-glass #btn-restore-json-label {
 #btn-save-weekly-summary:hover,
 #btn-backup-json:hover,
 #btn-restore-json-label:hover,
+#btn-save-banner:hover,
 body.style-ios-glass #btn-upload-ai-avatar:hover,
 body.style-ios-glass #btn-save-ai-skin:hover,
 body.style-ios-glass #btn-ai-save-config:hover,
 body.style-ios-glass #btn-save-weekly-summary:hover,
 body.style-ios-glass #btn-backup-json:hover,
-body.style-ios-glass #btn-restore-json-label:hover {
+body.style-ios-glass #btn-restore-json-label:hover,
+body.style-ios-glass #btn-save-banner:hover {
   filter: brightness(1.06) !important;
   transform: translateY(-1px) !important;
 }
@@ -2261,7 +2363,8 @@ body.style-ios-glass #btn-ai-detect-models {
 /* Modals Light Frosted Glass in iOS Liquid Glass Mode */
 body.style-ios-glass #modal-weekly-review .fofo-card,
 body.style-ios-glass #modal-data-settings .fofo-card,
-body.style-ios-glass #modal-theme-settings .fofo-card {
+body.style-ios-glass #modal-theme-settings .fofo-card,
+body.style-ios-glass #modal-banner-settings .fofo-card {
   background: rgba(255, 255, 255, 0.94) !important;
   backdrop-filter: blur(36px) saturate(200%) !important;
   -webkit-backdrop-filter: blur(36px) saturate(200%) !important;
@@ -2273,44 +2376,54 @@ body.style-ios-glass #modal-theme-settings .fofo-card {
 body.style-ios-glass #modal-weekly-review h3,
 body.style-ios-glass #modal-data-settings h3,
 body.style-ios-glass #modal-theme-settings h3,
+body.style-ios-glass #modal-banner-settings h3,
 body.style-ios-glass #modal-weekly-review label,
 body.style-ios-glass #modal-data-settings label,
 body.style-ios-glass #modal-theme-settings label,
+body.style-ios-glass #modal-banner-settings label,
 body.style-ios-glass #modal-weekly-review .text-slate-100,
 body.style-ios-glass #modal-data-settings .text-slate-100,
 body.style-ios-glass #modal-theme-settings .text-slate-100,
+body.style-ios-glass #modal-banner-settings .text-slate-100,
 body.style-ios-glass #modal-weekly-review .text-slate-200,
 body.style-ios-glass #modal-data-settings .text-slate-200,
 body.style-ios-glass #modal-theme-settings .text-slate-200,
+body.style-ios-glass #modal-banner-settings .text-slate-200,
 body.style-ios-glass #modal-weekly-review .text-slate-300,
 body.style-ios-glass #modal-data-settings .text-slate-300,
-body.style-ios-glass #modal-theme-settings .text-slate-300 {
+body.style-ios-glass #modal-theme-settings .text-slate-300,
+body.style-ios-glass #modal-banner-settings .text-slate-300 {
   color: #0f172a !important;
 }
 
 body.style-ios-glass #modal-weekly-review .text-slate-400,
 body.style-ios-glass #modal-data-settings .text-slate-400,
 body.style-ios-glass #modal-theme-settings .text-slate-400,
+body.style-ios-glass #modal-banner-settings .text-slate-400,
 body.style-ios-glass #modal-weekly-review .text-slate-500,
 body.style-ios-glass #modal-data-settings .text-slate-500,
-body.style-ios-glass #modal-theme-settings .text-slate-500 {
+body.style-ios-glass #modal-theme-settings .text-slate-500,
+body.style-ios-glass #modal-banner-settings .text-slate-500 {
   color: #64748b !important;
 }
 
 body.style-ios-glass #modal-weekly-close,
 body.style-ios-glass #modal-data-close,
-body.style-ios-glass #modal-theme-close {
+body.style-ios-glass #modal-theme-close,
+body.style-ios-glass #modal-banner-close {
   color: #94a3b8 !important;
 }
 body.style-ios-glass #modal-weekly-close:hover,
 body.style-ios-glass #modal-data-close:hover,
-body.style-ios-glass #modal-theme-close:hover {
+body.style-ios-glass #modal-theme-close:hover,
+body.style-ios-glass #modal-banner-close:hover {
   color: #0f172a !important;
 }
 
 body.style-ios-glass #modal-weekly-review .border-slate-800,
 body.style-ios-glass #modal-data-settings .border-slate-800,
-body.style-ios-glass #modal-theme-settings .border-slate-800 {
+body.style-ios-glass #modal-theme-settings .border-slate-800,
+body.style-ios-glass #modal-banner-settings .border-slate-800 {
   border-color: rgba(226, 232, 240, 0.8) !important;
 }
 
@@ -2359,16 +2472,207 @@ body.style-ios-glass .system-wallpaper-btn span.text-slate-500 {
 
 /* Custom Background & Avatar Buttons in Theme Settings Modal */
 body.style-ios-glass #btn-choose-bg-image,
-body.style-ios-glass #btn-upload-avatar-modal {
+body.style-ios-glass #btn-upload-avatar-modal,
+body.style-ios-glass #btn-upload-banner-img {
   background: rgba(240, 245, 252, 0.85) !important;
   border: 1px solid rgba(255, 255, 255, 0.9) !important;
   color: #1e293b !important;
 }
 body.style-ios-glass #btn-choose-bg-image:hover,
-body.style-ios-glass #btn-upload-avatar-modal:hover {
+body.style-ios-glass #btn-upload-avatar-modal:hover,
+body.style-ios-glass #btn-upload-banner-img:hover {
   background: #ffffff !important;
 }
 
+/* Banner Settings Modal Light Glass Controls */
+body.style-ios-glass #input-banner-slogan {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(203, 213, 225, 0.85) !important;
+  color: #0f172a !important;
+}
+body.style-ios-glass #input-banner-slogan::placeholder {
+  color: #94a3b8 !important;
+}
+body.style-ios-glass #btn-slogan-color-dark,
+body.style-ios-glass #btn-slogan-color-light {
+  background: rgba(240, 245, 252, 0.85) !important;
+  border-color: rgba(203, 213, 225, 0.85) !important;
+  color: #334155 !important;
+}
+body.style-ios-glass #btn-slogan-color-dark.active,
+body.style-ios-glass #btn-slogan-color-light.active {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: #50c9c3 !important;
+  color: #0f172a !important;
+  box-shadow: 0 0 0 2px rgba(80, 201, 195, 0.3) !important;
+}
 
+/* App Title & Date Controls in Banner Settings Modal */
+body.style-ios-glass #input-modal-app-title {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(203, 213, 225, 0.85) !important;
+  color: #0f172a !important;
+}
+body.style-ios-glass #input-modal-app-title::placeholder {
+  color: #94a3b8 !important;
+}
 
+body.style-ios-glass #btn-date-color-dark,
+body.style-ios-glass #btn-date-color-gray,
+body.style-ios-glass #btn-date-color-light {
+  background: rgba(240, 245, 252, 0.85) !important;
+  border-color: rgba(203, 213, 225, 0.85) !important;
+  color: #334155 !important;
+}
+body.style-ios-glass #btn-date-color-dark.active,
+body.style-ios-glass #btn-date-color-gray.active,
+body.style-ios-glass #btn-date-color-light.active {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: #50c9c3 !important;
+  color: #0f172a !important;
+  box-shadow: 0 0 0 2px rgba(80, 201, 195, 0.3) !important;
+}
 
+.app-title-color-preset-btn.active-preset {
+  outline: 2px solid #50c9c3 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 8px rgba(80, 201, 195, 0.6) !important;
+  transform: scale(1.08) !important;
+  z-index: 2;
+}
+
+body.style-ios-glass .app-title-color-preset-btn {
+  border-color: rgba(203, 213, 225, 0.9) !important;
+}
+body.style-ios-glass .app-title-color-preset-btn.active-preset {
+  outline: 2px solid #0284c7 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.45) !important;
+  transform: scale(1.08) !important;
+  z-index: 2;
+}
+
+body.style-ios-glass #btn-reset-app-title-color {
+  color: #64748b !important;
+}
+body.style-ios-glass #btn-reset-app-title-color:hover {
+  color: #0284c7 !important;
+}
+
+/* Date segmented buttons unified circle dots */
+#btn-date-color-dark span.rounded-full,
+#btn-date-color-gray span.rounded-full,
+#btn-date-color-light span.rounded-full,
+body.style-ios-glass #btn-date-color-dark span.rounded-full,
+body.style-ios-glass #btn-date-color-gray span.rounded-full,
+body.style-ios-glass #btn-date-color-light span.rounded-full {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+  border: 1.5px solid rgba(148, 163, 184, 0.85) !important;
+}
+
+#btn-date-color-dark.active span.rounded-full,
+#btn-date-color-gray.active span.rounded-full,
+#btn-date-color-light.active span.rounded-full,
+body.style-ios-glass #btn-date-color-dark.active span.rounded-full,
+body.style-ios-glass #btn-date-color-gray.active span.rounded-full,
+body.style-ios-glass #btn-date-color-light.active span.rounded-full {
+  background-color: #50c9c3 !important;
+  border-color: #50c9c3 !important;
+  box-shadow: 0 0 6px rgba(80, 201, 195, 0.7) !important;
+}
+
+/* Ensure 091540 preset text is pure white */
+.app-title-color-preset-btn[data-color="#091540"],
+body.style-ios-glass .app-title-color-preset-btn[data-color="#091540"],
+#modal-banner-settings .app-title-color-preset-btn[data-color="#091540"],
+body.style-ios-glass #modal-banner-settings .app-title-color-preset-btn[data-color="#091540"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Version Update Notification Styles */
+#app-version-badge {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+#app-version-badge.has-update {
+  background: rgba(245, 158, 11, 0.18) !important;
+  border-color: rgba(245, 158, 11, 0.55) !important;
+  color: #fbbf24 !important;
+  cursor: pointer !important;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.3) !important;
+}
+
+#app-version-badge.has-update::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 6.5px;
+  height: 6.5px;
+  background-color: #ef4444;
+  border: 1px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #ef4444;
+  animation: pulse-update-dot 2s infinite ease-in-out;
+}
+
+body.style-ios-glass #app-version-badge.has-update {
+  background: rgba(254, 243, 199, 0.75) !important;
+  border-color: rgba(245, 158, 11, 0.6) !important;
+  color: #b45309 !important;
+  -webkit-text-fill-color: #b45309 !important;
+  box-shadow: 0 1px 6px rgba(245, 158, 11, 0.2) !important;
+}
+
+@keyframes pulse-update-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.85;
+  }
+}
+
+/* Modal App Update Styles */
+body.style-ios-glass #modal-app-update .fofo-card {
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(36px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  color: #0f172a !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.16) !important;
+}
+
+body.style-ios-glass #modal-app-update #update-version-strip {
+  background: rgba(248, 250, 252, 0.8) !important;
+  border-color: rgba(226, 232, 240, 0.9) !important;
+}
+
+body.style-ios-glass #modal-app-update #update-release-notes {
+  background: rgba(248, 250, 252, 0.85) !important;
+  border-color: rgba(226, 232, 240, 0.9) !important;
+  color: #334155 !important;
+}
+
+body.style-ios-glass #btn-open-release-page {
+  background: linear-gradient(60deg, #96deda 0%, #50c9c3 100%) !important;
+  color: #0f172a !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(80, 201, 195, 0.35) !important;
+}
+
+body.style-ios-glass #btn-copy-download-link {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #334155 !important;
+  border-color: rgba(203, 213, 225, 0.8) !important;
+}
+
+body.style-ios-glass #btn-header-update-item {
+  background: rgba(254, 243, 199, 0.75) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  color: #b45309 !important;
+}

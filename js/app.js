@@ -54,7 +54,7 @@
     const toast = document.createElement('div');
     toast.className = 'toast-item flex items-center justify-between space-x-3 text-xs';
     
-    let icon = '🍅';
+    let icon = '🎓';
     if (type === 'info') icon = 'ℹ️';
     if (type === 'warn') icon = '⚠️';
     if (type === 'water') icon = '🥤';
@@ -172,8 +172,11 @@
       userAvatar: '',
       customBgImage: '',
       appTitle: 'FoFo 工作台',
+      appTitleColor: '',
       heroBannerImage: '',
       heroBannerSlogan: '请添加个性心情',
+      heroBannerTextColor: 'dark',
+      heroBannerDateColor: 'gray',
       monthlyGoals: [],
       weeklyGoals: [],
       bulletin: [],
@@ -462,8 +465,88 @@
     const bgUrl = state.heroBannerImage || '';
     const bgImage = bgUrl ? `url("${bgUrl}")` : 'none';
 
-    if (sloganText) sloganText.textContent = slogan;
-    if (modalPreviewText) modalPreviewText.textContent = slogan;
+    const isIos = state.uiStyle === 'ios-glass';
+    // 档位决策：若用户指定了 'dark' 或 'light'，以用户设定为准；未设定时，若为 iOS 浅色默认背景使用黑色字 ('dark')，否则使用白色字 ('light')
+    const textMode = state.heroBannerTextColor || (isIos && !state.heroBannerImage ? 'dark' : 'light');
+
+    if (sloganText) {
+      sloganText.textContent = slogan;
+      if (textMode === 'dark') {
+        sloganText.classList.add('slogan-dark-text');
+        sloganText.classList.remove('slogan-light-text');
+      } else {
+        sloganText.classList.add('slogan-light-text');
+        sloganText.classList.remove('slogan-dark-text');
+      }
+    }
+    if (modalPreviewText) {
+      modalPreviewText.textContent = slogan;
+      if (textMode === 'dark') {
+        modalPreviewText.classList.add('slogan-dark-text');
+        modalPreviewText.classList.remove('slogan-light-text');
+      } else {
+        modalPreviewText.classList.add('slogan-light-text');
+        modalPreviewText.classList.remove('slogan-dark-text');
+      }
+    }
+
+    // 弹窗内的 2 档切换按钮高亮状态
+    const btnDark = document.getElementById('btn-slogan-color-dark');
+    const btnLight = document.getElementById('btn-slogan-color-light');
+    if (btnDark && btnLight) {
+      if (textMode === 'dark') {
+        btnDark.classList.add('border-emerald-500', 'bg-slate-700', 'text-white', 'shadow');
+        btnDark.classList.remove('border-slate-700', 'bg-slate-800', 'text-slate-400');
+        btnLight.classList.remove('border-emerald-500', 'bg-slate-700', 'text-white', 'shadow');
+        btnLight.classList.add('border-slate-700', 'bg-slate-800', 'text-slate-400');
+      } else {
+        btnLight.classList.add('border-emerald-500', 'bg-slate-700', 'text-white', 'shadow');
+        btnLight.classList.remove('border-slate-700', 'bg-slate-800', 'text-slate-400');
+        btnDark.classList.remove('border-emerald-500', 'bg-slate-700', 'text-white', 'shadow');
+        btnDark.classList.add('border-slate-700', 'bg-slate-800', 'text-slate-400');
+      }
+    }
+
+    // 日期字色档位决策：'dark' | 'gray' | 'light'
+    const dateMode = state.heroBannerDateColor || (isIos && !state.heroBannerImage ? 'dark' : (isIos ? 'gray' : 'light'));
+    const headerDateSub = document.getElementById('header-date-sub');
+    const modalPreviewDate = document.getElementById('modal-banner-preview-date');
+    const applyDateStyle = (el, mode) => {
+      if (!el) return;
+      el.classList.remove('hero-date-dark', 'hero-date-gray', 'hero-date-light');
+      if (mode === 'dark') {
+        el.classList.add('hero-date-dark');
+        el.style.setProperty('color', '#0f172a', 'important');
+        el.style.setProperty('text-shadow', 'none', 'important');
+        el.style.setProperty('filter', 'none', 'important');
+      } else if (mode === 'light') {
+        el.classList.add('hero-date-light');
+        el.style.setProperty('color', '#ffffff', 'important');
+        el.style.setProperty('text-shadow', '0 1px 3px rgba(0, 0, 0, 0.9)', 'important');
+        el.style.setProperty('filter', 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75))', 'important');
+      } else {
+        el.classList.add('hero-date-gray');
+        el.style.setProperty('color', el === modalPreviewDate ? '#94a3b8' : '#64748b', 'important');
+        el.style.setProperty('text-shadow', 'none', 'important');
+        el.style.setProperty('filter', 'none', 'important');
+      }
+    };
+    applyDateStyle(headerDateSub, dateMode);
+    applyDateStyle(modalPreviewDate, dateMode);
+
+    // 弹窗内日期 3 档按钮状态
+    const btnDateDark = document.getElementById('btn-date-color-dark');
+    const btnDateGray = document.getElementById('btn-date-color-gray');
+    const btnDateLight = document.getElementById('btn-date-color-light');
+    if (btnDateDark && btnDateGray && btnDateLight) {
+      [btnDateDark, btnDateGray, btnDateLight].forEach(b => {
+        b.classList.remove('border-emerald-500', 'bg-slate-700', 'text-white', 'shadow', 'active');
+        b.classList.add('border-slate-700', 'bg-slate-800', 'text-slate-400');
+      });
+      const activeDateBtn = dateMode === 'dark' ? btnDateDark : (dateMode === 'light' ? btnDateLight : btnDateGray);
+      activeDateBtn.classList.add('border-emerald-500', 'bg-slate-700', 'text-white', 'shadow', 'active');
+      activeDateBtn.classList.remove('border-slate-700', 'bg-slate-800', 'text-slate-400');
+    }
 
     if (bannerImg) {
       bannerImg.style.backgroundImage = bgImage;
@@ -481,11 +564,43 @@
     }
   }
 
+  function applyAppTitleColor(el, colorVal) {
+    if (!el) return;
+    if (colorVal && colorVal.startsWith('linear-gradient')) {
+      el.classList.remove('app-title-solid');
+      el.classList.add('app-title-gradient');
+      el.style.setProperty('--app-title-gradient', colorVal);
+      el.style.backgroundImage = colorVal;
+      el.style.color = 'transparent';
+      el.style.webkitTextFillColor = 'transparent';
+    } else if (colorVal && colorVal.startsWith('#')) {
+      el.classList.remove('app-title-gradient');
+      el.classList.add('app-title-solid');
+      el.style.setProperty('--app-title-solid', colorVal);
+      el.style.backgroundImage = 'none';
+      el.style.color = colorVal;
+      el.style.webkitTextFillColor = colorVal;
+    } else {
+      el.classList.remove('app-title-gradient', 'app-title-solid');
+      el.style.removeProperty('--app-title-gradient');
+      el.style.removeProperty('--app-title-solid');
+      el.style.backgroundImage = '';
+      el.style.color = '';
+      el.style.webkitTextFillColor = '';
+    }
+  }
+
   function applyAppTitle() {
     const title = (state.appTitle && state.appTitle.trim()) ? state.appTitle.trim() : 'FoFo 工作台';
     const titleEl = document.getElementById('app-title-text');
     if (titleEl) {
       titleEl.textContent = title;
+      applyAppTitleColor(titleEl, state.appTitleColor);
+    }
+    const modalPreviewTitle = document.getElementById('modal-banner-preview-title');
+    if (modalPreviewTitle) {
+      modalPreviewTitle.textContent = title;
+      applyAppTitleColor(modalPreviewTitle, state.appTitleColor);
     }
     // Synchronize to browser webpage title tab
     document.title = `${title} - Personal WorkStation`;
@@ -502,8 +617,11 @@
     'userAvatar',
     'customBgImage',
     'appTitle',
+    'appTitleColor',
     'heroBannerImage',
-    'heroBannerSlogan'
+    'heroBannerSlogan',
+    'heroBannerTextColor',
+    'heroBannerDateColor'
   ];
   const PERSONALIZATION_DEFAULTS = {
     theme: 'midnight',
@@ -513,7 +631,10 @@
     bgOpacity: 82,
     bgBlur: 6,
     appTitle: 'FoFo 工作台',
-    heroBannerSlogan: '请添加个性心情'
+    appTitleColor: '',
+    heroBannerSlogan: '请添加个性心情',
+    heroBannerTextColor: 'dark',
+    heroBannerDateColor: 'gray'
   };
 
   function readLocalWorkspaceState() {
@@ -684,6 +805,97 @@
     }
   }
 
+  // --- Version Update Checker ---
+  let latestUpdateInfo = null;
+
+  async function checkAppUpdate(isManual = false) {
+    const versionBadge = document.getElementById('app-version-badge');
+    const menuUpdateItem = document.getElementById('btn-header-update-item');
+    const menuUpdateTag = document.getElementById('header-update-tag');
+
+    const btnManual = document.getElementById('btn-check-update-manual');
+    if (isManual && btnManual) {
+      btnManual.disabled = true;
+      btnManual.innerHTML = '<span>⏳</span><span>检查中...</span>';
+    }
+
+    try {
+      const url = isManual ? '/api/check_update?force=1' : '/api/check_update';
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('API request failed');
+      const data = await resp.json();
+      latestUpdateInfo = data;
+
+      if (data && data.hasUpdate) {
+        if (versionBadge) {
+          versionBadge.classList.add('has-update');
+          versionBadge.title = `发现新版本 ${data.tag || data.latestVersion} (点击查看详情)`;
+        }
+        if (menuUpdateItem) {
+          menuUpdateItem.classList.remove('hidden');
+          menuUpdateItem.classList.add('flex');
+        }
+        if (menuUpdateTag) {
+          menuUpdateTag.textContent = data.tag || data.latestVersion;
+        }
+
+        const ignoredVer = localStorage.getItem('fofo_ignore_update_ver');
+        if (isManual || ignoredVer !== (data.tag || data.latestVersion)) {
+          openAppUpdateModal(data);
+        }
+      } else {
+        if (isManual) {
+          if (data && data.status === 'error') {
+            showToast(data.message || '检查更新失败，请稍后重试', 'warning');
+          } else {
+            showToast(`当前已是最新版本 (${data.currentVersion ? 'v' + data.currentVersion.replace(/^v/, '') : 'v2.3.1'})！`, 'success');
+          }
+        }
+      }
+    } catch (e) {
+      if (isManual) {
+        showToast('无法连接至更新服务，请检查网络连接', 'warning');
+      }
+    } finally {
+      if (isManual && btnManual) {
+        btnManual.disabled = false;
+        btnManual.innerHTML = '<span>🔄</span><span>检查新版本</span>';
+      }
+    }
+  }
+
+  function openAppUpdateModal(data) {
+    if (!data) return;
+    const modal = document.getElementById('modal-app-update');
+    if (!modal) return;
+
+    const curVerEl = document.getElementById('update-current-ver');
+    const latestVerEl = document.getElementById('update-latest-ver');
+    const dateEl = document.getElementById('update-published-date');
+    const notesEl = document.getElementById('update-release-notes');
+    const openPageBtn = document.getElementById('btn-open-release-page');
+
+    if (curVerEl) curVerEl.textContent = data.currentVersion ? `v${data.currentVersion.replace(/^v/, '')}` : 'v2.3.1';
+    if (latestVerEl) latestVerEl.textContent = data.tag || (data.latestVersion ? `v${data.latestVersion.replace(/^v/, '')}` : '新版本');
+    if (dateEl) {
+      const pub = data.publishedAt;
+      dateEl.textContent = pub ? pub.substring(0, 10) : '';
+    }
+    if (notesEl) {
+      notesEl.textContent = data.notes || '暂无详细更新日志说明。';
+    }
+    if (openPageBtn && data.releaseUrl) {
+      openPageBtn.href = data.releaseUrl;
+    }
+
+    modal.classList.remove('hidden');
+  }
+
+  function closeAppUpdateModal() {
+    const modal = document.getElementById('modal-app-update');
+    if (modal) modal.classList.add('hidden');
+  }
+
   // --- UI Renderers ---
 
   function updateHeaderInfo() {
@@ -695,9 +907,14 @@
     const weekday = getWeekdayName(curDate);
 
     // Header date (Larger size)
+    const dateText = `${year}年${month}月 · 第${weekNum}周 · ${weekday}`;
     const headerSub = document.getElementById('header-date-sub');
     if (headerSub) {
-      headerSub.textContent = `${year}年${month}月 · 第${weekNum}周 · ${weekday}`;
+      headerSub.textContent = dateText;
+    }
+    const modalPreviewDate = document.getElementById('modal-banner-preview-date');
+    if (modalPreviewDate) {
+      modalPreviewDate.textContent = dateText;
     }
 
     // Month progress calculation
@@ -1200,9 +1417,9 @@
         
         <div class="flex items-center space-x-2 ml-2">
           <div class="flex items-center space-x-1">
-            ${pomoCount > 0 ? `<span class="text-[11px] text-amber-400 font-mono font-bold" title="已完成 ${pomoCount} 个番茄钟">🍅 x${pomoCount}</span>` : ''}
+            ${pomoCount > 0 ? `<span class="text-[11px] text-amber-400 font-mono font-bold" title="已完成 ${pomoCount} 个专注时段">🎓 x${pomoCount}</span>` : ''}
             <button class="btn-focus px-2 py-0.5 rounded bg-slate-800 hover:bg-emerald-900/60 hover:text-emerald-300 text-slate-400 text-[11px] font-medium transition" title="以此任务开启专注">
-              🍅 专注
+              🎓 专注
             </button>
           </div>
           ${!task.done ? `
@@ -1226,8 +1443,12 @@
       item.querySelector('.btn-focus').onclick = () => {
         pomodoro.setLinkedTask(task);
         pomodoro.start();
-        document.getElementById('pomo-task-tag').textContent = task.text;
-        document.getElementById('pomo-task-tag').className = 'max-w-[130px] truncate text-[11px] text-emerald-400 font-semibold';
+        const tag = document.getElementById('pomo-task-tag');
+        if (tag) {
+          tag.textContent = task.text;
+          tag.title = task.text;
+          tag.className = 'min-w-0 flex-1 max-w-[120px] truncate text-[11px] text-emerald-400 font-semibold cursor-pointer';
+        }
       };
 
       const btnDefer = item.querySelector('.btn-defer');
@@ -4123,19 +4344,158 @@
       });
     }
 
-    // Hero Banner Showcase & Mood Slogan Modal Binding
+    // Hero Banner Showcase, Workspace Title & Mood Slogan Modal Binding
     const modalBanner = document.getElementById('modal-banner-settings');
     const heroCard = document.getElementById('hero-banner-card');
     const inputBannerSlogan = document.getElementById('input-banner-slogan');
+    const inputModalAppTitle = document.getElementById('input-modal-app-title');
     const bannerFileInput = document.getElementById('banner-file-input');
+
+    let tempAppTitleColor = state.appTitleColor || '';
+    let tempDateColor = state.heroBannerDateColor || 'gray';
+    let tempSloganColor = state.heroBannerTextColor || 'dark';
+
+    const updatePresetButtonsHighlight = () => {
+      const presetBtns = modalBanner?.querySelectorAll('.app-title-color-preset-btn') || [];
+      presetBtns.forEach(btn => {
+        if (btn.getAttribute('data-color') === tempAppTitleColor) {
+          btn.classList.add('active-preset');
+        } else {
+          btn.classList.remove('active-preset');
+        }
+      });
+    };
+
+    const updateDateButtonsHighlight = () => {
+      const btnDateDark = document.getElementById('btn-date-color-dark');
+      const btnDateGray = document.getElementById('btn-date-color-gray');
+      const btnDateLight = document.getElementById('btn-date-color-light');
+      if (btnDateDark && btnDateGray && btnDateLight) {
+        [btnDateDark, btnDateGray, btnDateLight].forEach(b => {
+          b.classList.remove('border-emerald-500', 'bg-slate-700', 'text-white', 'shadow', 'active');
+          b.classList.add('border-slate-700', 'bg-slate-800', 'text-slate-400');
+        });
+        const activeBtn = tempDateColor === 'dark' ? btnDateDark : (tempDateColor === 'light' ? btnDateLight : btnDateGray);
+        activeBtn.classList.add('border-emerald-500', 'bg-slate-700', 'text-white', 'shadow', 'active');
+        activeBtn.classList.remove('border-slate-700', 'bg-slate-800', 'text-slate-400');
+      }
+      const modalPreviewDate = document.getElementById('modal-banner-preview-date');
+      if (modalPreviewDate) {
+        modalPreviewDate.classList.remove('hero-date-dark', 'hero-date-gray', 'hero-date-light');
+        if (tempDateColor === 'dark') {
+          modalPreviewDate.classList.add('hero-date-dark');
+          modalPreviewDate.style.setProperty('color', '#0f172a', 'important');
+          modalPreviewDate.style.setProperty('text-shadow', 'none', 'important');
+          modalPreviewDate.style.setProperty('filter', 'none', 'important');
+        } else if (tempDateColor === 'light') {
+          modalPreviewDate.classList.add('hero-date-light');
+          modalPreviewDate.style.setProperty('color', '#ffffff', 'important');
+          modalPreviewDate.style.setProperty('text-shadow', '0 1px 3px rgba(0, 0, 0, 0.9)', 'important');
+          modalPreviewDate.style.setProperty('filter', 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75))', 'important');
+        } else {
+          modalPreviewDate.classList.add('hero-date-gray');
+          modalPreviewDate.style.setProperty('color', '#94a3b8', 'important');
+          modalPreviewDate.style.setProperty('text-shadow', 'none', 'important');
+          modalPreviewDate.style.setProperty('filter', 'none', 'important');
+        }
+      }
+    };
+
+    const updateSloganButtonsHighlight = () => {
+      const btnDark = document.getElementById('btn-slogan-color-dark');
+      const btnLight = document.getElementById('btn-slogan-color-light');
+      if (btnDark && btnLight) {
+        if (tempSloganColor === 'dark') {
+          btnDark.classList.add('border-emerald-500', 'bg-slate-700', 'text-white', 'shadow');
+          btnDark.classList.remove('border-slate-700', 'bg-slate-800', 'text-slate-400');
+          btnLight.classList.remove('border-emerald-500', 'bg-slate-700', 'text-white', 'shadow');
+          btnLight.classList.add('border-slate-700', 'bg-slate-800', 'text-slate-400');
+        } else {
+          btnLight.classList.add('border-emerald-500', 'bg-slate-700', 'text-white', 'shadow');
+          btnLight.classList.remove('border-slate-700', 'bg-slate-800', 'text-slate-400');
+          btnDark.classList.remove('border-emerald-500', 'bg-slate-700', 'text-white', 'shadow');
+          btnDark.classList.add('border-slate-700', 'bg-slate-800', 'text-slate-400');
+        }
+      }
+      const modalPreviewText = document.getElementById('modal-banner-preview-text');
+      if (modalPreviewText) {
+        if (tempSloganColor === 'dark') {
+          modalPreviewText.classList.add('slogan-dark-text');
+          modalPreviewText.classList.remove('slogan-light-text');
+        } else {
+          modalPreviewText.classList.add('slogan-light-text');
+          modalPreviewText.classList.remove('slogan-dark-text');
+        }
+      }
+    };
+
+    const openBannerModal = (focusTitle = false) => {
+      tempAppTitleColor = state.appTitleColor || '';
+      tempDateColor = state.heroBannerDateColor || (state.uiStyle === 'ios-glass' && !state.heroBannerImage ? 'dark' : (state.uiStyle === 'ios-glass' ? 'gray' : 'light'));
+      tempSloganColor = state.heroBannerTextColor || (state.uiStyle === 'ios-glass' && !state.heroBannerImage ? 'dark' : 'light');
+
+      if (inputBannerSlogan) {
+        inputBannerSlogan.value = state.heroBannerSlogan || '保持热爱，奔赴山海！';
+      }
+      if (inputModalAppTitle) {
+        inputModalAppTitle.value = state.appTitle || 'FoFo 工作台';
+      }
+      const modalPreviewTitle = document.getElementById('modal-banner-preview-title');
+      if (modalPreviewTitle) {
+        modalPreviewTitle.textContent = state.appTitle || 'FoFo 工作台';
+        applyAppTitleColor(modalPreviewTitle, tempAppTitleColor);
+      }
+      const modalPreviewText = document.getElementById('modal-banner-preview-text');
+      if (modalPreviewText) {
+        modalPreviewText.textContent = state.heroBannerSlogan || '保持热爱，奔赴山海！';
+      }
+
+      applyHeroBanner();
+      updatePresetButtonsHighlight();
+      updateDateButtonsHighlight();
+      updateSloganButtonsHighlight();
+
+      if (modalBanner) modalBanner.classList.remove('hidden');
+      if (focusTitle && inputModalAppTitle) {
+        setTimeout(() => {
+          inputModalAppTitle.focus();
+          inputModalAppTitle.select();
+        }, 50);
+      }
+    };
 
     if (heroCard) {
       heroCard.onclick = () => {
-        if (inputBannerSlogan) {
-          inputBannerSlogan.value = state.heroBannerSlogan || '保持热爱，奔赴山海！';
+        openBannerModal(false);
+      };
+    }
+
+    modalBanner?.querySelectorAll('.app-title-color-preset-btn').forEach(btn => {
+      btn.onclick = () => {
+        const color = btn.getAttribute('data-color');
+        tempAppTitleColor = color;
+        const modalPreviewTitle = document.getElementById('modal-banner-preview-title');
+        applyAppTitleColor(modalPreviewTitle, tempAppTitleColor);
+        updatePresetButtonsHighlight();
+      };
+    });
+
+    const btnResetTitleColor = document.getElementById('btn-reset-app-title-color');
+    if (btnResetTitleColor) {
+      btnResetTitleColor.onclick = () => {
+        tempAppTitleColor = '';
+        const modalPreviewTitle = document.getElementById('modal-banner-preview-title');
+        applyAppTitleColor(modalPreviewTitle, '');
+        updatePresetButtonsHighlight();
+      };
+    }
+
+    if (inputModalAppTitle) {
+      inputModalAppTitle.oninput = (e) => {
+        const modalPreviewTitle = document.getElementById('modal-banner-preview-title');
+        if (modalPreviewTitle) {
+          modalPreviewTitle.textContent = e.target.value.trim() || 'FoFo 工作台';
         }
-        applyHeroBanner();
-        if (modalBanner) modalBanner.classList.remove('hidden');
       };
     }
 
@@ -4184,31 +4544,99 @@
       };
     }
 
+    const btnDateDark = document.getElementById('btn-date-color-dark');
+    const btnDateGray = document.getElementById('btn-date-color-gray');
+    const btnDateLight = document.getElementById('btn-date-color-light');
+    if (btnDateDark) {
+      btnDateDark.onclick = () => {
+        tempDateColor = 'dark';
+        updateDateButtonsHighlight();
+      };
+    }
+    if (btnDateGray) {
+      btnDateGray.onclick = () => {
+        tempDateColor = 'gray';
+        updateDateButtonsHighlight();
+      };
+    }
+    if (btnDateLight) {
+      btnDateLight.onclick = () => {
+        tempDateColor = 'light';
+        updateDateButtonsHighlight();
+      };
+    }
+
+    const dateRow = document.getElementById('header-date-sub');
+    if (dateRow) {
+      const handleDateCycle = (e) => {
+        e.stopPropagation();
+        const current = state.heroBannerDateColor || (state.uiStyle === 'ios-glass' && !state.heroBannerImage ? 'dark' : 'gray');
+        const next = current === 'dark' ? 'gray' : (current === 'gray' ? 'light' : 'dark');
+        state.heroBannerDateColor = next;
+        applyHeroBanner();
+        saveState(true);
+        const nameMap = { dark: '黑色字档 (浅色背景适用)', gray: '灰色字档 (中性过渡适用)', light: '白色字档 (深色背景适用)' };
+        showToast(`已切换日期字色为：${nameMap[next]}`, 'info', 1800);
+      };
+      dateRow.ondblclick = handleDateCycle;
+      if (dateRow.parentElement) {
+        dateRow.parentElement.setAttribute('title', '双击可快速切换日期字色（黑字/灰字/白字档）');
+        dateRow.parentElement.ondblclick = handleDateCycle;
+      }
+    }
+
+    const btnColorDark = document.getElementById('btn-slogan-color-dark');
+    const btnColorLight = document.getElementById('btn-slogan-color-light');
+    if (btnColorDark) {
+      btnColorDark.onclick = () => {
+        tempSloganColor = 'dark';
+        updateSloganButtonsHighlight();
+      };
+    }
+    if (btnColorLight) {
+      btnColorLight.onclick = () => {
+        tempSloganColor = 'light';
+        updateSloganButtonsHighlight();
+      };
+    }
+
+    const sloganRow = document.getElementById('hero-slogan-text')?.parentElement;
+    if (sloganRow) {
+      sloganRow.setAttribute('title', '双击可快速切换心情字色（黑字/白字档）');
+      sloganRow.ondblclick = (e) => {
+        e.stopPropagation();
+        const current = state.heroBannerTextColor || (state.uiStyle === 'ios-glass' && !state.heroBannerImage ? 'dark' : 'light');
+        state.heroBannerTextColor = current === 'dark' ? 'light' : 'dark';
+        applyHeroBanner();
+        saveState(true);
+        showToast(`已切换标语为：${state.heroBannerTextColor === 'dark' ? '黑色字档 (浅色背景适用)' : '白色字档 (深色背景适用)'}`, 'info', 1800);
+      };
+    }
+
     const btnSaveBanner = document.getElementById('btn-save-banner');
     if (btnSaveBanner) {
       btnSaveBanner.onclick = () => {
+        if (inputModalAppTitle) {
+          state.appTitle = inputModalAppTitle.value.trim() || 'FoFo 工作台';
+        }
+        state.appTitleColor = tempAppTitleColor;
+        state.heroBannerDateColor = tempDateColor;
+        state.heroBannerTextColor = tempSloganColor;
         if (inputBannerSlogan) {
           state.heroBannerSlogan = inputBannerSlogan.value.trim() || '保持热爱，奔赴山海！';
         }
+        applyAppTitle();
         applyHeroBanner();
         saveState(true);
         if (modalBanner) modalBanner.classList.add('hidden');
-        showToast('动态心情标语与展板已更新！', 'success');
+        showToast('工作台名称、字色与展板配置已保存！', 'success');
       };
     }
 
     // Editable Workspace Name (Syncs with browser document title)
     const handleEditAppTitle = (e) => {
       if (e && e.stopPropagation) e.stopPropagation();
-      const current = state.appTitle || 'FoFo 工作台';
-      const newTitle = prompt('请输入新的工作台名称（将同步至网页标题）：', current);
-      if (newTitle !== null) {
-        const trimmed = newTitle.trim();
-        state.appTitle = trimmed || 'FoFo 工作台';
-        applyAppTitle();
-        saveState();
-        showToast(`工作台名称已更新为: ${state.appTitle}`, 'success');
-      }
+      openBannerModal(true);
     };
 
     const titleEl = document.getElementById('app-title-text');
@@ -4519,6 +4947,69 @@
       };
       reader.readAsText(file);
     };
+
+    // App Version Update Check & Modal Event Listeners
+    const versionBadge = document.getElementById('app-version-badge');
+    if (versionBadge) {
+      versionBadge.onclick = () => {
+        if (latestUpdateInfo && latestUpdateInfo.hasUpdate) {
+          openAppUpdateModal(latestUpdateInfo);
+        } else {
+          checkAppUpdate(true);
+        }
+      };
+    }
+
+    const btnMenuUpdate = document.getElementById('btn-header-update-item');
+    if (btnMenuUpdate) {
+      btnMenuUpdate.onclick = () => {
+        if (latestUpdateInfo) {
+          openAppUpdateModal(latestUpdateInfo);
+        } else {
+          checkAppUpdate(true);
+        }
+      };
+    }
+
+    const btnManualCheck = document.getElementById('btn-check-update-manual');
+    if (btnManualCheck) {
+      btnManualCheck.onclick = () => {
+        checkAppUpdate(true);
+      };
+    }
+
+    const modalUpdateClose = document.getElementById('modal-update-close');
+    if (modalUpdateClose) {
+      modalUpdateClose.onclick = closeAppUpdateModal;
+    }
+
+    const btnUpdateIgnore = document.getElementById('btn-update-ignore-version');
+    if (btnUpdateIgnore) {
+      btnUpdateIgnore.onclick = () => {
+        if (latestUpdateInfo) {
+          localStorage.setItem('fofo_ignore_update_ver', latestUpdateInfo.tag || latestUpdateInfo.latestVersion);
+        }
+        closeAppUpdateModal();
+        showToast('已忽略本次版本更新提示', 'info');
+      };
+    }
+
+    const btnCopyDl = document.getElementById('btn-copy-download-link');
+    if (btnCopyDl) {
+      btnCopyDl.onclick = () => {
+        const link = (latestUpdateInfo && latestUpdateInfo.downloadUrl) ? latestUpdateInfo.downloadUrl : 'https://github.com/Flin-L/FoFo/releases/latest';
+        navigator.clipboard.writeText(link);
+        const originalText = btnCopyDl.textContent;
+        btnCopyDl.textContent = '已复制！';
+        setTimeout(() => { btnCopyDl.textContent = originalText; }, 2000);
+        showToast('下载链接已复制到剪贴板！', 'info');
+      };
+    }
+
+    // Trigger silent version check shortly after app startup
+    setTimeout(() => {
+      checkAppUpdate(false);
+    }, 2500);
 
     // Keyboard shortcut: Alt + Space for Pomodoro
     window.addEventListener('keydown', (e) => {
@@ -5439,10 +5930,12 @@
         
         if (s.linkedTask) {
           taskTag.textContent = s.linkedTask.text;
-          taskTag.className = 'max-w-[130px] truncate text-[11px] text-emerald-400 font-semibold';
+          taskTag.title = s.linkedTask.text;
+          taskTag.className = 'min-w-0 flex-1 max-w-[120px] truncate text-[11px] text-emerald-400 font-semibold cursor-pointer';
         } else {
           taskTag.textContent = '未绑定任务';
-          taskTag.className = 'max-w-[130px] truncate text-[11px] text-slate-400';
+          taskTag.title = '未绑定任务';
+          taskTag.className = 'min-w-0 flex-1 max-w-[120px] truncate text-[11px] text-slate-400';
         }
       },
       onComplete: (s) => {

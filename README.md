@@ -1,7 +1,7 @@
 # 🚀 FoFo 个人工作台 (FoFo Personal WorkStation)
 
 <p align="left">
-  <img src="https://img.shields.io/badge/version-2.3.0-emerald?style=flat-square" alt="Version 2.3.0" />
+  <img src="https://img.shields.io/badge/version-2.3.1-emerald?style=flat-square" alt="Version 2.3.1" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=flat-square" alt="Cross Platform" />
   <img src="https://img.shields.io/badge/license-MIT-purple?style=flat-square" alt="License MIT" />
   <img src="https://img.shields.io/badge/storage-100%25%20Local-success?style=flat-square" alt="100% Local" />
@@ -26,6 +26,17 @@
 > 
 > **后续每次发布新版本，必须在此区域以倒序方式（最新版本置顶）追加记录，清晰列出新版本号、发布日期及功能更新明细。**  
 > **数据兼容与升级指引硬性要求**：后续每次发布新版本，更新日志中**必须附带【老用户平滑升级指引 (Data Migration Guide)】**，明确指导老版本用户如何安全替换程序并无缝继承全部已有数据（数据存储与程序已物理解耦，升级零负担）。
+
+### [v2.3.1] - 2026-09-25
+
+#### 💡 老用户平滑升级与数据迁移指引 (v2.3.0 / 旧版升至 v2.3.1)
+- **桌面便携版升级（推荐）**：退出当前运行的旧版程序，直接下载 Release 附件中的最新 `FoFo.exe` 替换现有文件即可完成升级。`data/` 目录中的全部日程、待办、待阅与个人数据 100% 完整保留，数据与程序物理隔离，升级零负担！
+- **源码/Python 运行环境升级**：拉取最新代码，保留根目录下 `data/`、`documents/` 与 `.FoFoAI/` 用户目录即可。
+
+#### 🌟 核心更新详情
+1. **新增全自动新版本检测与升级提醒机制**：内置后台静默检测，发现新版自动微光红点提示与详情弹窗，支持一键复制下载链接与发布页直达；
+2. **完善部分 UI 细节**：独立优化顶部栏右侧版本号展示位置、工作台标题配色及展板个性化预览；
+3. **修复已知 Bug 与交互细节**：修复长任务专注绑定悬浮提示、专注计时排版微调及全站专注视觉规范统一。
 
 ---
 
