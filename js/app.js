@@ -848,7 +848,7 @@
           if (data && data.status === 'error') {
             showToast(data.message || '检查更新失败，请稍后重试', 'warning');
           } else {
-            showToast(`当前已是最新版本 (${data.currentVersion ? 'v' + data.currentVersion.replace(/^v/, '') : 'v2.3.1'})！`, 'success');
+            showToast(`当前已是最新版本 (${data.currentVersion ? 'v' + data.currentVersion.replace(/^v/, '') : 'v2.3.2'})！`, 'success');
           }
         }
       }
@@ -875,7 +875,7 @@
     const notesEl = document.getElementById('update-release-notes');
     const openPageBtn = document.getElementById('btn-open-release-page');
 
-    if (curVerEl) curVerEl.textContent = data.currentVersion ? `v${data.currentVersion.replace(/^v/, '')}` : 'v2.3.1';
+    if (curVerEl) curVerEl.textContent = data.currentVersion ? `v${data.currentVersion.replace(/^v/, '')}` : 'v2.3.2';
     if (latestVerEl) latestVerEl.textContent = data.tag || (data.latestVersion ? `v${data.latestVersion.replace(/^v/, '')}` : '新版本');
     if (dateEl) {
       const pub = data.publishedAt;
@@ -5303,13 +5303,16 @@
 
       overlay.classList.remove('hidden');
 
-      fsFocusInterval = setInterval(() => {
+      const tickFsFocus = () => {
+        if (!fsFocusStartTime || overlay.classList.contains('hidden')) return;
         const elapsed = Date.now() - fsFocusStartTime;
         const remaining = targetTotalMs - elapsed;
 
         if (remaining <= 0) {
-          clearInterval(fsFocusInterval);
-          fsFocusInterval = null;
+          if (fsFocusInterval) {
+            clearInterval(fsFocusInterval);
+            fsFocusInterval = null;
+          }
           countdownDisplay.textContent = '00:00';
 
           if (celebrationBox) {
@@ -5328,7 +5331,17 @@
         } else {
           countdownDisplay.textContent = formatTime(remaining);
         }
-      }, 500);
+      };
+
+      fsFocusInterval = setInterval(tickFsFocus, 500);
+
+      const handleFsVisibilitySync = () => {
+        if (fsFocusInterval && !overlay.classList.contains('hidden')) {
+          tickFsFocus();
+        }
+      };
+      document.addEventListener('visibilitychange', handleFsVisibilitySync);
+      window.addEventListener('focus', handleFsVisibilitySync);
     };
   }
 

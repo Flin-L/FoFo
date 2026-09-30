@@ -1,8 +1,8 @@
 {
-  "latestVersion": "2.3.1",
-  "releaseDate": "2026-09-25",
-  "title": "FoFo v2.3.1 体验升级",
-  "releaseNotes": "1. 新增全自动新版本检测与升级提醒机制\n2. 完善部分 UI 细节（版本号展示位置、工作台标题配色、展板预览优化）\n3. 修复已知 Bug 与交互细节（长任务悬浮气泡、专注排版加固、专注学术帽规范）",
+  "latestVersion": "2.3.2",
+  "releaseDate": "2026-09-30",
+  "title": "FoFo v2.3.2 体验升级与系统适配",
+  "releaseNotes": "1. 修复定时器在浏览器窗口最小化或被其他应用遮挡时暂停倒计时的问题\n2. 适配 macOS 系统，提供 start_mac.command 双击一键启动脚本并支持原生系统文件调度打开",
   "releaseUrl": "https://github.com/Flin-L/FoFo/releases/latest",
-  "downloadUrl": "https://github.com/Flin-L/FoFo/releases/download/v2.3.1/FoFo.exe"
+  "downloadUrl": "https://github.com/Flin-L/FoFo/releases/download/v2.3.2/FoFo.exe"
 }

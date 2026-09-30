@@ -1,0 +1,3 @@
+# Ensure shell scripts always preserve LF line endings across all operating systems
+*.command text eol=lf
+*.sh text eol=lf

@@ -5,13 +5,14 @@ import json
 import webbrowser
 import threading
 import sys
+import subprocess
 import re
 import time
 import urllib.error
 import urllib.request
 from urllib.parse import parse_qs, urlparse, unquote
 
-APP_VERSION = "2.3.1"
+APP_VERSION = "2.3.2"
 _UPDATE_CACHE = {
     "timestamp": 0,
     "data": None
@@ -468,7 +469,12 @@ class FoFoHandler(http.server.SimpleHTTPRequestHandler):
                 else:
                     norm_path = os.path.normpath(target)
                     if os.path.exists(norm_path):
-                        os.startfile(norm_path)
+                        if hasattr(os, "startfile"):
+                            os.startfile(norm_path)
+                        elif sys.platform == "darwin":
+                            subprocess.Popen(["open", norm_path])
+                        else:
+                            subprocess.Popen(["xdg-open", norm_path])
                         success = True
                         message = f"已打开本地文件: {norm_path}"
                     else:

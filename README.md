@@ -1,7 +1,7 @@
 # 🚀 FoFo 个人工作台 (FoFo Personal WorkStation)
 
 <p align="left">
-  <img src="https://img.shields.io/badge/version-2.3.1-emerald?style=flat-square" alt="Version 2.3.1" />
+  <img src="https://img.shields.io/badge/version-2.3.2-emerald?style=flat-square" alt="Version 2.3.2" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=flat-square" alt="Cross Platform" />
   <img src="https://img.shields.io/badge/license-MIT-purple?style=flat-square" alt="License MIT" />
   <img src="https://img.shields.io/badge/storage-100%25%20Local-success?style=flat-square" alt="100% Local" />
@@ -26,6 +26,19 @@
 > 
 > **后续每次发布新版本，必须在此区域以倒序方式（最新版本置顶）追加记录，清晰列出新版本号、发布日期及功能更新明细。**  
 > **数据兼容与升级指引硬性要求**：后续每次发布新版本，更新日志中**必须附带【老用户平滑升级指引 (Data Migration Guide)】**，明确指导老版本用户如何安全替换程序并无缝继承全部已有数据（数据存储与程序已物理解耦，升级零负担）。
+
+### [v2.3.2] - 2026-09-30
+
+#### 💡 老用户平滑升级与数据迁移指引 (v2.3.1 / 旧版升至 v2.3.2)
+- **桌面便携版升级（Windows 推荐）**：退出当前运行的旧版程序，直接下载 Release 附件中的最新 `FoFo.exe` 替换现有文件即可完成升级。`data/` 目录中的全部日程、待办、待阅与个人数据 100% 完整保留，数据与程序物理隔离，升级零负担！
+- **macOS 用户升级/使用**：下载 Release 附件中的 `FoFo-macOS-v2.3.2.zip` 解压至任意文件夹，双击 `start_mac.command` 脚本即可一键启动并自动在浏览器中打开。
+- **源码/Python 运行环境升级**：拉取最新代码，保留根目录下 `data/`、`documents/` 与 `.FoFoAI/` 用户目录即可。
+
+#### 🌟 核心更新详情
+1. **修复定时器后台遮挡休眠问题**：采用 Web Worker 独立线程与高精度挂钟时间戳双重校准机制，彻底解决浏览器最小化、多标签切换或被其他应用窗口遮挡时倒计时暂停卡顿的 Bug；
+2. **新增 macOS 完整跨平台适配**：新增 Finder 双击即可运行的 `start_mac.command` 启动脚本，优化 macOS 下调用系统默认应用打开文件/目录的原生调度逻辑。
+
+---
 
 ### [v2.3.1] - 2026-09-25
 
