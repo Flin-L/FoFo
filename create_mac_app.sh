@@ -28,24 +28,24 @@ int main(int argc, const char * argv[]) {
         NSImage *output = [[NSImage alloc] initWithSize:NSMakeSize(canvasSize, canvasSize)];
         [output lockFocus];
 
-        // Apple HIG 官方 macOS App 图标尺寸与纯白视觉视错觉补偿规范:
+        // Apple HIG 官方 macOS App 图标尺寸黄金平衡校准:
         // 画布: 1024x1024
-        // 针对纯白底色在深色/毛玻璃程序坞产生的“发散视觉膨胀感 (Irradiation Illusion)”，
-        // 将主体收敛校准为 756x756 (四周留白 134px)，与 App Store、设置等系统图标达到完全视觉等大。
-        CGFloat squircleSize = 756.0;
-        CGFloat padding = (canvasSize - squircleSize) / 2.0; // 134.0
-        CGFloat radius = squircleSize * 0.2237; // ~169.1px (标准连续曲率 Squircle)
+        // 取 824px (标准偏大) 与 756px (微小) 之间的黄金平衡中值: 790x790 (留白 117px)
+        // 与 App Store、设置等系统级应用达到真正的肉眼绝对等大与像素级平衡
+        CGFloat squircleSize = 790.0;
+        CGFloat padding = (canvasSize - squircleSize) / 2.0; // 117.0
+        CGFloat radius = squircleSize * 0.2237; // ~176.7px (Apple 连续曲率 Squircle)
 
         NSRect squircleRect = NSMakeRect(padding, padding, squircleSize, squircleSize);
 
         NSGraphicsContext *context = [NSGraphicsContext currentContext];
         [context saveGraphicsState];
 
-        // 原生 macOS 应用柔和立体阴影 (在 134px 留白区域自然扩散)
+        // 原生 macOS 应用柔和立体阴影 (在 117px 留白区域自然扩散)
         NSShadow *shadow = [[NSShadow alloc] init];
         [shadow setShadowColor:[NSColor colorWithCalibratedWhite:0.0 alpha:0.18]];
         [shadow setShadowOffset:NSMakeSize(0, -9)];
-        [shadow setShadowBlurRadius:16.0];
+        [shadow setShadowBlurRadius:17.0];
         [shadow set];
 
         NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:squircleRect xRadius:radius yRadius:radius];
@@ -59,8 +59,8 @@ int main(int argc, const char * argv[]) {
         [path setLineWidth:1.5];
         [path stroke];
 
-        // 居中绘制专属 Sparkle 星标 (主体内 68% 比例: ~514px)
-        CGFloat iconSize = squircleSize * 0.68;
+        // 居中绘制专属 Sparkle 星标 (主体内 69% 比例: ~545px)
+        CGFloat iconSize = squircleSize * 0.69;
         CGFloat iconOffset = (canvasSize - iconSize) / 2.0;
         NSRect iconRect = NSMakeRect(iconOffset, iconOffset, iconSize, iconSize);
         [sparkle drawInRect:iconRect fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0];
