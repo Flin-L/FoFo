@@ -629,7 +629,8 @@ def run_server():
             print(f"[AI 会话] 会话记录保存在: {AI_SESSION_FILE}")
 
             target_url = f"http://localhost:{port}"
-            threading.Timer(0.5, lambda: open_desktop_window(target_url)).start()
+            if "--no-browser" not in sys.argv and os.environ.get("FOFO_NO_BROWSER") != "1":
+                threading.Timer(0.5, lambda: open_desktop_window(target_url)).start()
             httpd.serve_forever()
             break
         except OSError:
