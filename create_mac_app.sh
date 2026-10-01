@@ -17,7 +17,7 @@ cat << 'EOF' > /tmp/create_white_icon.m
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        int size = 512;
+        int canvasSize = 1024;
         NSString *imgPath = [NSString stringWithUTF8String:argv[1]];
         NSImage *sparkle = [[NSImage alloc] initWithContentsOfFile:imgPath];
         if (!sparkle) {
@@ -25,28 +25,43 @@ int main(int argc, const char * argv[]) {
             return 1;
         }
 
-        NSImage *output = [[NSImage alloc] initWithSize:NSMakeSize(size, size)];
+        NSImage *output = [[NSImage alloc] initWithSize:NSMakeSize(canvasSize, canvasSize)];
         [output lockFocus];
 
-        CGFloat margin = 24.0;
-        CGFloat rectSize = size - 2 * margin; // 464x464
-        CGFloat radius = rectSize * 0.2237; // Apple 官方标准圆角比例
+        // Apple HIG 官方 macOS App 图标尺寸规范:
+        // 画布: 1024x1024
+        // 圆角矩形主体: 824x824 (居中留白 100px)
+        // 圆角半径: 185.0 (标准连续曲率 Squircle)
+        CGFloat squircleSize = 824.0;
+        CGFloat padding = (canvasSize - squircleSize) / 2.0; // 100.0
+        CGFloat radius = 185.0;
 
-        NSRect squircleRect = NSMakeRect(margin, margin, rectSize, rectSize);
+        NSRect squircleRect = NSMakeRect(padding, padding, squircleSize, squircleSize);
+
+        NSGraphicsContext *context = [NSGraphicsContext currentContext];
+        [context saveGraphicsState];
+
+        // 原生 macOS 应用柔和立体阴影 (在 100px 留白区域自然扩散)
+        NSShadow *shadow = [[NSShadow alloc] init];
+        [shadow setShadowColor:[NSColor colorWithCalibratedWhite:0.0 alpha:0.18]];
+        [shadow setShadowOffset:NSMakeSize(0, -10)];
+        [shadow setShadowBlurRadius:18.0];
+        [shadow set];
+
         NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:squircleRect xRadius:radius yRadius:radius];
-
-        // 纯净优雅白底
         [[NSColor whiteColor] setFill];
         [path fill];
 
-        // 微弱柔和描边 (增强在浅色浅灰壁纸上的轮廓清晰度)
-        [[NSColor colorWithCalibratedWhite:0.0 alpha:0.06] setStroke];
+        [context restoreGraphicsState];
+
+        // 微弱柔和描边 (1px 浅灰边框增强浅色壁纸对比)
+        [[NSColor colorWithCalibratedWhite:0.0 alpha:0.07] setStroke];
         [path setLineWidth:1.5];
         [path stroke];
 
-        // 居中绘制专属 Sparkle 星标
-        CGFloat iconSize = rectSize * 0.72;
-        CGFloat iconOffset = (size - iconSize) / 2.0;
+        // 居中绘制专属 Sparkle 星标 (主体内 70% 比例: ~576px)
+        CGFloat iconSize = squircleSize * 0.70;
+        CGFloat iconOffset = (canvasSize - iconSize) / 2.0;
         NSRect iconRect = NSMakeRect(iconOffset, iconOffset, iconSize, iconSize);
         [sparkle drawInRect:iconRect fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0];
 
