@@ -559,6 +559,40 @@ def check_existing_instance(port):
         pass
     return None
 
+def open_desktop_window(url):
+    """Open URL in a dedicated standalone app window without merging into existing browser tabs."""
+    if sys.platform == "darwin":
+        # 1. Try Microsoft Edge in standalone app mode (--app=URL)
+        edge_bin = "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
+        if os.path.exists(edge_bin):
+            try:
+                subprocess.Popen([edge_bin, f"--app={url}"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return
+            except Exception:
+                pass
+
+        # 2. Try Google Chrome in standalone app mode
+        chrome_bin = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        if os.path.exists(chrome_bin):
+            try:
+                subprocess.Popen([chrome_bin, f"--app={url}"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return
+            except Exception:
+                pass
+
+        # 3. Fallback to Safari new window
+        try:
+            osa_script = f'tell application "Safari" to make new document with properties {{URL:"{url}"}}'
+            res = subprocess.run(["osascript", "-e", osa_script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if res.returncode == 0:
+                subprocess.run(["osascript", "-e", 'tell application "Safari" to activate'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return
+        except Exception:
+            pass
+
+    # Windows or general fallback
+    webbrowser.open(url)
+
 def run_server():
     port = PORT
     max_attempts = 10
@@ -572,8 +606,8 @@ def run_server():
             if existing:
                 existing_dir = os.path.normcase(os.path.abspath(existing.get("dir", "")))
                 if existing_dir == current_dir:
-                    print(f"[FoFo] 检测到当前工作区服务已在后台运行 (端口 {test_port})，正在直接唤起浏览器...")
-                    webbrowser.open(f"http://localhost:{test_port}")
+                    print(f"[FoFo] 检测到当前工作区服务已在后台运行 (端口 {test_port})，正在直接唤起独立窗口...")
+                    open_desktop_window(f"http://localhost:{test_port}")
                     sys.exit(0)
         sys.exit(0)
 
@@ -595,7 +629,7 @@ def run_server():
             print(f"[AI 会话] 会话记录保存在: {AI_SESSION_FILE}")
 
             target_url = f"http://localhost:{port}"
-            threading.Timer(0.5, lambda: webbrowser.open(target_url)).start()
+            threading.Timer(0.5, lambda: open_desktop_window(target_url)).start()
             httpd.serve_forever()
             break
         except OSError:
