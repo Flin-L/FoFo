@@ -848,7 +848,7 @@
           if (data && data.status === 'error') {
             showToast(data.message || '检查更新失败，请稍后重试', 'warning');
           } else {
-            showToast(`当前已是最新版本 (${data.currentVersion ? 'v' + data.currentVersion.replace(/^v/, '') : 'v2.3.2'})！`, 'success');
+            showToast(`当前已是最新版本 (${data.currentVersion ? 'v' + data.currentVersion.replace(/^v/, '') : 'v2.3.3'})！`, 'success');
           }
         }
       }
@@ -875,7 +875,7 @@
     const notesEl = document.getElementById('update-release-notes');
     const openPageBtn = document.getElementById('btn-open-release-page');
 
-    if (curVerEl) curVerEl.textContent = data.currentVersion ? `v${data.currentVersion.replace(/^v/, '')}` : 'v2.3.2';
+    if (curVerEl) curVerEl.textContent = data.currentVersion ? `v${data.currentVersion.replace(/^v/, '')}` : 'v2.3.3';
     if (latestVerEl) latestVerEl.textContent = data.tag || (data.latestVersion ? `v${data.latestVersion.replace(/^v/, '')}` : '新版本');
     if (dateEl) {
       const pub = data.publishedAt;
@@ -1410,12 +1410,16 @@
 
       item.innerHTML = `
         <div class="flex items-center space-x-2.5 flex-1 min-w-0">
-          <input type="checkbox" class="task-checkbox" ${task.done ? 'checked' : ''} />
-          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded ${prioClass}">${task.priority || 'P1'}</span>
-          <span class="text-xs truncate flex-1 ${task.done ? 'task-completed' : 'text-slate-200'}">${task.text}</span>
+          <input type="checkbox" class="task-checkbox flex-shrink-0" ${task.done ? 'checked' : ''} />
+          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded flex-shrink-0 ${prioClass}">${task.priority || 'P1'}</span>
+          <div class="task-text-viewport flex-1 min-w-0 overflow-hidden">
+            <div class="task-text-clip">
+              <span class="task-text-inner text-xs ${task.done ? 'task-completed' : 'text-slate-200'}">${task.text}</span>
+            </div>
+          </div>
         </div>
         
-        <div class="flex items-center space-x-2 ml-2">
+        <div class="flex items-center space-x-2 ml-2 flex-shrink-0">
           <div class="flex items-center space-x-1">
             ${pomoCount > 0 ? `<span class="text-[11px] text-amber-400 font-mono font-bold" title="已完成 ${pomoCount} 个专注时段">🎓 x${pomoCount}</span>` : ''}
             <button class="btn-focus px-2 py-0.5 rounded bg-slate-800 hover:bg-emerald-900/60 hover:text-emerald-300 text-slate-400 text-[11px] font-medium transition" title="以此任务开启专注">
@@ -1430,6 +1434,54 @@
           <button class="btn-del text-slate-600 hover:text-red-400 text-xs opacity-0 group-hover:opacity-100 transition p-1" title="删除待办">✕</button>
         </div>
       `;
+
+      // Zero-reflow GPU-composited marquee for overflowing task text on hover
+      const textViewport = item.querySelector('.task-text-viewport');
+      const textInner = item.querySelector('.task-text-inner');
+      let slideResetTimer = null;
+
+      const updateOverflowState = () => {
+        if (!textViewport || !textInner) return 0;
+        const dist = Math.ceil(textInner.offsetWidth - textViewport.clientWidth);
+        if (dist > 2) {
+          textViewport.classList.add('has-overflow');
+          return dist;
+        } else {
+          textViewport.classList.remove('has-overflow');
+          return 0;
+        }
+      };
+
+      requestAnimationFrame(updateOverflowState);
+
+      item.addEventListener('mouseenter', () => {
+        if (!textViewport || !textInner) return;
+        if (slideResetTimer) {
+          clearTimeout(slideResetTimer);
+          slideResetTimer = null;
+        }
+        const overflowDist = updateOverflowState();
+        if (overflowDist > 2) {
+          textViewport.classList.add('is-sliding');
+          const targetShift = overflowDist + 6;
+          // Gentle ~28px/s steady velocity so eyes can comfortably read moving text without motion blur
+          const duration = Math.max(1.8, targetShift / 28);
+          textInner.style.transition = `transform ${duration.toFixed(2)}s linear 0.12s`;
+          textInner.style.transform = `translate3d(-${targetShift}px, 0, 0)`;
+        }
+      });
+
+      item.addEventListener('mouseleave', () => {
+        if (!textViewport || !textInner) return;
+        if (textViewport.classList.contains('is-sliding')) {
+          textInner.style.transition = 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)';
+          textInner.style.transform = 'translate3d(0, 0, 0)';
+          slideResetTimer = setTimeout(() => {
+            textViewport.classList.remove('is-sliding');
+            textInner.style.transition = '';
+          }, 360);
+        }
+      });
 
       item.querySelector('.task-checkbox').onchange = (e) => {
         task.done = e.target.checked;
@@ -1688,14 +1740,750 @@
     });
   }
 
-  function renderNotes() {
+  let noteViewMode = 'live'; // 'live' | 'edit' | 'preview'
+  let isTyporaComposing = false;
+  let typoraInitialized = false;
+
+  function escapeHtmlText(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function formatInlineMarkdownToHtml(text) {
+    if (!text) return '';
+    let html = escapeHtmlText(text);
+    // Inline code
+    html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+    // Bold
+    html = html.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+    // Italic
+    html = html.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+    // Strikethrough
+    html = html.replace(/~~([^~\n]+)~~/g, '<del>$1</del>');
+    return html;
+  }
+
+  function markdownToLiveHtml(md) {
+    if (!md || !md.trim()) return '';
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    const htmlParts = [];
+    let inCodeBlock = false;
+    let codeLang = '';
+    let codeLines = [];
+    let listType = null; // 'ul' | 'ol'
+    let listItems = [];
+
+    const flushList = () => {
+      if (listType && listItems.length > 0) {
+        htmlParts.push(`<${listType}>${listItems.join('')}</${listType}>`);
+      }
+      listType = null;
+      listItems = [];
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      if (trimmed.startsWith('```')) {
+        flushList();
+        if (!inCodeBlock) {
+          inCodeBlock = true;
+          codeLang = trimmed.slice(3).trim();
+          codeLines = [];
+        } else {
+          const codeContent = escapeHtmlText(codeLines.join('\n')) || '<br>';
+          htmlParts.push(`<pre><code data-lang="${escapeHtmlText(codeLang)}">${codeContent}</code></pre>`);
+          inCodeBlock = false;
+          codeLang = '';
+          codeLines = [];
+        }
+        continue;
+      }
+
+      if (inCodeBlock) {
+        codeLines.push(line);
+        continue;
+      }
+
+      // Task list item: - [ ] or - [x]
+      const taskMatch = line.match(/^\s*[-*+]\s+\[([ xX])\]\s+(.*)$/);
+      if (taskMatch) {
+        flushList();
+        const checked = taskMatch[1].toLowerCase() === 'x';
+        const inner = formatInlineMarkdownToHtml(taskMatch[2]) || '<br>';
+        htmlParts.push(
+          `<div class="typora-task-row ${checked ? 'is-checked' : ''}">` +
+            `<input type="checkbox" class="typora-task-checkbox accent-emerald-500 rounded" contenteditable="false" ${checked ? 'checked' : ''} />` +
+            `<div class="typora-task-text">${inner}</div>` +
+          `</div>`
+        );
+        continue;
+      }
+
+      // Unordered list: - or *
+      const ulMatch = line.match(/^\s*[-*+]\s+(.*)$/);
+      if (ulMatch) {
+        if (listType && listType !== 'ul') flushList();
+        listType = 'ul';
+        listItems.push(`<li>${formatInlineMarkdownToHtml(ulMatch[1]) || '<br>'}</li>`);
+        continue;
+      }
+
+      // Ordered list: 1.
+      const olMatch = line.match(/^\s*\d+\.\s+(.*)$/);
+      if (olMatch) {
+        if (listType && listType !== 'ol') flushList();
+        listType = 'ol';
+        listItems.push(`<li>${formatInlineMarkdownToHtml(olMatch[1]) || '<br>'}</li>`);
+        continue;
+      }
+
+      flushList();
+
+      if (trimmed === '') {
+        htmlParts.push('<p><br></p>');
+      } else if (/^(---|___|\*\*\*)$/.test(trimmed)) {
+        htmlParts.push('<hr>');
+      } else if (/^####\s+(.*)$/.test(trimmed)) {
+        const m = trimmed.match(/^####\s+(.*)$/);
+        htmlParts.push(`<h4>${formatInlineMarkdownToHtml(m[1]) || '<br>'}</h4>`);
+      } else if (/^###\s+(.*)$/.test(trimmed)) {
+        const m = trimmed.match(/^###\s+(.*)$/);
+        htmlParts.push(`<h3>${formatInlineMarkdownToHtml(m[1]) || '<br>'}</h3>`);
+      } else if (/^##\s+(.*)$/.test(trimmed)) {
+        const m = trimmed.match(/^##\s+(.*)$/);
+        htmlParts.push(`<h2>${formatInlineMarkdownToHtml(m[1]) || '<br>'}</h2>`);
+      } else if (/^#\s+(.*)$/.test(trimmed)) {
+        const m = trimmed.match(/^#\s+(.*)$/);
+        htmlParts.push(`<h1>${formatInlineMarkdownToHtml(m[1]) || '<br>'}</h1>`);
+      } else if (/^>\s?(.*)$/.test(trimmed)) {
+        const m = trimmed.match(/^>\s?(.*)$/);
+        htmlParts.push(`<blockquote>${formatInlineMarkdownToHtml(m[1]) || '<br>'}</blockquote>`);
+      } else {
+        htmlParts.push(`<p>${formatInlineMarkdownToHtml(line)}</p>`);
+      }
+    }
+
+    flushList();
+    if (inCodeBlock) {
+      const codeContent = escapeHtmlText(codeLines.join('\n')) || '<br>';
+      htmlParts.push(`<pre><code data-lang="${escapeHtmlText(codeLang)}">${codeContent}</code></pre>`);
+    }
+
+    return htmlParts.join('');
+  }
+
+  function serializeInlineDomToMarkdown(el) {
+    if (!el) return '';
+    let out = '';
+    el.childNodes.forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        out += node.nodeValue.replace(/\u200B/g, '');
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const tag = node.tagName.toUpperCase();
+        const inner = serializeInlineDomToMarkdown(node);
+        if (tag === 'STRONG' || tag === 'B') {
+          out += inner ? `**${inner}**` : '';
+        } else if (tag === 'EM' || tag === 'I') {
+          out += inner ? `*${inner}*` : '';
+        } else if (tag === 'CODE') {
+          const rawCode = node.textContent.replace(/\u200B/g, '');
+          out += rawCode ? `\`${rawCode}\`` : '';
+        } else if (tag === 'DEL' || tag === 'S' || tag === 'STRIKE') {
+          out += inner ? `~~${inner}~~` : '';
+        } else if (tag === 'BR') {
+          // ignore trailing br inside single-line block
+        } else {
+          out += inner;
+        }
+      }
+    });
+    return out;
+  }
+
+  function serializeLiveEditorToMarkdown(container) {
+    if (!container) return '';
+    const lines = [];
+
+    const processBlockNode = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const txt = node.nodeValue.replace(/\u200B/g, '');
+        if (txt.trim()) lines.push(txt);
+        return;
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+      const tag = node.tagName.toUpperCase();
+      if (node.classList.contains('typora-task-row')) {
+        const cb = node.querySelector('input[type="checkbox"]');
+        const textEl = node.querySelector('.typora-task-text') || node;
+        const checked = cb && cb.checked ? 'x' : ' ';
+        lines.push(`- [${checked}] ${serializeInlineDomToMarkdown(textEl)}`);
+        return;
+      }
+
+      if (tag === 'H1') {
+        lines.push(`# ${serializeInlineDomToMarkdown(node)}`);
+      } else if (tag === 'H2') {
+        lines.push(`## ${serializeInlineDomToMarkdown(node)}`);
+      } else if (tag === 'H3') {
+        lines.push(`### ${serializeInlineDomToMarkdown(node)}`);
+      } else if (tag === 'H4') {
+        lines.push(`#### ${serializeInlineDomToMarkdown(node)}`);
+      } else if (tag === 'BLOCKQUOTE') {
+        lines.push(`> ${serializeInlineDomToMarkdown(node)}`);
+      } else if (tag === 'HR') {
+        lines.push('---');
+      } else if (tag === 'PRE') {
+        const codeEl = node.querySelector('code') || node;
+        const lang = (codeEl.getAttribute && codeEl.getAttribute('data-lang')) || '';
+        const rawCode = codeEl.textContent.replace(/\u200B/g, '').replace(/\n$/, '');
+        lines.push(`\`\`\`${lang}\n${rawCode}\n\`\`\``);
+      } else if (tag === 'UL') {
+        Array.from(node.children).forEach((li) => {
+          if (li.tagName && li.tagName.toUpperCase() === 'LI') {
+            lines.push(`- ${serializeInlineDomToMarkdown(li)}`);
+          }
+        });
+      } else if (tag === 'OL') {
+        Array.from(node.children).forEach((li, idx) => {
+          if (li.tagName && li.tagName.toUpperCase() === 'LI') {
+            lines.push(`${idx + 1}. ${serializeInlineDomToMarkdown(li)}`);
+          }
+        });
+      } else if (tag === 'P' || tag === 'DIV') {
+        lines.push(serializeInlineDomToMarkdown(node));
+      } else {
+        lines.push(serializeInlineDomToMarkdown(node));
+      }
+    };
+
+    Array.from(container.childNodes).forEach(processBlockNode);
+
+    // Trim trailing empty lines if the whole document is empty
+    const result = lines.join('\n');
+    if (!result.trim()) return '';
+    return result;
+  }
+
+  function syncLiveEditorToState() {
+    const container = document.getElementById('note-live-editor');
+    if (!container) return;
+    const md = serializeLiveEditorToMarkdown(container);
+    ensureCurrentDayExists();
+    state.dailyData[state.currentDate].notes = md;
+    const editor = document.getElementById('note-editor');
+    if (editor && editor.value !== md) {
+      editor.value = md;
+    }
+    if (!md.trim()) {
+      container.classList.add('is-empty');
+    } else {
+      container.classList.remove('is-empty');
+    }
+    saveState();
+  }
+
+  function placeCaretAtStart(el) {
+    if (!el) return;
+    const sel = window.getSelection();
+    if (!sel) return;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function placeCaretAtEnd(el) {
+    if (!el) return;
+    const sel = window.getSelection();
+    if (!sel) return;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function getClosestBlockElement(node, container) {
+    let curr = node && node.nodeType === Node.TEXT_NODE ? node.parentNode : node;
+    while (curr && curr !== container) {
+      if (curr.classList && curr.classList.contains('typora-task-text')) {
+        return curr;
+      }
+      const tag = curr.tagName ? curr.tagName.toUpperCase() : '';
+      if (['P', 'H1', 'H2', 'H3', 'H4', 'LI', 'BLOCKQUOTE', 'PRE', 'DIV'].includes(tag)) {
+        return curr;
+      }
+      curr = curr.parentNode;
+    }
+    return null;
+  }
+
+  function createTaskRowElement(checked = false, initialHtml = '<br>') {
+    const row = document.createElement('div');
+    row.className = `typora-task-row ${checked ? 'is-checked' : ''}`;
+    row.innerHTML = `
+      <input type="checkbox" class="typora-task-checkbox accent-emerald-500 rounded" contenteditable="false" ${checked ? 'checked' : ''} />
+      <div class="typora-task-text">${initialHtml || '<br>'}</div>
+    `;
+    return row;
+  }
+
+  function tryLiveMarkdownTransform(container) {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount || !sel.isCollapsed) return false;
+
+    const anchorNode = sel.anchorNode;
+    const anchorOffset = sel.anchorOffset;
+    const blockEl = getClosestBlockElement(anchorNode, container);
+
+    // 1. Check inline markdown triggers (**bold**, *italic*, `code`, ~~strike~~) inside text node
+    if (anchorNode && anchorNode.nodeType === Node.TEXT_NODE) {
+      const parentTag = anchorNode.parentNode && anchorNode.parentNode.tagName
+        ? anchorNode.parentNode.tagName.toUpperCase()
+        : '';
+      if (parentTag !== 'CODE' && parentTag !== 'PRE') {
+        const textBefore = anchorNode.nodeValue.slice(0, anchorOffset);
+        const textAfter = anchorNode.nodeValue.slice(anchorOffset);
+
+        const patterns = [
+          { regex: /\*\*([^*\n]+)\*\*$/, tag: 'strong' },
+          { regex: /(?<!\*)\*([^*\n]+)\*$/, tag: 'em' },
+          { regex: /`([^`\n]+)`$/, tag: 'code' },
+          { regex: /~~([^~\n]+)~~$/, tag: 'del' }
+        ];
+
+        for (const p of patterns) {
+          const match = textBefore.match(p.regex);
+          if (match) {
+            const fullMatch = match[0];
+            const innerContent = match[1];
+            const startIndex = textBefore.length - fullMatch.length;
+            const prefixText = textBefore.slice(0, startIndex);
+
+            const frag = document.createDocumentFragment();
+            if (prefixText) {
+              frag.appendChild(document.createTextNode(prefixText));
+            }
+            const formattedEl = document.createElement(p.tag);
+            formattedEl.textContent = innerContent;
+            frag.appendChild(formattedEl);
+
+            const afterTextNode = document.createTextNode('\u200B' + textAfter);
+            frag.appendChild(afterTextNode);
+
+            anchorNode.parentNode.replaceChild(frag, anchorNode);
+
+            const newRange = document.createRange();
+            newRange.setStart(afterTextNode, 1);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+            return true;
+          }
+        }
+      }
+    }
+
+    // 2. Check block-level markdown prefix triggers on plain P / DIV
+    if (!blockEl) return false;
+    const blockTag = blockEl.tagName ? blockEl.tagName.toUpperCase() : '';
+    if (blockTag !== 'P' && (blockTag !== 'DIV' || blockEl.classList.contains('typora-task-text'))) {
+      return false;
+    }
+
+    const rawBlockText = blockEl.textContent.replace(/\u200B/g, '');
+
+    // Headings: # , ## , ### , ####
+    const headingMatch = rawBlockText.match(/^(#{1,4})\s(.*)$/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const restText = headingMatch[2];
+      const hEl = document.createElement(`h${level}`);
+      hEl.innerHTML = formatInlineMarkdownToHtml(restText) || '<br>';
+      blockEl.parentNode.replaceChild(hEl, blockEl);
+      if (restText) placeCaretAtEnd(hEl);
+      else placeCaretAtStart(hEl);
+      return true;
+    }
+
+    // Task checkbox: - [ ] , - [x] , []
+    const taskMatch = rawBlockText.match(/^(?:[-*+]\s+\[([ xX])\]|\[\])\s(.*)$/);
+    if (taskMatch) {
+      const checked = (taskMatch[1] || '').toLowerCase() === 'x';
+      const restText = taskMatch[2];
+      const row = createTaskRowElement(checked, formatInlineMarkdownToHtml(restText) || '<br>');
+      blockEl.parentNode.replaceChild(row, blockEl);
+      const textDiv = row.querySelector('.typora-task-text');
+      if (restText) placeCaretAtEnd(textDiv);
+      else placeCaretAtStart(textDiv);
+      return true;
+    }
+
+    // Unordered list: - or *
+    const ulMatch = rawBlockText.match(/^[-*+]\s(.*)$/);
+    if (ulMatch) {
+      const restText = ulMatch[1];
+      const ul = document.createElement('ul');
+      const li = document.createElement('li');
+      li.innerHTML = formatInlineMarkdownToHtml(restText) || '<br>';
+      ul.appendChild(li);
+      blockEl.parentNode.replaceChild(ul, blockEl);
+      if (restText) placeCaretAtEnd(li);
+      else placeCaretAtStart(li);
+      return true;
+    }
+
+    // Ordered list: 1.
+    const olMatch = rawBlockText.match(/^\d+\.\s(.*)$/);
+    if (olMatch) {
+      const restText = olMatch[1];
+      const ol = document.createElement('ol');
+      const li = document.createElement('li');
+      li.innerHTML = formatInlineMarkdownToHtml(restText) || '<br>';
+      ol.appendChild(li);
+      blockEl.parentNode.replaceChild(ol, blockEl);
+      if (restText) placeCaretAtEnd(li);
+      else placeCaretAtStart(li);
+      return true;
+    }
+
+    // Blockquote: >
+    const quoteMatch = rawBlockText.match(/^>\s(.*)$/);
+    if (quoteMatch) {
+      const restText = quoteMatch[1];
+      const bq = document.createElement('blockquote');
+      bq.innerHTML = formatInlineMarkdownToHtml(restText) || '<br>';
+      blockEl.parentNode.replaceChild(bq, blockEl);
+      if (restText) placeCaretAtEnd(bq);
+      else placeCaretAtStart(bq);
+      return true;
+    }
+
+    // Horizontal Rule: --- or *** followed by space
+    if (/^(---|___|\*\*\*)\s$/.test(rawBlockText)) {
+      const hr = document.createElement('hr');
+      const nextP = document.createElement('p');
+      nextP.innerHTML = '<br>';
+      blockEl.parentNode.insertBefore(hr, blockEl);
+      blockEl.parentNode.replaceChild(nextP, blockEl);
+      placeCaretAtStart(nextP);
+      return true;
+    }
+
+    // Code block: ```lang followed by space
+    const codeMatch = rawBlockText.match(/^```(\w*)\s$/);
+    if (codeMatch) {
+      const pre = document.createElement('pre');
+      const code = document.createElement('code');
+      code.setAttribute('data-lang', codeMatch[1] || '');
+      code.innerHTML = '<br>';
+      pre.appendChild(code);
+      blockEl.parentNode.replaceChild(pre, blockEl);
+      placeCaretAtStart(code);
+      return true;
+    }
+
+    return false;
+  }
+
+  function initTyporaFullDocEditor() {
+    if (typoraInitialized) return;
+    const container = document.getElementById('note-live-editor');
+    if (!container) return;
+    typoraInitialized = true;
+
+    container.addEventListener('compositionstart', () => {
+      isTyporaComposing = true;
+    });
+
+    container.addEventListener('compositionend', () => {
+      isTyporaComposing = false;
+      tryLiveMarkdownTransform(container);
+      syncLiveEditorToState();
+    });
+
+    // Delegate checkbox clicks inside full-document editor
+    container.addEventListener('change', (e) => {
+      if (e.target && e.target.classList.contains('typora-task-checkbox')) {
+        const row = e.target.closest('.typora-task-row');
+        if (row) {
+          row.classList.toggle('is-checked', e.target.checked);
+        }
+        syncLiveEditorToState();
+      }
+    });
+
+    container.addEventListener('input', () => {
+      if (isTyporaComposing) return;
+      // Ensure container at least has a paragraph if user typed into bare root
+      if (container.childNodes.length === 1 && container.firstChild.nodeType === Node.TEXT_NODE) {
+        const txt = container.firstChild.nodeValue;
+        const p = document.createElement('p');
+        p.textContent = txt;
+        container.innerHTML = '';
+        container.appendChild(p);
+        placeCaretAtEnd(p);
+      }
+      tryLiveMarkdownTransform(container);
+      syncLiveEditorToState();
+    });
+
+    container.addEventListener('keydown', (e) => {
+      if (e.isComposing || isTyporaComposing || e.keyCode === 229) return;
+
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      const blockEl = getClosestBlockElement(range.startContainer, container);
+
+      if (e.key === 'Enter' && !e.shiftKey) {
+        // If container is completely empty, create initial paragraph
+        if (!blockEl) {
+          e.preventDefault();
+          const p = document.createElement('p');
+          p.innerHTML = '<br>';
+          container.appendChild(p);
+          placeCaretAtStart(p);
+          syncLiveEditorToState();
+          return;
+        }
+
+        const rawText = blockEl.textContent.replace(/\u200B/g, '');
+        const tag = blockEl.tagName ? blockEl.tagName.toUpperCase() : '';
+
+        // Check if current plain line is --- or ```lang before splitting
+        if (tag === 'P' || (tag === 'DIV' && !blockEl.classList.contains('typora-task-text'))) {
+          if (/^(---|___|\*\*\*)$/.test(rawText.trim())) {
+            e.preventDefault();
+            const hr = document.createElement('hr');
+            const nextP = document.createElement('p');
+            nextP.innerHTML = '<br>';
+            blockEl.parentNode.insertBefore(hr, blockEl);
+            blockEl.parentNode.replaceChild(nextP, blockEl);
+            placeCaretAtStart(nextP);
+            syncLiveEditorToState();
+            return;
+          }
+          const fenceMatch = rawText.trim().match(/^```(\w*)$/);
+          if (fenceMatch) {
+            e.preventDefault();
+            const pre = document.createElement('pre');
+            const code = document.createElement('code');
+            code.setAttribute('data-lang', fenceMatch[1] || '');
+            code.innerHTML = '<br>';
+            pre.appendChild(code);
+            blockEl.parentNode.replaceChild(pre, blockEl);
+            placeCaretAtStart(code);
+            syncLiveEditorToState();
+            return;
+          }
+        }
+
+        // 1. Inside Code Block (<pre><code>)
+        if (tag === 'PRE' || blockEl.closest('pre')) {
+          e.preventDefault();
+          const preEl = tag === 'PRE' ? blockEl : blockEl.closest('pre');
+          const codeEl = preEl.querySelector('code') || preEl;
+          const codeText = codeEl.textContent;
+          // If pressing Enter at the end of an already trailing blank line, exit code block
+          if (codeText.endsWith('\n') && range.collapsed) {
+            codeEl.textContent = codeText.replace(/\n+$/, '');
+            const nextP = document.createElement('p');
+            nextP.innerHTML = '<br>';
+            preEl.insertAdjacentElement('afterend', nextP);
+            placeCaretAtStart(nextP);
+            syncLiveEditorToState();
+            return;
+          }
+          const nlNode = document.createTextNode('\n');
+          range.deleteContents();
+          range.insertNode(nlNode);
+          range.setStartAfter(nlNode);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          syncLiveEditorToState();
+          return;
+        }
+
+        // 2. Inside Task Row (.typora-task-text)
+        if (blockEl.classList.contains('typora-task-text')) {
+          e.preventDefault();
+          const taskRow = blockEl.closest('.typora-task-row');
+          if (!rawText.trim()) {
+            // Empty task item -> exit task list into normal paragraph
+            const p = document.createElement('p');
+            p.innerHTML = '<br>';
+            taskRow.parentNode.replaceChild(p, taskRow);
+            placeCaretAtStart(p);
+            syncLiveEditorToState();
+            return;
+          }
+          const tailRange = range.cloneRange();
+          tailRange.selectNodeContents(blockEl);
+          tailRange.setStart(range.endContainer, range.endOffset);
+          const afterFrag = tailRange.extractContents();
+          if (!blockEl.textContent.replace(/\u200B/g, '').trim()) {
+            blockEl.innerHTML = '<br>';
+          }
+          const newRow = createTaskRowElement(false, '');
+          const newTextDiv = newRow.querySelector('.typora-task-text');
+          newTextDiv.innerHTML = '';
+          newTextDiv.appendChild(afterFrag);
+          if (!newTextDiv.textContent.replace(/\u200B/g, '').trim() && !newTextDiv.querySelector('br')) {
+            newTextDiv.innerHTML = '<br>';
+          }
+          taskRow.insertAdjacentElement('afterend', newRow);
+          placeCaretAtStart(newTextDiv);
+          syncLiveEditorToState();
+          return;
+        }
+
+        // 3. Inside List Item (LI)
+        if (tag === 'LI') {
+          e.preventDefault();
+          const listEl = blockEl.parentNode;
+          if (!rawText.trim()) {
+            // Empty bullet -> exit list to normal paragraph
+            const p = document.createElement('p');
+            p.innerHTML = '<br>';
+            listEl.insertAdjacentElement('afterend', p);
+            blockEl.remove();
+            if (listEl.children.length === 0) listEl.remove();
+            placeCaretAtStart(p);
+            syncLiveEditorToState();
+            return;
+          }
+          const tailRange = range.cloneRange();
+          tailRange.selectNodeContents(blockEl);
+          tailRange.setStart(range.endContainer, range.endOffset);
+          const afterFrag = tailRange.extractContents();
+          if (!blockEl.textContent.replace(/\u200B/g, '').trim()) {
+            blockEl.innerHTML = '<br>';
+          }
+          const newLi = document.createElement('li');
+          newLi.appendChild(afterFrag);
+          if (!newLi.textContent.replace(/\u200B/g, '').trim() && !newLi.querySelector('br')) {
+            newLi.innerHTML = '<br>';
+          }
+          blockEl.insertAdjacentElement('afterend', newLi);
+          placeCaretAtStart(newLi);
+          syncLiveEditorToState();
+          return;
+        }
+
+        // 4. Inside Heading (H1~H4), Blockquote, or Paragraph (P / DIV)
+        e.preventDefault();
+        if (tag === 'BLOCKQUOTE' && !rawText.trim()) {
+          const p = document.createElement('p');
+          p.innerHTML = '<br>';
+          blockEl.parentNode.replaceChild(p, blockEl);
+          placeCaretAtStart(p);
+          syncLiveEditorToState();
+          return;
+        }
+
+        const tailRange = range.cloneRange();
+        tailRange.selectNodeContents(blockEl);
+        tailRange.setStart(range.endContainer, range.endOffset);
+        const afterFrag = tailRange.extractContents();
+
+        if (!blockEl.textContent.replace(/\u200B/g, '').trim() && !blockEl.querySelector('br')) {
+          blockEl.innerHTML = '<br>';
+        }
+
+        const nextP = document.createElement('p');
+        nextP.appendChild(afterFrag);
+        if (!nextP.textContent.replace(/\u200B/g, '').trim() && !nextP.querySelector('br')) {
+          nextP.innerHTML = '<br>';
+        }
+
+        blockEl.insertAdjacentElement('afterend', nextP);
+        placeCaretAtStart(nextP);
+        syncLiveEditorToState();
+      } else if (e.key === 'Backspace') {
+        if (!blockEl || !range.collapsed) return;
+
+        // Check if cursor is at the very beginning of the block
+        const preRange = range.cloneRange();
+        preRange.selectNodeContents(blockEl);
+        preRange.setEnd(range.startContainer, range.startOffset);
+        const textBeforeCaret = preRange.toString().replace(/\u200B/g, '');
+
+        if (textBeforeCaret.length === 0) {
+          const tag = blockEl.tagName ? blockEl.tagName.toUpperCase() : '';
+          // Unwrap Heading or Blockquote to normal paragraph on Backspace at start
+          if (['H1', 'H2', 'H3', 'H4', 'BLOCKQUOTE'].includes(tag)) {
+            e.preventDefault();
+            const p = document.createElement('p');
+            p.innerHTML = blockEl.innerHTML || '<br>';
+            blockEl.parentNode.replaceChild(p, blockEl);
+            placeCaretAtStart(p);
+            syncLiveEditorToState();
+          } else if (blockEl.classList.contains('typora-task-text')) {
+            e.preventDefault();
+            const taskRow = blockEl.closest('.typora-task-row');
+            const p = document.createElement('p');
+            p.innerHTML = blockEl.innerHTML || '<br>';
+            taskRow.parentNode.replaceChild(p, taskRow);
+            placeCaretAtStart(p);
+            syncLiveEditorToState();
+          } else if (tag === 'LI') {
+            const listEl = blockEl.parentNode;
+            if (blockEl === listEl.firstElementChild) {
+              e.preventDefault();
+              const p = document.createElement('p');
+              p.innerHTML = blockEl.innerHTML || '<br>';
+              listEl.insertAdjacentElement('beforebegin', p);
+              blockEl.remove();
+              if (listEl.children.length === 0) listEl.remove();
+              placeCaretAtStart(p);
+              syncLiveEditorToState();
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderTyporaLiveEditor(focusAtEnd = false) {
+    const container = document.getElementById('note-live-editor');
+    if (!container) return;
+    initTyporaFullDocEditor();
+
     ensureCurrentDayExists();
     const day = state.dailyData[state.currentDate];
-    const editor = document.getElementById('note-editor');
-    const preview = document.getElementById('note-preview');
+    const md = day.notes || '';
+    const html = markdownToLiveHtml(md);
 
-    if (editor) editor.value = day.notes || '';
-    if (preview) preview.innerHTML = renderMarkdown(day.notes || '*暂无纪要内容*');
+    container.innerHTML = html;
+    if (!md.trim()) {
+      container.classList.add('is-empty');
+    } else {
+      container.classList.remove('is-empty');
+    }
+
+    if (focusAtEnd) {
+      requestAnimationFrame(() => {
+        container.focus();
+        if (container.lastElementChild) {
+          placeCaretAtEnd(container.lastElementChild);
+        } else {
+          placeCaretAtEnd(container);
+        }
+      });
+    }
+  }
+
+  function renderNotes() {
+    ensureCurrentDayExists();
+    renderTyporaLiveEditor(false);
   }
 
   function refreshHeatmap() {
@@ -4122,41 +4910,19 @@
       showToast(`已添加待阅事项: ${title}${syncNote}`, 'info');
     };
 
-    // Notes Editor
-    const noteEditor = document.getElementById('note-editor');
-    const notePreview = document.getElementById('note-preview');
-    const btnEdit = document.getElementById('btn-note-edit');
-    const btnPreview = document.getElementById('btn-note-preview');
-
-    btnEdit.onclick = () => {
-      noteEditor.classList.remove('hidden');
-      notePreview.classList.add('hidden');
-      btnEdit.className = 'px-2 py-0.5 rounded bg-slate-700 text-white font-medium';
-      btnPreview.className = 'px-2 py-0.5 rounded text-slate-400 hover:text-white';
-    };
-
-    btnPreview.onclick = () => {
-      notePreview.innerHTML = renderMarkdown(noteEditor.value || '*暂无内容*');
-      noteEditor.classList.add('hidden');
-      notePreview.classList.remove('hidden');
-      btnPreview.className = 'px-2 py-0.5 rounded bg-slate-700 text-white font-medium';
-      btnEdit.className = 'px-2 py-0.5 rounded text-slate-400 hover:text-white';
-    };
-
-    noteEditor.oninput = (e) => {
-      ensureCurrentDayExists();
-      state.dailyData[state.currentDate].notes = e.target.value;
-      saveState();
-    };
+    // Notes Instant WYSIWYG Editor
+    initTyporaFullDocEditor();
 
     document.getElementById('btn-note-timestamp').onclick = () => {
       const now = new Date();
-      const timeStr = `\n\n#### ⏱️ ${pad(now.getHours())}:${pad(now.getMinutes())}\n- `;
-      noteEditor.value += timeStr;
-      noteEditor.focus();
       ensureCurrentDayExists();
-      state.dailyData[state.currentDate].notes = noteEditor.value;
+      const currentNotes = state.dailyData[state.currentDate].notes || '';
+      const prefix = currentNotes.trim().length > 0 ? '\n\n' : '';
+      const timeStr = `${prefix}#### ⏱️ ${pad(now.getHours())}:${pad(now.getMinutes())}\n- `;
+      const updatedNotes = currentNotes + timeStr;
+      state.dailyData[state.currentDate].notes = updatedNotes;
       saveState();
+      renderTyporaLiveEditor(true);
     };
 
     // Right Panel Tabs

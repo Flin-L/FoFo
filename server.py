@@ -12,7 +12,7 @@ import urllib.error
 import urllib.request
 from urllib.parse import parse_qs, urlparse, unquote
 
-APP_VERSION = "2.3.2"
+APP_VERSION = "2.3.3"
 _UPDATE_CACHE = {
     "timestamp": 0,
     "data": None
